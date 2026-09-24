@@ -139,3 +139,4 @@ const styles = {
   puce: { fontFamily: 'var(--police-etiquette)', fontSize: '0.78rem', opacity: 0.7 },
   boutonProduit: { marginTop: '0.8rem', padding: '0.5em 1.1em', fontSize: '0.85rem' },
 };
+
