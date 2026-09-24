@@ -1,0 +1,178 @@
+:root {
+  /* Couleurs — la charte LOOHOO, utilisée franchement (pas juste en petite touche) */
+  --loo-orange: #F7941D;
+  --loo-rouge: #EF4136;
+  --loo-encre: #17120D;
+  --loo-papier: #FFF8EF;
+  --loo-papier-ombre: #F0DFC4;
+  --loo-blanc: #FFFFFF;
+  --gradient-marque: linear-gradient(115deg, var(--loo-orange) 0%, var(--loo-rouge) 100%);
+
+  /* Typographie — trois voix distinctes : affiche (titres), texte (lecture), étiquette (prix/données) */
+  --police-affiche: 'Bricolage Grotesque', 'Segoe UI', sans-serif;
+  --police-texte: 'Work Sans', -apple-system, sans-serif;
+  --police-etiquette: 'IBM Plex Mono', 'Courier New', monospace;
+
+  /* Un seul rayon asymétrique — le "coin plié", signature visuelle des étiquettes de marché */
+  --coupe: 4px 22px 4px 22px;
+  --coupe-inv: 22px 4px 22px 4px;
+  --rayon-sm: 8px;
+
+  --ombre-carte: 0 10px 26px rgba(23, 18, 13, 0.08);
+}
+
+* { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
+
+body, #root {
+  margin: 0;
+  padding: 0;
+  background: var(--loo-papier);
+  color: var(--loo-encre);
+  font-family: var(--police-texte);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--police-affiche);
+  margin: 0;
+  color: var(--loo-encre);
+  letter-spacing: -0.01em;
+}
+
+p { line-height: 1.65; }
+
+a { color: inherit; text-decoration: none; }
+
+img { max-width: 100%; display: block; }
+
+:focus-visible {
+  outline: 2px solid var(--loo-rouge);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+.container {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.etiquette {
+  font-family: var(--police-etiquette);
+  font-size: 0.76rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--loo-rouge);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.85em 1.6em;
+  border-radius: var(--rayon-sm);
+  font-family: var(--police-texte);
+  font-weight: 600;
+  font-size: 0.95rem;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.btn:hover { transform: translateY(-2px); }
+
+.btn-primary {
+  background: var(--loo-encre);
+  color: var(--loo-papier);
+}
+.btn-primary:hover { box-shadow: 0 8px 18px rgba(23, 18, 13, 0.25); }
+
+.btn-outline {
+  background: transparent;
+  color: currentColor;
+  border: 1.5px solid currentColor;
+}
+
+.btn-clair {
+  background: var(--loo-papier);
+  color: var(--loo-rouge);
+}
+
+.section { padding: 5.5rem 0; }
+
+.section-titre {
+  font-size: clamp(1.9rem, 3.4vw, 2.6rem);
+  margin: 0.5rem 0 1.1rem;
+  max-width: 16ch;
+}
+
+.section-intro {
+  max-width: 560px;
+  opacity: 0.72;
+  font-size: 1.05rem;
+}
+
+/* La carte "étiquette de marché" — coin plié asymétrique, jamais un rectangle parfait */
+.carte {
+  background: var(--loo-blanc);
+  border: 1px solid var(--loo-papier-ombre);
+  border-radius: var(--coupe);
+  box-shadow: var(--ombre-carte);
+}
+
+/* ---- rangées "étal" à défilement horizontal (marketplace, groupée par boutique) ---- */
+.etal-rangee {
+  display: flex;
+  gap: 1.1rem;
+  overflow-x: auto;
+  padding: 0.4rem 0.2rem 1.2rem;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+.etal-rangee::-webkit-scrollbar { height: 6px; }
+.etal-rangee::-webkit-scrollbar-thumb { background: var(--loo-papier-ombre); border-radius: 10px; }
+.etal-rangee > * { scroll-snap-align: start; flex: 0 0 200px; }
+
+/* ---- squelette de chargement ---- */
+@keyframes loo-pulse {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+.loo-squelette {
+  background: var(--loo-papier-ombre);
+  border-radius: var(--rayon-sm);
+  animation: loo-pulse 1.3s ease-in-out infinite;
+}
+
+/* ---- responsive ---- */
+@media (max-width: 640px) {
+  .loo-nav a:not(.btn) { display: none; }
+  .loo-nav { gap: 0.7rem; }
+  .section { padding: 3.5rem 0; }
+}
+
+@media (max-width: 900px) {
+  .loo-hero-grille { grid-template-columns: 1fr !important; text-align: center; }
+  .loo-hero-grille > div:first-child { display: flex; flex-direction: column; align-items: center; }
+  .loo-mission-grille { grid-template-columns: 1fr !important; }
+  .loo-boutiques-grille { grid-template-columns: 1fr !important; }
+  .loo-boutiques-grille > .carte-vedette { grid-column: span 1 !important; }
+}
+
+
+/* ---- pages légales ---- */
+.texte-legal { max-width: 780px; }
+.texte-legal h2 { font-size: 1.3rem; margin: 2.2rem 0 0.6rem; }
+.texte-legal p, .texte-legal li { font-size: 0.98rem; line-height: 1.7; }
+.texte-legal ul { padding-left: 1.3rem; margin: 0.5rem 0 1rem; }
+.texte-legal a { color: var(--loo-rouge); text-decoration: underline; }
+.texte-legal-maj { font-family: var(--police-etiquette); font-size: 0.8rem; opacity: 0.6; margin: 0 0 1.5rem; }
+.a-completer { background: #FFE9A8; padding: 0 0.3em; border-radius: 3px; font-weight: 600; }
