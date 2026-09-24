@@ -176,3 +176,12 @@ img { max-width: 100%; display: block; }
 .texte-legal a { color: var(--loo-rouge); text-decoration: underline; }
 .texte-legal-maj { font-family: var(--police-etiquette); font-size: 0.8rem; opacity: 0.6; margin: 0 0 1.5rem; }
 .a-completer { background: #FFE9A8; padding: 0 0.3em; border-radius: 3px; font-weight: 600; }
+
+
+/* ---- annuaire fournisseurs ---- */
+.grille-grossistes { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 1.2rem; }
+.champ { width: 100%; padding: 0.85em 1em; border: 1.5px solid var(--loo-papier-ombre); border-radius: var(--rayon-sm); background: var(--loo-blanc); font: inherit; color: var(--loo-encre); }
+.champ:focus { outline: 2px solid var(--loo-rouge); outline-offset: 2px; }
+.badge { display: inline-flex; align-items: center; gap: 0.3em; padding: 0.25em 0.7em; border-radius: 999px; font-family: var(--police-etiquette); font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.badge-verifie { background: var(--loo-encre); color: var(--loo-papier); }
+.badge-fabricant { background: var(--loo-papier-ombre); color: var(--loo-encre); }
