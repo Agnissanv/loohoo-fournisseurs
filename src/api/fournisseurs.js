@@ -82,10 +82,11 @@ export function suivreSession(callback) {
   return () => abonnement.subscription.unsubscribe();
 }
 
-export async function recupererMonProfil() {
+export async function recupererMonProfil(userId) {
   const { data, error } = await supabase
     .from('grossiste')
     .select('*, grossiste_contact(telephone), grossiste_photo(id, url, ordre), produit(*)')
+    .eq('user_id', userId)
     .maybeSingle();
   if (error) throw error;
   return data;

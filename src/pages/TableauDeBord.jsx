@@ -23,7 +23,7 @@ export default function TableauDeBord() {
   useEffect(() => {
     if (session === undefined) return;
     if (session === null) { navigate('/connexion'); return; }
-    recupererMonProfil().then(setProfil).catch(() => setErreur('Impossible de charger votre profil.'));
+    recupererMonProfil(session.user.id).then(setProfil).catch((err) => setErreur('Impossible de charger votre profil : ' + err.message));
   }, [session, navigate]);
 
   if (erreur) {
@@ -63,7 +63,7 @@ export default function TableauDeBord() {
     try {
       await ajouterProduit(profil.id, nouveau);
       e.target.reset();
-      setProfil(await recupererMonProfil());
+      setProfil(await recupererMonProfil(session.user.id));
     } catch (err) {
       setErreur("Impossible d'ajouter le produit : " + err.message);
     }
