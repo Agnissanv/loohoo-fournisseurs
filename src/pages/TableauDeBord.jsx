@@ -114,6 +114,12 @@ export default function TableauDeBord() {
                 <div style={{ fontSize: '0.85rem', opacity: 0.7 }}>
                   {p.prix_gros_fcfa.toLocaleString('fr-FR')} F CFA · minimum {p.moq}
                 </div>
+                <div style={{ fontSize: '0.8rem', fontWeight: 700, marginTop: '0.3rem', color: p.statut === 'publie' ? '#2f8f4e' : p.statut === 'rejete' ? 'var(--loo-rouge)' : 'var(--loo-orange)' }}>
+                  {p.statut === 'publie' ? 'Publié' : p.statut === 'rejete' ? 'Rejeté' : 'En attente de vérification'}
+                </div>
+                {p.statut === 'rejete' && p.motif_rejet && (
+                  <div style={{ fontSize: '0.8rem', opacity: 0.75, marginTop: '0.15rem' }}>Motif : {p.motif_rejet}</div>
+                )}
               </div>
               <button type="button" className="btn btn-outline" style={{ padding: '0.4em 0.8em' }} onClick={() => supprimer(p.id)} aria-label="Supprimer">
                 <Trash2 size={15} />
