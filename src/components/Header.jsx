@@ -10,7 +10,10 @@ export default function Header() {
           <span style={styles.logoTexte}>LOOHOO</span>
           <span className="etiquette" style={{ marginLeft: '0.2rem' }}>Fournisseurs</span>
         </Link>
-        <a href="https://looh-oo.com" style={styles.lien}>← looh-oo.com</a>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.4rem' }}>
+          <Link to="/connexion" style={styles.lien}>Espace fournisseur</Link>
+          <a href="https://looh-oo.com" style={styles.lien}>← looh-oo.com</a>
+        </div>
       </div>
     </header>
   );

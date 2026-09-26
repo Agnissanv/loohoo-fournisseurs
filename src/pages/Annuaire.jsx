@@ -7,7 +7,8 @@ export default function Annuaire() {
   const [q, setQ] = useState('');
   const [categorie, setCategorie] = useState('');
   const [ville, setVille] = useState('');
-  const [filtres, setFiltres] = useState({ categories: [], villes: [] });
+  const [commune, setCommune] = useState('');
+  const [filtres, setFiltres] = useState({ categories: [], villes: [], communes: [] });
   const [resultats, setResultats] = useState(null);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(false);
@@ -22,12 +23,12 @@ export default function Annuaire() {
     setChargement(true);
     setErreur(false);
     const delai = setTimeout(() => {
-      rechercherGrossistes({ q, categorie, ville })
+      rechercherGrossistes({ q, categorie, ville, commune })
         .then((liste) => { if (!annule) { setResultats(liste); setChargement(false); } })
         .catch(() => { if (!annule) { setErreur(true); setChargement(false); } });
     }, 350);
     return () => { annule = true; clearTimeout(delai); };
-  }, [q, categorie, ville]);
+  }, [q, categorie, ville, commune]);
 
   const nb = resultats ? resultats.length : 0;
 
@@ -62,6 +63,12 @@ export default function Annuaire() {
               <option value="">Toutes les villes</option>
               {filtres.villes.map((v) => <option key={v} value={v}>{v}</option>)}
             </select>
+            {filtres.communes.length > 0 && (
+              <select className="champ" style={styles.select} value={commune} onChange={(e) => setCommune(e.target.value)} aria-label="Commune">
+                <option value="">Toutes les communes</option>
+                {filtres.communes.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            )}
           </div>
         </div>
       </section>
