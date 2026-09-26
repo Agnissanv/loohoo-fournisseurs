@@ -26,6 +26,9 @@ export default function TableauDeBord() {
     recupererMonProfil().then(setProfil).catch(() => setErreur('Impossible de charger votre profil.'));
   }, [session, navigate]);
 
+  if (erreur) {
+    return <section className="section"><div className="container"><p style={{ color: 'var(--loo-rouge)', fontWeight: 600 }}>{erreur}</p></div></section>;
+  }
   if (session === undefined || profil === undefined) {
     return <section className="section"><div className="container"><div className="loo-squelette" style={{ height: '200px' }} /></div></section>;
   }
