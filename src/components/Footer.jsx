@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 export default function Footer() {
   return (
@@ -6,10 +7,9 @@ export default function Footer() {
       <div className="container" style={styles.ligne}>
         <span>© {new Date().getFullYear()} LOOHOO Fournisseurs</span>
         <nav style={styles.liens} aria-label="Informations légales">
-          {/* Provisoire : pages légales de la landing, en attendant celles propres au module Fournisseurs */}
-          <a href="https://looh-oo.com/mentions-legales" style={styles.lien}>Mentions légales</a>
-          <a href="https://looh-oo.com/confidentialite" style={styles.lien}>Confidentialité</a>
-          <a href="https://looh-oo.com/conditions" style={styles.lien}>Conditions d'utilisation</a>
+          <Link to="/mentions-legales" style={styles.lien}>Mentions légales</Link>
+          <Link to="/confidentialite" style={styles.lien}>Confidentialité</Link>
+          <Link to="/conditions" style={styles.lien}>Conditions d'utilisation</Link>
           {/* Inscription fournisseur volontairement discrète, en pied de page (PDF §10) */}
           <a href="mailto:contact@looh-oo.com?subject=Référencer%20mon%20entreprise%20comme%20fournisseur" style={styles.lien}>
             Vous êtes fournisseur ?

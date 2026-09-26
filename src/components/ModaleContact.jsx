@@ -96,7 +96,7 @@ export default function ModaleContact({ grossiste, produit, onClose }) {
             <p style={{ fontSize: '0.76rem', opacity: 0.65, margin: '0.9rem 0 0', lineHeight: 1.5 }}>
               En envoyant ce formulaire, vous acceptez que LOOHOO enregistre vos coordonnées pour vous mettre en
               relation avec ce fournisseur. Voir la{' '}
-              <a href="https://looh-oo.com/confidentialite" target="_blank" rel="noreferrer" style={{ textDecoration: 'underline' }}>
+              <a href="/confidentialite" target="_blank" rel="noreferrer" style={{ textDecoration: 'underline' }}>
                 politique de confidentialité
               </a>.
             </p>

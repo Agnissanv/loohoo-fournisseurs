@@ -61,7 +61,7 @@ export default function Inscription() {
           <p style={{ fontSize: '0.76rem', opacity: 0.65, lineHeight: 1.5, margin: 0 }}>
             En créant un compte, vous acceptez que LOOHOO conserve ces informations pour vous référencer dans
             l'annuaire fournisseurs. Voir la{' '}
-            <a href="https://looh-oo.com/confidentialite" target="_blank" rel="noreferrer" style={{ textDecoration: 'underline' }}>
+            <a href="/confidentialite" target="_blank" rel="noreferrer" style={{ textDecoration: 'underline' }}>
               politique de confidentialité
             </a>.
           </p>
