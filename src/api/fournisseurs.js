@@ -180,3 +180,29 @@ export async function marquerMessagesLus(conversationId, role) {
   const autre = role === 'vendeur' ? 'fournisseur' : 'vendeur';
   await supabase.from('message').update({ lu: true }).eq('conversation_id', conversationId).eq('expediteur', autre).eq('lu', false);
 }
+
+
+
+// ---- Médiathèque ----
+export async function recupererMedia(grossisteId) {
+  const { data, error } = await supabase.from('media').select('*').eq('grossiste_id', grossisteId).order('date_ajout', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function ajouterMedia(grossisteId, { url, largeur, hauteur, taille_octets }, nomFichier) {
+  const { error } = await supabase.from('media').insert({
+    grossiste_id: grossisteId, url, largeur, hauteur, taille_octets, nom: nomFichier,
+  });
+  if (error) throw error;
+}
+
+export async function supprimerMedia(id) {
+  const { error } = await supabase.from('media').delete().eq('id', id);
+  if (error) throw error;
+}
+
+export async function modifierProduitPhoto(produitId, url) {
+  const { error } = await supabase.from('produit').update({ photo_url: url }).eq('id', produitId);
+  if (error) throw error;
+}

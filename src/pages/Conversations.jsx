@@ -18,7 +18,7 @@ export default function Conversations() {
   }, [session, navigate]);
 
   if (session === undefined || liste === undefined) {
-    return <section className="section"><div className="container"><div className="loo-squelette" style={{ height: '200px' }} /></div></section>;
+    return <section className="section"><div className="container"><NavFournisseur /><div className="loo-squelette" style={{ height: '200px' }} /></div></section>;
   }
 
   return (
