@@ -106,3 +106,77 @@ export async function supprimerProduit(id) {
   const { error } = await supabase.from('produit').delete().eq('id', id);
   if (error) throw error;
 }
+
+
+
+// ---- Rôle du compte connecté (vendeur ou fournisseur) ----
+export async function recupererMonRole() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return { session: null, role: null };
+  const [{ data: g }, { data: v }] = await Promise.all([
+    supabase.from('grossiste').select('id').eq('user_id', session.user.id).maybeSingle(),
+    supabase.from('vendeur').select('id, nom, telephone').eq('user_id', session.user.id).maybeSingle(),
+  ]);
+  if (g) return { session, role: 'fournisseur', profil: g };
+  if (v) return { session, role: 'vendeur', profil: v };
+  return { session, role: null, profil: null };
+}
+
+export async function recupererSessionVendeur() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return null;
+  const { data } = await supabase.from('vendeur').select('nom, telephone').eq('user_id', session.user.id).maybeSingle();
+  return { session, vendeur: data };
+}
+
+// ---- Démarrer ou poursuivre une conversation (remplace l'ancien lien WhatsApp) ----
+export async function demarrerConversation({ grossisteId, produitId, message, nom, telephone, activite, email, password }) {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    const { error: erreurCompte } = await supabase.auth.signUp({ email, password });
+    if (erreurCompte) throw erreurCompte;
+  }
+  const { data, error } = await supabase.rpc('demarrer_conversation', {
+    p_grossiste_id: grossisteId, p_message: message, p_produit_id: produitId || null,
+    p_nom: nom || null, p_telephone: telephone || null, p_activite: activite || null,
+  });
+  if (error) throw error;
+  return data;
+}
+
+// ---- Conversations ----
+export async function recupererMesConversations() {
+  const { data, error } = await supabase
+    .from('conversation')
+    .select('id, derniere_activite, grossiste(id, nom), vendeur(id, nom), produit(nom), message(contenu, date_envoi, expediteur, lu)')
+    .order('derniere_activite', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function recupererMessages(conversationId) {
+  const { data, error } = await supabase
+    .from('message').select('id, expediteur, contenu, date_envoi, lu')
+    .eq('conversation_id', conversationId).order('date_envoi', { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+export async function envoyerMessage(conversationId, contenu) {
+  const { error } = await supabase.from('message').insert({ conversation_id: conversationId, contenu });
+  if (error) throw error;
+}
+
+export function suivreMessages(conversationId, callback) {
+  const canal = supabase
+    .channel(`messages-${conversationId}`)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'message', filter: `conversation_id=eq.${conversationId}` },
+      (payload) => callback(payload.new))
+    .subscribe();
+  return () => supabase.removeChannel(canal);
+}
+
+export async function marquerMessagesLus(conversationId, role) {
+  const autre = role === 'vendeur' ? 'fournisseur' : 'vendeur';
+  await supabase.from('message').update({ lu: true }).eq('conversation_id', conversationId).eq('expediteur', autre).eq('lu', false);
+}

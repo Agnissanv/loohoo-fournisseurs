@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { connecterFournisseur } from '../api/fournisseurs.js';
+import { connecterFournisseur, recupererMonRole } from '../api/fournisseurs.js';
 
 export default function Connexion() {
   const navigate = useNavigate();
@@ -15,7 +15,8 @@ export default function Connexion() {
     setErreur('');
     try {
       await connecterFournisseur(email, motDePasse);
-      navigate('/tableau-de-bord');
+      const { role } = await recupererMonRole();
+      navigate(role === 'fournisseur' ? '/tableau-de-bord' : '/conversations');
     } catch {
       setErreur('E-mail ou mot de passe incorrect.');
     } finally {

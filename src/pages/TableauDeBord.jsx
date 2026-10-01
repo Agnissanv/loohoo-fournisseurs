@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Trash2, LogOut } from 'lucide-react';
 import {
   suivreSession, recupererMonProfil, deconnecterFournisseur,
@@ -86,9 +86,12 @@ export default function TableauDeBord() {
             <h1 className="section-titre" style={{ margin: 0 }}>{profil.nom}</h1>
             <span style={{ color: statutActuel.couleur, fontWeight: 700, fontSize: '0.9rem' }}>{statutActuel.texte}</span>
           </div>
-          <button type="button" className="btn btn-outline" onClick={() => deconnecterFournisseur().then(() => navigate('/'))}>
-            <LogOut size={16} /> Se déconnecter
-          </button>
+          <div style={{ display: 'flex', gap: '0.6rem' }}>
+            <Link to="/conversations" className="btn btn-outline">Mes messages</Link>
+            <button type="button" className="btn btn-outline" onClick={() => deconnecterFournisseur().then(() => navigate('/'))}>
+              <LogOut size={16} /> Se déconnecter
+            </button>
+          </div>
         </div>
 
         {erreur && <p style={{ color: 'var(--loo-rouge)', fontWeight: 600, marginTop: '1rem' }}>{erreur}</p>}

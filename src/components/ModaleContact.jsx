@@ -1,36 +1,25 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { MessageCircle, X } from 'lucide-react';
-import { contacterGrossiste } from '../api/fournisseurs.js';
-
-const CLE_STOCKAGE = 'loohoo_vendeur';
-
-// Mémorise les coordonnées sur l'appareil du vendeur uniquement, pour ne pas les retaper à chaque contact
-function lireMemoire() {
-  try {
-    return JSON.parse(localStorage.getItem(CLE_STOCKAGE)) || {};
-  } catch {
-    return {};
-  }
-}
-function ecrireMemoire(champs) {
-  try {
-    localStorage.setItem(CLE_STOCKAGE, JSON.stringify(champs));
-  } catch {
-    // stockage indisponible : sans conséquence
-  }
-}
+import { demarrerConversation, recupererSessionVendeur } from '../api/fournisseurs.js';
 
 export default function ModaleContact({ grossiste, produit, onClose }) {
-  const [champs, setChamps] = useState(() => ({ nom: '', telephone: '', email: '', activite: '', ...lireMemoire() }));
+  const [dejaConnecte, setDejaConnecte] = useState(null); // null = en cours de vérification
+  const [champs, setChamps] = useState({ nom: '', telephone: '', email: '', motDePasse: '', activite: '', message: '' });
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState('');
-  const [lien, setLien] = useState('');
+  const [conversationId, setConversationId] = useState(null);
 
   useEffect(() => {
-    const surTouche = (e) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', surTouche);
-    return () => document.removeEventListener('keydown', surTouche);
-  }, [onClose]);
+    recupererSessionVendeur().then((r) => {
+      if (r?.vendeur) {
+        setDejaConnecte(true);
+        setChamps((c) => ({ ...c, nom: r.vendeur.nom, telephone: r.vendeur.telephone }));
+      } else {
+        setDejaConnecte(false);
+      }
+    });
+  }, []);
 
   const maj = (cle) => (e) => setChamps((c) => ({ ...c, [cle]: e.target.value }));
 
@@ -39,15 +28,14 @@ export default function ModaleContact({ grossiste, produit, onClose }) {
     setEnvoi(true);
     setErreur('');
     try {
-      const lienWhatsApp = await contacterGrossiste({
-        ...champs,
-        grossisteId: grossiste.id,
-        produitId: produit ? produit.id : null,
+      const id = await demarrerConversation({
+        grossisteId: grossiste.id, produitId: produit ? produit.id : null, message: champs.message,
+        nom: champs.nom, telephone: champs.telephone, activite: champs.activite,
+        email: champs.email, password: champs.motDePasse,
       });
-      ecrireMemoire(champs);
-      setLien(lienWhatsApp);
+      setConversationId(id);
     } catch (err) {
-      setErreur(err.message || "Une erreur est survenue. Réessayez dans un instant.");
+      setErreur(err.message || "Impossible d'envoyer le message pour le moment.");
     } finally {
       setEnvoi(false);
     }
@@ -55,51 +43,54 @@ export default function ModaleContact({ grossiste, produit, onClose }) {
 
   return (
     <div className="modale-fond" onClick={onClose}>
-      <div className="modale" role="dialog" aria-modal="true" aria-label="Contacter le fournisseur" onClick={(e) => e.stopPropagation()}>
+      <div className="modale" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
         <button type="button" className="modale-fermer" onClick={onClose} aria-label="Fermer"><X size={20} /></button>
 
-        {lien ? (
+        {conversationId ? (
           <div style={{ textAlign: 'center', padding: '0.5rem 0' }}>
             <MessageCircle size={36} color="var(--loo-rouge)" />
-            <h2 style={{ fontSize: '1.3rem', margin: '0.8rem 0 0.5rem' }}>Demande enregistrée</h2>
-            <p style={{ opacity: 0.8, marginBottom: '1.4rem' }}>
-              Continuez la conversation avec {grossiste.nom} sur WhatsApp.
-            </p>
-            <a href={lien} target="_blank" rel="noreferrer" className="btn btn-primary" onClick={onClose}>
-              Ouvrir WhatsApp
-            </a>
+            <h2 style={{ fontSize: '1.2rem', margin: '0.8rem 0 0.5rem' }}>Message envoyé</h2>
+            <p style={{ opacity: 0.8, marginBottom: '1.2rem' }}>{grossiste.nom} vous répondra directement ici.</p>
+            <Link to={`/conversations/${conversationId}`} className="btn btn-primary" onClick={onClose}>
+              Ouvrir la conversation
+            </Link>
           </div>
         ) : (
           <form onSubmit={envoyer}>
-            <h2 style={{ fontSize: '1.3rem', marginBottom: '0.3rem' }}>Contacter {grossiste.nom}</h2>
-            {produit && <p style={{ margin: 0, opacity: 0.75, fontSize: '0.92rem' }}>À propos de : {produit.nom}</p>}
+            <h2 style={{ fontSize: '1.2rem', marginBottom: '0.3rem' }}>Contacter {grossiste.nom}</h2>
+            {produit && <p style={{ margin: '0 0 0.8rem', opacity: 0.75, fontSize: '0.92rem' }}>À propos de : {produit.nom}</p>}
 
-            <label className="etiquette-champ" htmlFor="c-nom">Votre nom</label>
-            <input id="c-nom" className="champ" required value={champs.nom} onChange={maj('nom')} autoComplete="name" />
+            {dejaConnecte === null && <div className="loo-squelette" style={{ height: '120px' }} />}
 
-            <label className="etiquette-champ" htmlFor="c-tel">Téléphone (WhatsApp)</label>
-            <input id="c-tel" className="champ" type="tel" required value={champs.telephone} onChange={maj('telephone')} autoComplete="tel" />
+            {dejaConnecte === false && (
+              <>
+                <input className="champ" required placeholder="Votre nom" value={champs.nom} onChange={maj('nom')} style={{ marginBottom: '0.6rem' }} />
+                <input className="champ" required type="tel" placeholder="Téléphone" value={champs.telephone} onChange={maj('telephone')} style={{ marginBottom: '0.6rem' }} />
+                <input className="champ" placeholder="Votre activité (facultatif)" value={champs.activite} onChange={maj('activite')} style={{ marginBottom: '0.6rem' }} />
+                <input className="champ" required type="email" placeholder="E-mail" value={champs.email} onChange={maj('email')} autoComplete="email" style={{ marginBottom: '0.6rem' }} />
+                <input className="champ" required type="password" minLength={8} placeholder="Créez un mot de passe (8 caractères min.)" value={champs.motDePasse} onChange={maj('motDePasse')} autoComplete="new-password" style={{ marginBottom: '0.6rem' }} />
+              </>
+            )}
 
-            <label className="etiquette-champ" htmlFor="c-mail">E-mail</label>
-            <input id="c-mail" className="champ" type="email" required value={champs.email} onChange={maj('email')} autoComplete="email" />
+            {dejaConnecte !== null && (
+              <textarea className="champ" required rows={3} placeholder="Votre message" value={champs.message} onChange={maj('message')} style={{ marginBottom: '0.6rem' }} />
+            )}
 
-            <label className="etiquette-champ" htmlFor="c-act">Votre boutique ou activité (facultatif)</label>
-            <input id="c-act" className="champ" value={champs.activite} onChange={maj('activite')} />
+            {erreur && <p style={{ color: 'var(--loo-rouge)', fontWeight: 600, fontSize: '0.88rem', margin: '0 0 0.6rem' }}>{erreur}</p>}
 
-            {erreur && <p style={{ color: 'var(--loo-rouge)', fontWeight: 600, fontSize: '0.9rem', margin: '1rem 0 0' }}>{erreur}</p>}
+            {dejaConnecte !== null && (
+              <button type="submit" className="btn btn-primary" disabled={envoi} style={{ width: '100%', justifyContent: 'center' }}>
+                {envoi ? 'Envoi…' : 'Envoyer'}
+              </button>
+            )}
 
-            <button type="submit" className="btn btn-primary" disabled={envoi} style={{ width: '100%', justifyContent: 'center', marginTop: '1.2rem' }}>
-              {envoi ? 'Envoi…' : 'Envoyer et ouvrir WhatsApp'}
-            </button>
-
-            {/* Mention de consentement provisoire : à faire valider par le client (PDF §10) */}
-            <p style={{ fontSize: '0.76rem', opacity: 0.65, margin: '0.9rem 0 0', lineHeight: 1.5 }}>
-              En envoyant ce formulaire, vous acceptez que LOOHOO enregistre vos coordonnées pour vous mettre en
-              relation avec ce fournisseur. Voir la{' '}
-              <a href="/confidentialite" target="_blank" rel="noreferrer" style={{ textDecoration: 'underline' }}>
-                politique de confidentialité
-              </a>.
-            </p>
+            {dejaConnecte === false && (
+              <p style={{ fontSize: '0.76rem', opacity: 0.65, lineHeight: 1.5, margin: '0.9rem 0 0' }}>
+                En envoyant ce message, vous créez un compte LOOHOO Fournisseurs et acceptez notre{' '}
+                <Link to="/confidentialite" target="_blank" style={{ textDecoration: 'underline' }}>politique de confidentialité</Link>.
+                Vous pourrez vous reconnecter plus tard avec cet e-mail et ce mot de passe.
+              </p>
+            )}
           </form>
         )}
       </div>
