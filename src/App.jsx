@@ -10,6 +10,7 @@ import TableauDeBord from './pages/TableauDeBord.jsx';
 import Conversations from './pages/Conversations.jsx';
 import Conversation from './pages/Conversation.jsx';
 import Mediatheque from './pages/Mediatheque.jsx';
+import Profil from './pages/Profil.jsx';
 import MentionsLegales from './pages/MentionsLegales.jsx';
 import Confidentialite from './pages/Confidentialite.jsx';
 import Conditions from './pages/Conditions.jsx';
@@ -50,6 +51,7 @@ export default function App() {
         <Route path="/conversations" element={<Conversations />} />
         <Route path="/conversations/:id" element={<Conversation />} />
         <Route path="/mediatheque" element={<Mediatheque />} />
+        <Route path="/profil" element={<Profil />} />
         <Route path="/mentions-legales" element={<MentionsLegales />} />
         <Route path="/confidentialite" element={<Confidentialite />} />
         <Route path="/conditions" element={<Conditions />} />

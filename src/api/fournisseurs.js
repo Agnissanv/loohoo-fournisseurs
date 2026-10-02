@@ -27,7 +27,7 @@ export async function recupererFiltres() {
 export async function recupererGrossiste(id) {
   const { data, error } = await supabase
     .from('grossiste')
-    .select('*, grossiste_photo(url, ordre), produit(id, nom, description, poids_grammes, prix_gros_fcfa, moq, photo_url, date_ajout)')
+    .select('id, nom, categorie, ville, commune, pays, origine, est_fabricant, badge_verifie, statut, horaires_ouverture, grossiste_photo(url, ordre), produit(id, nom, description, poids_grammes, prix_gros_fcfa, moq, photo_url, date_ajout)')
     .eq('id', id)
     .maybeSingle();
   if (error) throw error;
@@ -205,4 +205,46 @@ export async function supprimerMedia(id) {
 export async function modifierProduitPhoto(produitId, url) {
   const { error } = await supabase.from('produit').update({ photo_url: url }).eq('id', produitId);
   if (error) throw error;
+}
+
+
+// ---- Profil complet (vue privée du fournisseur) ----
+export async function mettreAJourProfilComplet(id, champs) {
+  const { error } = await supabase.from('grossiste').update(champs).eq('id', id);
+  if (error) throw error;
+}
+
+// ---- Documents administratifs ----
+export async function recupererDocuments(grossisteId) {
+  const { data, error } = await supabase.from('document_fournisseur').select('*').eq('grossiste_id', grossisteId).order('date_ajout', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function televerserDocument(grossisteId, type, fichier) {
+  if (!['image/jpeg', 'image/png', 'application/pdf'].includes(fichier.type)) {
+    throw new Error('Formats acceptés : JPG, PNG, PDF');
+  }
+  if (fichier.size > 10 * 1024 * 1024) throw new Error('Fichier trop volumineux (10 Mo max)');
+
+  const chemin = `${grossisteId}/${Date.now().toString(36)}-${fichier.name}`;
+  const { error: erreurUpload } = await supabase.storage.from('documents').upload(chemin, fichier);
+  if (erreurUpload) throw erreurUpload;
+
+  const { error } = await supabase.from('document_fournisseur').insert({
+    grossiste_id: grossisteId, type, chemin, nom_fichier: fichier.name,
+  });
+  if (error) throw error;
+}
+
+export async function supprimerDocument(id, chemin) {
+  await supabase.storage.from('documents').remove([chemin]);
+  const { error } = await supabase.from('document_fournisseur').delete().eq('id', id);
+  if (error) throw error;
+}
+
+export async function obtenirLienDocument(chemin) {
+  const { data, error } = await supabase.storage.from('documents').createSignedUrl(chemin, 300); // valable 5 minutes
+  if (error) throw error;
+  return data.signedUrl;
 }

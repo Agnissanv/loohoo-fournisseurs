@@ -13,6 +13,7 @@ export default function NavFournisseur() {
     <nav style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.6rem', flexWrap: 'wrap' }}>
       <Link to="/tableau-de-bord" style={lien('/tableau-de-bord')}>Tableau de bord</Link>
       <Link to="/mediatheque" style={lien('/mediatheque')}>Médiathèque</Link>
+      <Link to="/profil" style={lien('/profil')}>Mon profil</Link>
       <Link to="/conversations" style={lien('/conversations')}>Messages</Link>
     </nav>
   );
