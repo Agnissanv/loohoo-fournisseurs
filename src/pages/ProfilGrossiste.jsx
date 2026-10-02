@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, BadgeCheck, Factory, MapPin, MessageCircle, Package } from 'lucide-react';
-import { recupererGrossiste } from '../api/fournisseurs.js';
+import { recupererGrossiste, incrementerVueProfil } from '../api/fournisseurs.js';
+import CaptureSortie from '../components/CaptureSortie.jsx';
 import { optimiserImageCloudinary } from '../utils/cloudinaryOptimize.js';
 import ModaleContact from '../components/ModaleContact.jsx';
 
@@ -25,7 +26,7 @@ export default function ProfilGrossiste() {
     let annule = false;
     setGrossiste(undefined);
     recupererGrossiste(id)
-      .then((g) => { if (!annule) setGrossiste(g); })
+      .then((g) => { if (!annule) setGrossiste(g); if (g) incrementerVueProfil(id); })
       .catch(() => { if (!annule) setGrossiste(null); });
     return () => { annule = true; };
   }, [id]);

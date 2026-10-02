@@ -14,6 +14,7 @@ export default function NavFournisseur() {
       <Link to="/tableau-de-bord" style={lien('/tableau-de-bord')}>Tableau de bord</Link>
       <Link to="/mediatheque" style={lien('/mediatheque')}>Médiathèque</Link>
       <Link to="/profil" style={lien('/profil')}>Mon profil</Link>
+      <Link to="/statistiques" style={lien('/statistiques')}>Statistiques</Link>
       <Link to="/conversations" style={lien('/conversations')}>Messages</Link>
     </nav>
   );

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Search } from 'lucide-react';
 import { rechercherGrossistes, recupererFiltres } from '../api/fournisseurs.js';
+import CaptureSortie from '../components/CaptureSortie.jsx';
 import CarteGrossiste from '../components/CarteGrossiste.jsx';
 
 export default function Annuaire() {
@@ -97,6 +98,7 @@ export default function Annuaire() {
           )}
         </div>
       </section>
+      <CaptureSortie recherche={q} />
     </>
   );
 }

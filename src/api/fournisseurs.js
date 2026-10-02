@@ -248,3 +248,19 @@ export async function obtenirLienDocument(chemin) {
   if (error) throw error;
   return data.signedUrl;
 }
+
+
+export async function capturerLead(email, recherche) {
+  const { error } = await supabase.rpc('capturer_lead', { p_email: email, p_recherche: recherche || null });
+  if (error) throw error;
+}
+
+export async function incrementerVueProfil(id) {
+  await supabase.rpc('incrementer_vue_profil', { p_id: id }).catch(() => {}); // jamais bloquant
+}
+
+export async function recupererMesStats() {
+  const { data, error } = await supabase.rpc('stats_mon_profil');
+  if (error) throw error;
+  return data;
+}
