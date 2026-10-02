@@ -264,3 +264,15 @@ export async function recupererMesStats() {
   if (error) throw error;
   return data;
 }
+
+
+export async function compterMessagesNonLus(role) {
+  const autre = role === 'vendeur' ? 'fournisseur' : 'vendeur';
+  const { count, error } = await supabase
+    .from('message')
+    .select('id', { count: 'exact', head: true })
+    .eq('expediteur', autre)
+    .eq('lu', false);
+  if (error) return 0;
+  return count || 0;
+}
