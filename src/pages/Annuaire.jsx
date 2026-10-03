@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Search } from 'lucide-react';
-import { rechercherGrossistes, recupererFiltres } from '../api/fournisseurs.js';
+import { rechercherProduits, recupererFiltres } from '../api/fournisseurs.js';
+import CarteProduit from '../components/CarteProduit.jsx';
 import CaptureSortie from '../components/CaptureSortie.jsx';
-import CarteGrossiste from '../components/CarteGrossiste.jsx';
 
 export default function Annuaire() {
   const [q, setQ] = useState('');
@@ -14,17 +13,14 @@ export default function Annuaire() {
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(false);
 
-  useEffect(() => {
-    recupererFiltres().then(setFiltres).catch(() => {});
-  }, []);
+  useEffect(() => { recupererFiltres().then(setFiltres).catch(() => {}); }, []);
 
-  // Recherche avec un petit délai pour ne pas interroger la base à chaque lettre tapée
   useEffect(() => {
     let annule = false;
     setChargement(true);
     setErreur(false);
     const delai = setTimeout(() => {
-      rechercherGrossistes({ q, categorie, ville, commune })
+      rechercherProduits({ q, categorie, ville, commune })
         .then((liste) => { if (!annule) { setResultats(liste); setChargement(false); } })
         .catch(() => { if (!annule) { setErreur(true); setChargement(false); } });
     }, 350);
@@ -39,33 +35,24 @@ export default function Annuaire() {
         <div className="container">
           <span className="badge" style={styles.badgeMali}>Bientôt au Mali</span>
           <h1 style={styles.titre}>Le seul endroit où trouver un fournisseur vérifié.</h1>
-          <p style={styles.sousTitre}>
-            La marketplace des fournisseurs — Côte d'Ivoire aujourd'hui, l'Afrique demain.
-          </p>
+          <p style={styles.sousTitre}>Recherchez directement le produit que vous voulez acheter en gros.</p>
 
           <div style={styles.recherche}>
-            <div style={styles.champRecherche}>
-              <Search size={18} style={styles.iconeRecherche} />
-              <input
-                className="champ"
-                style={{ paddingLeft: '2.8em' }}
-                type="search"
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Que cherchez-vous ? (ex. sac à main, sérum visage, pagne…)"
-                aria-label="Rechercher un produit"
-              />
-            </div>
-            <select className="champ" style={styles.select} value={categorie} onChange={(e) => setCategorie(e.target.value)} aria-label="Catégorie">
+            <input
+              className="champ" style={{ flex: '1 1 320px' }} type="search" value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Que cherchez-vous ? (ex. sac à main, sérum visage, pagne…)"
+            />
+            <select className="champ" style={styles.select} value={categorie} onChange={(e) => setCategorie(e.target.value)}>
               <option value="">Toutes les catégories</option>
               {filtres.categories.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
-            <select className="champ" style={styles.select} value={ville} onChange={(e) => setVille(e.target.value)} aria-label="Ville">
+            <select className="champ" style={styles.select} value={ville} onChange={(e) => setVille(e.target.value)}>
               <option value="">Toutes les villes</option>
               {filtres.villes.map((v) => <option key={v} value={v}>{v}</option>)}
             </select>
             {filtres.communes.length > 0 && (
-              <select className="champ" style={styles.select} value={commune} onChange={(e) => setCommune(e.target.value)} aria-label="Commune">
+              <select className="champ" style={styles.select} value={commune} onChange={(e) => setCommune(e.target.value)}>
                 <option value="">Toutes les communes</option>
                 {filtres.communes.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
@@ -76,22 +63,16 @@ export default function Annuaire() {
 
       <section className="section" style={{ paddingTop: '2.5rem' }}>
         <div className="container">
-          {erreur && (
-            <p style={{ opacity: 0.75 }}>Impossible de charger les fournisseurs pour le moment. Réessayez dans un instant.</p>
-          )}
-
+          {erreur && <p style={{ opacity: 0.75 }}>Impossible de charger les produits pour le moment.</p>}
           {!erreur && resultats === null && <SqueletteGrille />}
-
           {!erreur && resultats !== null && (
             nb === 0 ? (
-              <p style={{ opacity: 0.75 }}>Aucun fournisseur ne correspond à votre recherche pour l'instant.</p>
+              <p style={{ opacity: 0.75 }}>Aucun produit ne correspond à votre recherche pour l'instant.</p>
             ) : (
               <>
-                <p className="etiquette" style={{ marginBottom: '1rem' }}>
-                  {nb} fournisseur{nb > 1 ? 's' : ''}
-                </p>
-                <div className="grille-grossistes" style={{ opacity: chargement ? 0.55 : 1, transition: 'opacity 0.15s' }}>
-                  {resultats.map((g) => <CarteGrossiste key={g.id} grossiste={g} />)}
+                <p className="etiquette" style={{ marginBottom: '1rem' }}>{nb} produit{nb > 1 ? 's' : ''}</p>
+                <div className="loo-fournisseurs-grille" style={{ opacity: chargement ? 0.55 : 1 }}>
+                  {resultats.map((p) => <CarteProduit key={p.id} p={p} />)}
                 </div>
               </>
             )
@@ -105,12 +86,12 @@ export default function Annuaire() {
 
 function SqueletteGrille() {
   return (
-    <div className="grille-grossistes">
-      {Array.from({ length: 6 }).map((_, i) => (
+    <div className="loo-fournisseurs-grille">
+      {Array.from({ length: 8 }).map((_, i) => (
         <div key={i} className="carte" style={{ padding: '0.9rem' }}>
-          <div className="loo-squelette" style={{ aspectRatio: '4 / 3', marginBottom: '0.8rem' }} />
-          <div className="loo-squelette" style={{ width: '70%', height: '14px', marginBottom: '0.5rem' }} />
-          <div className="loo-squelette" style={{ width: '40%', height: '12px' }} />
+          <div className="loo-squelette" style={{ aspectRatio: '4 / 3', marginBottom: '0.7rem' }} />
+          <div className="loo-squelette" style={{ width: '80%', height: '13px', marginBottom: '0.5rem' }} />
+          <div className="loo-squelette" style={{ width: '45%', height: '13px' }} />
         </div>
       ))}
     </div>
@@ -123,7 +104,5 @@ const styles = {
   titre: { fontSize: 'clamp(2rem, 4.6vw, 3.2rem)', lineHeight: 1.08, margin: '1rem 0 0.8rem', color: 'var(--loo-papier)', maxWidth: '20ch' },
   sousTitre: { maxWidth: '520px', opacity: 0.92, margin: '0 0 1.8rem', fontSize: '1.05rem' },
   recherche: { display: 'flex', gap: '0.7rem', flexWrap: 'wrap' },
-  champRecherche: { position: 'relative', flex: '1 1 320px' },
-  iconeRecherche: { position: 'absolute', left: '1em', top: '50%', transform: 'translateY(-50%)', color: 'var(--loo-encre)', opacity: 0.5 },
-  select: { flex: '0 1 200px' },
+  select: { flex: '0 1 180px' },
 };

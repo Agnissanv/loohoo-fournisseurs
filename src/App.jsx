@@ -4,6 +4,7 @@ import Header from './components/Header.jsx';
 import Footer from './components/Footer.jsx';
 import Annuaire from './pages/Annuaire.jsx';
 import ProfilGrossiste from './pages/ProfilGrossiste.jsx';
+import ProduitDetail from './pages/ProduitDetail.jsx';
 import Connexion from './pages/Connexion.jsx';
 import Inscription from './pages/Inscription.jsx';
 import TableauDeBord from './pages/TableauDeBord.jsx';
@@ -46,6 +47,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Annuaire />} />
         <Route path="/grossiste/:id" element={<ProfilGrossiste />} />
+        <Route path="/produit/:id" element={<ProduitDetail />} />
         <Route path="/connexion" element={<Connexion />} />
         <Route path="/inscription" element={<Inscription />} />
         <Route path="/tableau-de-bord" element={<TableauDeBord />} />

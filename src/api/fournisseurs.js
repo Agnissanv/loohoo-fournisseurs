@@ -293,3 +293,52 @@ export async function supprimerPhotoProfil(id) {
   const { error } = await supabase.from('grossiste_photo').delete().eq('id', id);
   if (error) throw error;
 }
+
+
+// ---- Recherche de produits (nouvelle page d'accueil de l'annuaire) ----
+export async function rechercherProduits({ q = '', categorie = '', ville = '', commune = '' } = {}) {
+  const { data, error } = await supabase.rpc('rechercher_produits', {
+    p_q: q.trim() || null, p_categorie: categorie || null, p_ville: ville || null, p_commune: commune || null,
+  });
+  if (error) throw error;
+  return data;
+}
+
+// Fiche produit publique complète (galerie, vidéo, infos du fournisseur)
+export async function recupererProduitPublic(id) {
+  const { data, error } = await supabase
+    .from('produit')
+    .select(`
+      id, nom, description, tags, categorie, sous_categorie, video_url,
+      prix_gros_fcfa, prix_unitaire_fcfa, moq, unite, poids_grammes,
+      produit_photo(url, ordre),
+      grossiste(id, nom, badge_verifie, est_fabricant, ville, commune, statut, logo_url)
+    `)
+    .eq('id', id).eq('statut', 'publie').eq('actif', true)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data || data.grossiste?.statut !== 'publie') return null;
+  return { ...data, photos: [...(data.produit_photo || [])].sort((a, b) => a.ordre - b.ordre).map((p) => p.url) };
+}
+
+// ---- Galerie et vidéo d'un produit (gérées par le fournisseur) ----
+export async function recupererGaleriePhotosProduit(produitId) {
+  const { data, error } = await supabase.from('produit_photo').select('*').eq('produit_id', produitId).order('ordre');
+  if (error) throw error;
+  return data;
+}
+
+export async function ajouterPhotoProduit(produitId, url, ordre) {
+  const { error } = await supabase.from('produit_photo').insert({ produit_id: produitId, url, ordre });
+  if (error) throw error;
+}
+
+export async function supprimerPhotoProduit(id) {
+  const { error } = await supabase.from('produit_photo').delete().eq('id', id);
+  if (error) throw error;
+}
+
+export async function mettreAJourVideoProduit(produitId, videoUrl) {
+  const { error } = await supabase.from('produit').update({ video_url: videoUrl }).eq('id', produitId);
+  if (error) throw error;
+}

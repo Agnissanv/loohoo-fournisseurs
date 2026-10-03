@@ -93,3 +93,25 @@ export async function supprimerPhotoStockage(url) {
   const chemin = url.slice(index + marqueur.length);
   await supabase.storage.from('photos').remove([chemin]);
 }
+
+
+const TAILLE_MAX_VIDEO = 50 * 1024 * 1024;
+
+export async function televerserVideo(grossisteId, fichier) {
+  if (!fichier.type.startsWith('video/')) throw new Error('Le fichier doit être une vidéo');
+  if (fichier.size > TAILLE_MAX_VIDEO) throw new Error('Vidéo trop volumineuse (50 Mo max)');
+
+  const chemin = `${grossisteId}/${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  const { error } = await supabase.storage.from('videos').upload(chemin, fichier);
+  if (error) throw error;
+
+  const { data } = supabase.storage.from('videos').getPublicUrl(chemin);
+  return data.publicUrl;
+}
+
+export async function supprimerVideoStockage(url) {
+  const marqueur = '/object/public/videos/';
+  const index = url.indexOf(marqueur);
+  if (index === -1) return;
+  await supabase.storage.from('videos').remove([url.slice(index + marqueur.length)]);
+}
