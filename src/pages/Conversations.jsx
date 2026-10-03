@@ -16,10 +16,13 @@ export default function Conversations() {
   useEffect(() => {
     if (session === undefined) return;
     if (session === null) { navigate('/connexion'); return; }
-    recupererMonRole().then((r) => setRole(r.role));
+    recupererMonRole().then((r) => setRole(r.role)).catch((err) => setErreur(err.message));
     recupererMesConversations().then(setListe).catch((err) => setErreur(err.message));
   }, [session, navigate]);
 
+  if (erreur) {
+    return <section className="section"><div className="container"><p style={{ color: 'var(--loo-rouge)', fontWeight: 600 }}>{erreur}</p></div></section>;
+  }
   if (session === undefined || liste === undefined) {
     return <section className="section"><div className="container"><div className="loo-squelette" style={{ height: '200px' }} /></div></section>;
   }
@@ -33,7 +36,6 @@ export default function Conversations() {
           </Link>
         )}
         <h1 className="section-titre">Mes conversations</h1>
-        {erreur && <p style={{ color: 'var(--loo-rouge)' }}>{erreur}</p>}
         {liste.length === 0 && <p style={{ opacity: 0.7 }}>Aucune conversation pour l'instant.</p>}
 
         <div style={{ display: 'grid', gap: '0.7rem' }}>
