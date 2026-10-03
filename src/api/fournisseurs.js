@@ -276,3 +276,20 @@ export async function compterMessagesNonLus(role) {
   if (error) return 0;
   return count || 0;
 }
+
+
+// ---- Téléphone et photos du profil (celles qui bloquent la publication) ----
+export async function mettreAJourTelephone(grossisteId, telephone) {
+  const { error } = await supabase.from('grossiste_contact').upsert({ grossiste_id: grossisteId, telephone }, { onConflict: 'grossiste_id' });
+  if (error) throw error;
+}
+
+export async function ajouterPhotoProfil(grossisteId, url, ordre) {
+  const { error } = await supabase.from('grossiste_photo').insert({ grossiste_id: grossisteId, url, ordre });
+  if (error) throw error;
+}
+
+export async function supprimerPhotoProfil(id) {
+  const { error } = await supabase.from('grossiste_photo').delete().eq('id', id);
+  if (error) throw error;
+}

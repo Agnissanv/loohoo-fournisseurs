@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, Trash2, Upload } from 'lucide-react';
+import { Download, Image as IconeImage, Trash2, Upload } from 'lucide-react';
 import NavFournisseur from '../components/NavFournisseur.jsx';
 import {
-  suivreSession, recupererMonProfil, mettreAJourProfilComplet,
+  suivreSession, recupererMonProfil, mettreAJourProfilComplet, mettreAJourTelephone,
+  ajouterPhotoProfil, supprimerPhotoProfil,
   recupererDocuments, televerserDocument, supprimerDocument, obtenirLienDocument,
 } from '../api/fournisseurs.js';
+import { televerserPhoto, supprimerPhotoStockage } from '../utils/stockagePhotos.js';
 
 const JOURS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
 const TYPES_DOCUMENT = {
@@ -79,12 +81,42 @@ export default function Profil() {
 
     try {
       await mettreAJourProfilComplet(profil.id, champs);
-      setProfil((p) => ({ ...p, ...champs }));
+      await mettreAJourTelephone(profil.id, form.get('telephone'));
+      setProfil((p) => ({ ...p, ...champs, grossiste_contact: [{ telephone: form.get('telephone') }] }));
       setSucces(true);
     } catch (err) {
       setErreur(err.message);
     } finally {
       setEnregistrement(false);
+    }
+  }
+
+  const photosProfil = profil.grossiste_photo || [];
+
+  async function ajouterPhoto(e) {
+    const fichier = e.target.files?.[0];
+    if (!fichier) return;
+    setTeleversement(true);
+    setErreur('');
+    try {
+      const url = await televerserPhoto(profil.id, fichier);
+      await ajouterPhotoProfil(profil.id, url, photosProfil.length);
+      setProfil((p) => ({ ...p, grossiste_photo: [...(p.grossiste_photo || []), { id: `temp-${Date.now()}`, url, ordre: photosProfil.length }] }));
+    } catch (err) {
+      setErreur(err.message);
+    } finally {
+      setTeleversement(false);
+      e.target.value = '';
+    }
+  }
+
+  async function retirerPhoto(photo) {
+    try {
+      await supprimerPhotoProfil(photo.id);
+      await supprimerPhotoStockage(photo.url);
+      setProfil((p) => ({ ...p, grossiste_photo: p.grossiste_photo.filter((x) => x.id !== photo.id) }));
+    } catch (err) {
+      setErreur(err.message);
     }
   }
 
@@ -155,6 +187,10 @@ export default function Profil() {
               </div>
             </div>
 
+            <label style={{ ...styles.etiquette, marginTop: '0.8rem' }}>Téléphone (WhatsApp)</label>
+            <input className="champ" name="telephone" type="tel" required defaultValue={profil.grossiste_contact?.[0]?.telephone || ''} placeholder="Ex. : 2250700000000" />
+            <p style={styles.aide}>Jamais affiché publiquement — uniquement transmis via le chat après une demande de contact.</p>
+
             <label style={{ ...styles.etiquette, marginTop: '0.8rem' }}>Adresse complète</label>
             <input className="champ" name="adresse" defaultValue={profil.adresse || ''} placeholder="Non affichée publiquement" />
             <p style={styles.aide}>Visible uniquement par vous et par l'équipe LOOHOO, pour la vérification.</p>
@@ -192,6 +228,28 @@ export default function Profil() {
             {enregistrement ? 'Enregistrement…' : 'Enregistrer le profil'}
           </button>
         </form>
+
+        <h2 style={{ fontSize: '1.3rem', marginBottom: '0.5rem' }}>Photos du profil ({photosProfil.length}/3)</h2>
+        <p style={{ opacity: 0.7, fontSize: '0.9rem', marginBottom: '1.2rem' }}>
+          Au moins une photo est nécessaire pour que votre profil puisse être publié.
+        </p>
+        <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', marginBottom: '2rem' }}>
+          {photosProfil.map((p) => (
+            <div key={p.id} style={{ position: 'relative' }}>
+              <img src={p.url} alt="" style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: 'var(--rayon-sm)' }} />
+              <button type="button" onClick={() => retirerPhoto(p)} style={{ position: 'absolute', top: '-8px', right: '-8px', background: 'var(--loo-rouge)', color: '#fff', border: 0, borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer' }}>
+                <Trash2 size={13} />
+              </button>
+            </div>
+          ))}
+          {photosProfil.length < 3 && (
+            <label className="btn btn-outline" style={{ width: '100px', height: '100px', flexDirection: 'column', gap: '0.3rem', fontSize: '0.75rem', cursor: 'pointer' }}>
+              <IconeImage size={18} />
+              {televersement ? 'Envoi…' : 'Ajouter'}
+              <input type="file" accept="image/jpeg,image/png,image/webp" hidden disabled={televersement} onChange={ajouterPhoto} />
+            </label>
+          )}
+        </div>
 
         <h2 style={{ fontSize: '1.3rem', marginBottom: '0.5rem' }}>Documents administratifs</h2>
         <p style={{ opacity: 0.7, fontSize: '0.9rem', marginBottom: '1.2rem', maxWidth: '560px' }}>
