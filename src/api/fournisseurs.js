@@ -114,7 +114,7 @@ export async function recupererMonRole() {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return { session: null, role: null };
   const [{ data: g }, { data: v }] = await Promise.all([
-    supabase.from('grossiste').select('id').eq('user_id', session.user.id).maybeSingle(),
+    supabase.from('grossiste').select('id, nom').eq('user_id', session.user.id).maybeSingle(),
     supabase.from('vendeur').select('id, nom, telephone').eq('user_id', session.user.id).maybeSingle(),
   ]);
   if (g) return { session, role: 'fournisseur', profil: g };
