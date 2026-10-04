@@ -55,9 +55,12 @@ export default function Header() {
               </button>
             </>
           ) : (
-            <Link to="/connexion" className="btn btn-primary" style={{ padding: '0.5em 1.1em', fontSize: '0.85rem', border: 0 }}>
-              Se connecter
-            </Link>
+            <>
+              <Link to="/creer-compte" style={styles.lien}>Créer un compte</Link>
+              <Link to="/connexion" className="btn btn-primary" style={{ padding: '0.5em 1.1em', fontSize: '0.85rem', border: 0 }}>
+                Se connecter
+              </Link>
+            </>
           )}
           <a href="https://looh-oo.com" style={styles.lien}>← looh-oo.com</a>
         </div>

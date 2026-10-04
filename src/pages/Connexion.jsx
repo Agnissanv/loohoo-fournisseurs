@@ -39,7 +39,11 @@ export default function Connexion() {
         </form>
         <p style={{ marginTop: '1.2rem', fontSize: '0.9rem' }}>
           Pas encore de compte ?{' '}
-          <Link to="/inscription" style={{ textDecoration: 'underline', fontWeight: 600 }}>Créer mon compte fournisseur</Link>
+          <Link to="/creer-compte" style={{ textDecoration: 'underline', fontWeight: 600 }}>Créer un compte</Link>
+        </p>
+        <p style={{ marginTop: '0.5rem', fontSize: '0.85rem', opacity: 0.7 }}>
+          Vous êtes un fournisseur ?{' '}
+          <Link to="/inscription" style={{ textDecoration: 'underline' }}>Créer votre compte fournisseur</Link>
         </p>
       </div>
     </section>

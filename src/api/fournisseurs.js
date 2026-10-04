@@ -342,3 +342,11 @@ export async function mettreAJourVideoProduit(produitId, videoUrl) {
   const { error } = await supabase.from('produit').update({ video_url: videoUrl }).eq('id', produitId);
   if (error) throw error;
 }
+
+
+export async function inscrireVendeur({ email, password, nom, telephone, activite }) {
+  const { error: erreurCompte } = await supabase.auth.signUp({ email, password });
+  if (erreurCompte) throw erreurCompte;
+  const { error } = await supabase.rpc('creer_profil_vendeur', { p_nom: nom, p_telephone: telephone, p_activite: activite || null });
+  if (error) throw error;
+}

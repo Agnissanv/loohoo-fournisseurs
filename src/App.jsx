@@ -7,6 +7,7 @@ import ProfilGrossiste from './pages/ProfilGrossiste.jsx';
 import ProduitDetail from './pages/ProduitDetail.jsx';
 import Connexion from './pages/Connexion.jsx';
 import Inscription from './pages/Inscription.jsx';
+import InscriptionVendeur from './pages/InscriptionVendeur.jsx';
 import TableauDeBord from './pages/TableauDeBord.jsx';
 import Conversations from './pages/Conversations.jsx';
 import Conversation from './pages/Conversation.jsx';
@@ -50,6 +51,7 @@ export default function App() {
         <Route path="/produit/:id" element={<ProduitDetail />} />
         <Route path="/connexion" element={<Connexion />} />
         <Route path="/inscription" element={<Inscription />} />
+        <Route path="/creer-compte" element={<InscriptionVendeur />} />
         <Route path="/tableau-de-bord" element={<TableauDeBord />} />
         <Route path="/conversations" element={<Conversations />} />
         <Route path="/conversations/:id" element={<Conversation />} />
