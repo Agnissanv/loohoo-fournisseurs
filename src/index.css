@@ -209,3 +209,10 @@ img { max-width: 100%; display: block; }
 .texte-legal a { color: var(--loo-rouge); text-decoration: underline; }
 .texte-legal-maj { font-family: var(--police-etiquette); font-size: 0.8rem; opacity: 0.6; margin: 0 0 1.5rem; }
 .a-completer { background: #FFE9A8; padding: 0 0.3em; border-radius: 3px; font-weight: 600; }
+
+
+/* ---- sécurité : les images de carte produit ne doivent jamais dépasser une hauteur raisonnable ---- */
+.loo-fournisseurs-grille > .carte img,
+.loo-fournisseurs-grille > .carte > div:first-child {
+  max-height: 220px !important;
+}
