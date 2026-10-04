@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import NavFournisseur from '../components/NavFournisseur.jsx';
 import SelecteurPhoto from '../components/SelecteurPhoto.jsx';
+import GaleriePhotosProduit from '../components/GaleriePhotosProduit.jsx';
 import { Image as IconeImage, Plus, Trash2, LogOut } from 'lucide-react';
 import {
   suivreSession, recupererMonProfil, deconnecterFournisseur,
@@ -23,6 +24,7 @@ export default function TableauDeBord() {
   const [erreur, setErreur] = useState('');
   const [photoChoisie, setPhotoChoisie] = useState(null);
   const [selecteurOuvert, setSelecteurOuvert] = useState(false);
+  const [galerieProduit, setGalerieProduit] = useState(null);
 
   useEffect(() => suivreSession(setSession), []);
 
@@ -153,9 +155,14 @@ export default function TableauDeBord() {
                   )}
                 </div>
               </div>
-              <button type="button" className="btn btn-outline" style={{ padding: '0.4em 0.8em' }} onClick={() => supprimer(p.id)} aria-label="Supprimer">
-                <Trash2 size={15} />
-              </button>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button type="button" className="btn btn-outline" style={{ padding: '0.4em 0.8em', fontSize: '0.8rem' }} onClick={() => setGalerieProduit(p)}>
+                  Photos & vidéo
+                </button>
+                <button type="button" className="btn btn-outline" style={{ padding: '0.4em 0.8em' }} onClick={() => supprimer(p.id)} aria-label="Supprimer">
+                  <Trash2 size={15} />
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -270,6 +277,15 @@ export default function TableauDeBord() {
           grossisteId={profil.id}
           onChoisir={(url) => { setPhotoChoisie(url); setSelecteurOuvert(false); }}
           onClose={() => setSelecteurOuvert(false)}
+        />
+      )}
+
+      {galerieProduit && (
+        <GaleriePhotosProduit
+          produit={galerieProduit}
+          grossisteId={profil.id}
+          onClose={() => setGalerieProduit(null)}
+          onChange={() => recupererMonProfil(session.user.id).then(setProfil)}
         />
       )}
     </section>

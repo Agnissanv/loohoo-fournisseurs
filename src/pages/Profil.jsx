@@ -30,6 +30,8 @@ export default function Profil() {
   const [documents, setDocuments] = useState(undefined);
   const [enregistrement, setEnregistrement] = useState(false);
   const [televersement, setTeleversement] = useState(false);
+  const [logoEnvoi, setLogoEnvoi] = useState(false);
+  const [banniereEnvoi, setBanniereEnvoi] = useState(false);
   const [erreur, setErreur] = useState('');
   const [succes, setSucces] = useState(false);
 
@@ -92,6 +94,40 @@ export default function Profil() {
   }
 
   const photosProfil = profil.grossiste_photo || [];
+
+  async function changerLogo(e) {
+    const fichier = e.target.files?.[0];
+    if (!fichier) return;
+    setLogoEnvoi(true);
+    setErreur('');
+    try {
+      const url = await televerserPhoto(profil.id, fichier);
+      await mettreAJourProfilComplet(profil.id, { logo_url: url });
+      setProfil((p) => ({ ...p, logo_url: url }));
+    } catch (err) {
+      setErreur(err.message);
+    } finally {
+      setLogoEnvoi(false);
+      e.target.value = '';
+    }
+  }
+
+  async function changerBanniere(e) {
+    const fichier = e.target.files?.[0];
+    if (!fichier) return;
+    setBanniereEnvoi(true);
+    setErreur('');
+    try {
+      const url = await televerserPhoto(profil.id, fichier);
+      await mettreAJourProfilComplet(profil.id, { banniere_url: url });
+      setProfil((p) => ({ ...p, banniere_url: url }));
+    } catch (err) {
+      setErreur(err.message);
+    } finally {
+      setBanniereEnvoi(false);
+      e.target.value = '';
+    }
+  }
 
   async function ajouterPhoto(e) {
     const fichier = e.target.files?.[0];
@@ -198,6 +234,36 @@ export default function Profil() {
             <label style={{ ...styles.etiquette, marginTop: '0.8rem' }}>Site web (facultatif)</label>
             <input className="champ" name="site_web" defaultValue={profil.site_web || ''} />
             <p style={styles.aide}>Usage interne uniquement — jamais affiché sur votre fiche publique.</p>
+          </fieldset>
+
+          <fieldset style={styles.groupe}>
+            <legend style={styles.legende}>Logo et bannière (fiche publique)</legend>
+            <div style={{ display: 'flex', gap: '1.2rem', flexWrap: 'wrap' }}>
+              <div>
+                <p style={styles.etiquette}>Logo</p>
+                {profil.logo_url ? (
+                  <img src={profil.logo_url} alt="" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '10px', marginBottom: '0.5rem' }} />
+                ) : (
+                  <div style={{ width: '80px', height: '80px', background: 'var(--loo-papier-ombre)', borderRadius: '10px', marginBottom: '0.5rem' }} />
+                )}
+                <label className="btn btn-outline" style={{ fontSize: '0.78rem', padding: '0.35em 0.7em', cursor: 'pointer', display: 'inline-flex' }}>
+                  <IconeImage size={13} /> {logoEnvoi ? 'Envoi…' : 'Changer'}
+                  <input type="file" accept="image/jpeg,image/png,image/webp" hidden disabled={logoEnvoi} onChange={changerLogo} />
+                </label>
+              </div>
+              <div>
+                <p style={styles.etiquette}>Bannière</p>
+                {profil.banniere_url ? (
+                  <img src={profil.banniere_url} alt="" style={{ width: '220px', height: '80px', objectFit: 'cover', borderRadius: '10px', marginBottom: '0.5rem' }} />
+                ) : (
+                  <div style={{ width: '220px', height: '80px', background: 'var(--loo-papier-ombre)', borderRadius: '10px', marginBottom: '0.5rem' }} />
+                )}
+                <label className="btn btn-outline" style={{ fontSize: '0.78rem', padding: '0.35em 0.7em', cursor: 'pointer', display: 'inline-flex' }}>
+                  <IconeImage size={13} /> {banniereEnvoi ? 'Envoi…' : 'Changer'}
+                  <input type="file" accept="image/jpeg,image/png,image/webp" hidden disabled={banniereEnvoi} onChange={changerBanniere} />
+                </label>
+              </div>
+            </div>
           </fieldset>
 
           <fieldset style={styles.groupe}>
