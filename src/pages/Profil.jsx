@@ -264,7 +264,7 @@ export default function Profil() {
                 </label>
               </div>
             </div>
-          </fieldset>
+          </fieldset> 
 
           <fieldset style={styles.groupe}>
             <legend style={styles.legende}>Réseaux sociaux (usage interne)</legend>
