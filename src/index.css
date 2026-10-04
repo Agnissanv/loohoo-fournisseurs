@@ -216,3 +216,11 @@ img { max-width: 100%; display: block; }
 .loo-fournisseurs-grille > .carte > div:first-child {
   max-height: 220px !important;
 }
+
+
+/* ---- grille produits (dense, façon Alibaba) ---- */
+.loo-fournisseurs-grille {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+}
