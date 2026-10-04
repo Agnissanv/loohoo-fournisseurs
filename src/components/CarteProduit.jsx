@@ -29,7 +29,7 @@ export default function CarteProduit({ p }) {
 const styles = {
   carte: { display: 'flex', flexDirection: 'column', gap: '0.4rem', padding: '0.9rem' },
   imageBloc: {
-    aspectRatio: '4 / 3', background: 'var(--loo-papier-ombre)', borderRadius: '4px 14px 4px 14px',
+    height: '160px', background: 'var(--loo-papier-ombre)', borderRadius: '4px 14px 4px 14px',
     display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
   },
   image: { width: '100%', height: '100%', objectFit: 'cover' },

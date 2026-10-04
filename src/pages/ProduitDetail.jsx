@@ -91,7 +91,7 @@ export default function ProduitDetail() {
 
 const styles = {
   retour: { display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600, fontSize: '0.9rem', color: 'var(--loo-rouge)', marginBottom: '1.5rem' },
-  imagePrincipale: { aspectRatio: '1', borderRadius: '4px 20px 4px 20px', overflow: 'hidden', background: 'var(--loo-papier-ombre)' },
+  imagePrincipale: { height: '360px', borderRadius: '4px 20px 4px 20px', overflow: 'hidden', background: 'var(--loo-papier-ombre)' },
   miniature: { width: '60px', height: '60px', borderRadius: '6px', overflow: 'hidden', border: '2px solid', padding: 0, cursor: 'pointer', background: 'none' },
   prixLigne: { display: 'flex', alignItems: 'baseline', gap: '0.8rem', flexWrap: 'wrap' },
   prix: { fontFamily: 'var(--police-etiquette)', fontWeight: 700, color: 'var(--loo-rouge)', fontSize: '1.3rem' },
