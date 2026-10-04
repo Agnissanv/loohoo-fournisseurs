@@ -41,7 +41,7 @@ export default function Header() {
           {session === undefined ? null : identite ? (
             <>
               <span style={{ fontSize: '0.82rem', opacity: 0.55 }}>
-                Connecté{identite.role === 'fournisseur' ? ' en tant que fournisseur' : ''} — {identite.nom}
+                Bonjour{identite.role === 'fournisseur' ? ' ' : ''}  {identite.nom}
               </span>
               {identite.role === 'fournisseur' && (
                 <Link to="/tableau-de-bord" style={styles.lien}>Tableau de bord</Link>
