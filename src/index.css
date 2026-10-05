@@ -381,3 +381,24 @@ img { max-width: 100%; display: block; }
   .msg-retour { display: inline-flex; }
   .msg-bulle { max-width: 88%; }
 }
+
+
+/* ====== Pages d'accès : connexion et inscription ====== */
+.acces-page { display: flex; justify-content: center; padding: 2.5rem 1rem 4rem; }
+.acces-carte { width: min(100%, 460px); background: var(--loo-blanc); border: 1px solid var(--loo-papier-ombre); border-radius: var(--coupe); box-shadow: var(--ombre-carte); padding: 1.8rem; }
+.acces-titre { font-size: clamp(1.5rem, 4vw, 1.9rem); margin: 0 0 0.4rem; }
+.acces-sous { margin: 0 0 1.3rem; opacity: 0.75; font-size: 0.95rem; line-height: 1.5; }
+.acces-form { display: grid; gap: 0.85rem; }
+.acces-champ-bloc { display: grid; gap: 0.3rem; }
+.acces-champ-bloc > label { font-weight: 600; font-size: 0.86rem; }
+.acces-aide { font-size: 0.78rem; opacity: 0.65; margin: 0; line-height: 1.45; }
+.acces-erreur { color: var(--loo-rouge); font-weight: 600; font-size: 0.9rem; margin: 0; }
+.acces-pied { margin-top: 1.3rem; padding-top: 1.1rem; border-top: 1px solid var(--loo-papier-ombre); font-size: 0.9rem; }
+.acces-lien { text-decoration: underline; font-weight: 600; }
+.acces-choix { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 1.1rem; width: min(100%, 780px); }
+.acces-choix-carte { display: flex; flex-direction: column; gap: 0.6rem; padding: 1.6rem; background: var(--loo-blanc); border: 2px solid var(--loo-papier-ombre); border-radius: var(--coupe); box-shadow: var(--ombre-carte); transition: transform 0.15s ease, border-color 0.15s ease; }
+.acces-choix-carte:hover { transform: translateY(-3px); border-color: var(--loo-rouge); }
+.acces-choix-icone { width: 54px; height: 54px; border-radius: 14px; background: #FFF1E0; color: var(--loo-rouge); display: inline-flex; align-items: center; justify-content: center; }
+.acces-etapes { display: flex; gap: 0.4rem; margin-bottom: 1.1rem; }
+.acces-etapes span { flex: 1; height: 5px; border-radius: 999px; background: var(--loo-papier-ombre); }
+.acces-etapes span.fait { background: var(--gradient-marque); }

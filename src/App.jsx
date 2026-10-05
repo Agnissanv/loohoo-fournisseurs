@@ -1,10 +1,11 @@
 import React, { useEffect } from 'react';
-import { Routes, Route, Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Routes, Route, Link, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Header from './components/Header.jsx';
 import Footer from './components/Footer.jsx';
 import LayoutEspace from './components/LayoutEspace.jsx';
 import { suivreSession, finaliserInscriptionEnAttente } from './api/fournisseurs.js';
 import Produits from './pages/Produits.jsx';
+import ChoixInscription from './pages/ChoixInscription.jsx';
 import ProduitFormulaire from './pages/ProduitFormulaire.jsx';
 import Annuaire from './pages/Annuaire.jsx';
 import ProfilGrossiste from './pages/ProfilGrossiste.jsx';
@@ -80,11 +81,14 @@ export default function App() {
           <Route path="/grossiste/:id" element={<ProfilGrossiste />} />
           <Route path="/produit/:id" element={<ProduitDetail />} />
           <Route path="/connexion" element={<Connexion />} />
-          <Route path="/inscription" element={<Inscription />} />
+          <Route path="/inscription" element={<ChoixInscription />} />
+          <Route path="/inscription/fournisseur" element={<Inscription />} />
+          <Route path="/inscription/acheteur" element={<InscriptionVendeur />} />
           <Route path="/devenir-fournisseur" element={<DevenirFournisseur />} />
           <Route path="/mot-de-passe-oublie" element={<MotDePasseOublie />} />
           <Route path="/nouveau-mot-de-passe" element={<NouveauMotDePasse />} />
-          <Route path="/creer-compte" element={<InscriptionVendeur />} />
+          {/* Anciennes adresses, gardées pour les liens déjà partagés */}
+          <Route path="/creer-compte" element={<Navigate to="/inscription/acheteur" replace />} />
           <Route path="/mentions-legales" element={<MentionsLegales />} />
           <Route path="/confidentialite" element={<Confidentialite />} />
           <Route path="/conditions" element={<Conditions />} />

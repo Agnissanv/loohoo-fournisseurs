@@ -56,9 +56,12 @@ export default function Header() {
             </>
           ) : (
             <>
-              <Link to="/creer-compte" style={styles.lien}>Créer un compte</Link>
-              <Link to="/connexion" className="btn btn-primary" style={{ padding: '0.5em 1.1em', fontSize: '0.85rem', border: 0 }}>
+              <Link to="/devenir-fournisseur" style={styles.lien}>Devenir fournisseur</Link>
+              <Link to="/connexion" className="btn btn-outline" style={{ padding: '0.5em 1.1em', fontSize: '0.85rem' }}>
                 Se connecter
+              </Link>
+              <Link to="/inscription" className="btn btn-primary" style={{ padding: '0.5em 1.1em', fontSize: '0.85rem', border: 0 }}>
+                Créer un compte
               </Link>
             </>
           )}

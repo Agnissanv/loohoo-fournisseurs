@@ -57,7 +57,7 @@ export default function DevenirFournisseur() {
             et vous permet de leur répondre directement.
           </p>
           <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', marginTop: '1.6rem' }}>
-            <Link to="/inscription" className="btn btn-primary">Créer mon compte fournisseur</Link>
+            <Link to="/inscription/fournisseur" className="btn btn-primary">Créer mon compte fournisseur</Link>
             <Link to="/connexion" className="btn btn-outline">J'ai déjà un compte</Link>
           </div>
         </div>
@@ -118,7 +118,7 @@ export default function DevenirFournisseur() {
           <p style={{ marginTop: '1.4rem', fontSize: '0.9rem', opacity: 0.8 }}>
             Une autre question ? Écrivez-nous à <a href="mailto:contact@looh-oo.com" style={{ textDecoration: 'underline' }}>contact@looh-oo.com</a>.
           </p>
-          <Link to="/inscription" className="btn btn-primary" style={{ marginTop: '1rem' }}>Créer mon compte fournisseur</Link>
+          <Link to="/inscription/fournisseur" className="btn btn-primary" style={{ marginTop: '1rem' }}>Créer mon compte fournisseur</Link>
         </div>
       </section>
     </>

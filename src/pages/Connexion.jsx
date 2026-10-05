@@ -1,9 +1,16 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { ShoppingBag, Store } from 'lucide-react';
 import { connecterFournisseur, recupererMonRole, finaliserInscriptionEnAttente } from '../api/fournisseurs.js';
+import ChampMotDePasse from '../components/ChampMotDePasse.jsx';
+import RedirigerSiConnecte from '../components/RedirigerSiConnecte.jsx';
+import { retourSur } from '../utils/navigation.js';
 
+// Une seule connexion pour tout le monde : après l'identification, chacun arrive dans son espace.
 export default function Connexion() {
   const navigate = useNavigate();
+  const { search } = useLocation();
+  const retour = retourSur(new URLSearchParams(search).get('retour'));
   const [email, setEmail] = useState('');
   const [motDePasse, setMotDePasse] = useState('');
   const [erreur, setErreur] = useState('');
@@ -14,39 +21,57 @@ export default function Connexion() {
     setEnvoi(true);
     setErreur('');
     try {
-      await connecterFournisseur(email, motDePasse);
+      await connecterFournisseur(email.trim(), motDePasse);
+    } catch (err) {
+      setErreur(/not confirmed/i.test(err?.message || '')
+        ? "Votre e-mail n'est pas encore confirmé. Cliquez sur le lien que nous vous avons envoyé, puis réessayez."
+        : 'E-mail ou mot de passe incorrect.');
+      setEnvoi(false);
+      return;
+    }
+    try {
       let { role } = await recupererMonRole();
       if (!role) role = (await finaliserInscriptionEnAttente().catch(() => false))?.type || null;
-      navigate(role === 'fournisseur' ? '/tableau-de-bord' : '/conversations');
+      navigate(retour || (role === 'fournisseur' ? '/tableau-de-bord' : '/'));
     } catch {
-      setErreur('E-mail ou mot de passe incorrect.');
-    } finally {
-      setEnvoi(false);
+      navigate(retour || '/');
     }
   }
 
   return (
-    <section className="section" style={{ maxWidth: '420px', margin: '0 auto' }}>
-      <div className="container">
-        <span className="etiquette">Espace fournisseur</span>
-        <h1 className="section-titre">Connexion</h1>
-        <form onSubmit={soumettre} style={{ display: 'grid', gap: '0.9rem', marginTop: '1.2rem' }}>
-          <input className="champ" type="email" required placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
-          <input className="champ" type="password" required placeholder="Mot de passe" value={motDePasse} onChange={(e) => setMotDePasse(e.target.value)} autoComplete="current-password" />
-          {erreur && <p style={{ color: 'var(--loo-rouge)', fontWeight: 600, fontSize: '0.9rem', margin: 0 }}>{erreur}</p>}
+    <section className="acces-page">
+      <RedirigerSiConnecte vers={retour} />
+      <div className="acces-carte">
+        <h1 className="acces-titre">Connexion</h1>
+        <p className="acces-sous">Acheteurs et fournisseurs se connectent ici, avec le même formulaire.</p>
+
+        <form onSubmit={soumettre} className="acces-form">
+          <div className="acces-champ-bloc">
+            <label htmlFor="email">E-mail</label>
+            <input id="email" className="champ" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
+          </div>
+          <div className="acces-champ-bloc">
+            <label htmlFor="mdp">Mot de passe</label>
+            <ChampMotDePasse id="mdp" required value={motDePasse} onChange={(e) => setMotDePasse(e.target.value)} />
+          </div>
+          {erreur && <p role="alert" className="acces-erreur">{erreur}</p>}
           <button type="submit" className="btn btn-primary" disabled={envoi} style={{ justifyContent: 'center' }}>
             {envoi ? 'Connexion…' : 'Se connecter'}
           </button>
-          <Link to="/mot-de-passe-oublie" style={{ fontSize: '0.88rem', textDecoration: 'underline' }}>Mot de passe oublié ?</Link>
+          <Link to="/mot-de-passe-oublie" className="acces-lien" style={{ fontSize: '0.88rem', fontWeight: 500 }}>Mot de passe oublié ?</Link>
         </form>
-        <p style={{ marginTop: '1.2rem', fontSize: '0.9rem' }}>
-          Pas encore de compte ?{' '}
-          <Link to="/creer-compte" style={{ textDecoration: 'underline', fontWeight: 600 }}>Créer un compte</Link>
-        </p>
-        <p style={{ marginTop: '0.5rem', fontSize: '0.85rem', opacity: 0.7 }}>
-          Vous êtes un fournisseur ?{' '}
-          <Link to="/devenir-fournisseur" style={{ textDecoration: 'underline' }}>Découvrir l'offre fournisseur</Link>
-        </p>
+
+        <div className="acces-pied">
+          <p style={{ margin: '0 0 0.7rem', fontWeight: 700 }}>Pas encore de compte ?</p>
+          <div style={{ display: 'grid', gap: '0.6rem' }}>
+            <Link to={`/inscription/acheteur${search}`} className="btn btn-outline" style={{ justifyContent: 'center' }}>
+              <ShoppingBag size={16} /> Je suis acheteur : créer mon compte
+            </Link>
+            <Link to="/inscription/fournisseur" className="btn btn-outline" style={{ justifyContent: 'center' }}>
+              <Store size={16} /> Je suis fournisseur : créer mon compte
+            </Link>
+          </div>
+        </div>
       </div>
     </section>
   );

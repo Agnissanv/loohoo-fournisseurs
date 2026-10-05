@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { inscrireVendeur } from '../api/fournisseurs.js';
 import { normaliserTelephone } from '../utils/telephone.js';
+import { retourSur } from '../utils/navigation.js';
+import ChampMotDePasse from '../components/ChampMotDePasse.jsx';
+import RedirigerSiConnecte from '../components/RedirigerSiConnecte.jsx';
 
+// Compte acheteur : quatre champs, une minute.
 export default function InscriptionVendeur() {
   const navigate = useNavigate();
-  const [champs, setChamps] = useState({ nom: '', telephone: '', activite: '', email: '', motDePasse: '' });
+  const { search } = useLocation();
+  const retour = retourSur(new URLSearchParams(search).get('retour'));
+  const [champs, setChamps] = useState({ nom: '', telephone: '', email: '', motDePasse: '', activite: '' });
   const [erreur, setErreur] = useState('');
   const [envoi, setEnvoi] = useState(false);
   const [confirmationEnvoyee, setConfirmationEnvoyee] = useState(false);
@@ -24,7 +30,7 @@ export default function InscriptionVendeur() {
         nom: champs.nom.trim(), telephone, activite: champs.activite.trim(),
       });
       if (confirmationRequise) setConfirmationEnvoyee(true);
-      else navigate('/');
+      else navigate(retour || '/');
     } catch (err) {
       setErreur(err.message || "Impossible de créer le compte pour le moment.");
     } finally {
@@ -34,42 +40,64 @@ export default function InscriptionVendeur() {
 
   if (confirmationEnvoyee) {
     return (
-      <section className="section" style={{ maxWidth: '440px', margin: '0 auto' }}>
-        <div className="container">
-          <span className="etiquette">Dernière étape</span>
-          <h1 className="section-titre">Confirmez votre e-mail</h1>
-          <p style={{ lineHeight: 1.6 }}>
-            Nous venons d'envoyer un lien de confirmation à <strong>{champs.email}</strong>. Cliquez dessus, puis connectez-vous :
-            votre compte sera prêt pour contacter des fournisseurs. Pensez à vérifier vos courriers indésirables.
+      <section className="acces-page">
+        <div className="acces-carte">
+          <h1 className="acces-titre">Confirmez votre e-mail</h1>
+          <p className="acces-sous">
+            Nous venons d'envoyer un lien à <strong>{champs.email}</strong>. Cliquez dessus : votre compte sera prêt pour contacter des fournisseurs.
+            Pensez à regarder vos courriers indésirables.
           </p>
-          <Link to="/connexion" className="btn btn-primary" style={{ marginTop: '1rem' }}>Aller à la connexion</Link>
+          <Link to="/connexion" className="btn btn-primary" style={{ justifyContent: 'center' }}>Aller à la connexion</Link>
         </div>
       </section>
     );
   }
 
   return (
-    <section className="section" style={{ maxWidth: '420px', margin: '0 auto' }}>
-      <div className="container">
-        <span className="etiquette">LOOHOO Fournisseurs</span>
-        <h1 className="section-titre">Créer un compte</h1>
-        <p className="section-intro" style={{ marginBottom: '1.5rem' }}>
-          Pour contacter des fournisseurs et retrouver vos conversations.
-        </p>
-        <form onSubmit={soumettre} style={{ display: 'grid', gap: '0.9rem' }}>
-          <input className="champ" required placeholder="Votre nom" value={champs.nom} onChange={maj('nom')} />
-          <input className="champ" required type="tel" placeholder="Téléphone (ex. 07 00 00 00 00)" value={champs.telephone} onChange={maj('telephone')} />
-          <input className="champ" placeholder="Votre activité (facultatif)" value={champs.activite} onChange={maj('activite')} />
-          <input className="champ" required type="email" placeholder="E-mail" value={champs.email} onChange={maj('email')} autoComplete="email" />
-          <input className="champ" required type="password" minLength={8} placeholder="Mot de passe (8 caractères min.)" value={champs.motDePasse} onChange={maj('motDePasse')} autoComplete="new-password" />
-          {erreur && <p style={{ color: 'var(--loo-rouge)', fontWeight: 600, fontSize: '0.9rem', margin: 0 }}>{erreur}</p>}
+    <section className="acces-page">
+      <RedirigerSiConnecte vers={retour} />
+      <div className="acces-carte">
+        <h1 className="acces-titre">Créer mon compte acheteur</h1>
+        <p className="acces-sous">Pour demander des devis aux fournisseurs et retrouver vos conversations.</p>
+
+        <form onSubmit={soumettre} className="acces-form">
+          <div className="acces-champ-bloc">
+            <label htmlFor="nom">Votre nom</label>
+            <input id="nom" className="champ" required value={champs.nom} onChange={maj('nom')} autoComplete="name" />
+          </div>
+          <div className="acces-champ-bloc">
+            <label htmlFor="tel">Téléphone</label>
+            <input id="tel" className="champ" required type="tel" placeholder="07 00 00 00 00" value={champs.telephone} onChange={maj('telephone')} autoComplete="tel" />
+            <p className="acces-aide">Reste privé : les fournisseurs vous répondent par la messagerie LOOHOO.</p>
+          </div>
+          <div className="acces-champ-bloc">
+            <label htmlFor="email">E-mail</label>
+            <input id="email" className="champ" required type="email" value={champs.email} onChange={maj('email')} autoComplete="email" />
+          </div>
+          <div className="acces-champ-bloc">
+            <label htmlFor="mdp">Mot de passe</label>
+            <ChampMotDePasse id="mdp" nouveau required minLength={8} value={champs.motDePasse} onChange={maj('motDePasse')} />
+            <p className="acces-aide">8 caractères minimum.</p>
+          </div>
+          <div className="acces-champ-bloc">
+            <label htmlFor="activite">Votre activité <span style={{ fontWeight: 400, opacity: 0.6 }}>(facultatif)</span></label>
+            <input id="activite" className="champ" placeholder="Ex. boutique en ligne de vêtements" value={champs.activite} onChange={maj('activite')} />
+          </div>
+
+          {erreur && <p role="alert" className="acces-erreur">{erreur}</p>}
           <button type="submit" className="btn btn-primary" disabled={envoi} style={{ justifyContent: 'center' }}>
             {envoi ? 'Création…' : 'Créer mon compte'}
           </button>
+          <p className="acces-aide">
+            En créant un compte, vous acceptez les <Link to="/conditions" target="_blank" className="acces-lien" style={{ fontWeight: 500 }}>conditions d'utilisation</Link> et
+            la <Link to="/confidentialite" target="_blank" className="acces-lien" style={{ fontWeight: 500 }}>politique de confidentialité</Link>.
+          </p>
         </form>
-        <p style={{ marginTop: '1.2rem', fontSize: '0.9rem' }}>
-          Déjà inscrit ? <Link to="/connexion" style={{ textDecoration: 'underline', fontWeight: 600 }}>Se connecter</Link>
-        </p>
+
+        <div className="acces-pied">
+          <p style={{ margin: '0 0 0.5rem' }}>Déjà un compte ? <Link to={`/connexion${search}`} className="acces-lien">Se connecter</Link></p>
+          <p style={{ margin: 0 }}>Vous vendez en gros ? <Link to="/inscription/fournisseur" className="acces-lien">Créer un compte fournisseur</Link></p>
+        </div>
       </div>
     </section>
   );

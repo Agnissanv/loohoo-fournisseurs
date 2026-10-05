@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { MessageCircle, X } from 'lucide-react';
 import { demarrerConversation, recupererSessionVendeur } from '../api/fournisseurs.js';
 import { composerDemande, DELAIS_DEVIS } from '../utils/messagerie.js';
@@ -7,6 +7,7 @@ import { normaliserTelephone } from '../utils/telephone.js';
 
 // Demande de devis : quantité, ville de livraison et délai, pour que le fournisseur puisse répondre précisément du premier coup.
 export default function ModaleContact({ grossiste, produit, onClose }) {
+  const { pathname } = useLocation();
   const [dejaConnecte, setDejaConnecte] = useState(null); // null = en cours de vérification
   const [champs, setChamps] = useState({
     nom: '', telephone: '', email: '', motDePasse: '', activite: '',
@@ -119,7 +120,11 @@ export default function ModaleContact({ grossiste, produit, onClose }) {
 
             {dejaConnecte === false && (
               <>
-                <p style={{ margin: '0.9rem 0 0.5rem', fontWeight: 700, fontSize: '0.88rem' }}>Vos coordonnées</p>
+                <p style={{ margin: '0.9rem 0 0.5rem', fontWeight: 700, fontSize: '0.88rem' }}>
+                  Vos coordonnées <span style={{ fontWeight: 400, opacity: 0.75 }}>· déjà un compte ?{' '}
+                    <Link to={`/connexion?retour=${encodeURIComponent(pathname)}`} onClick={onClose} style={{ textDecoration: 'underline', fontWeight: 700 }}>Se connecter</Link>
+                  </span>
+                </p>
                 <input className="champ" required placeholder="Votre nom" value={champs.nom} onChange={maj('nom')} style={espace} />
                 <input className="champ" required type="tel" placeholder="Téléphone (ex. 07 00 00 00 00)" value={champs.telephone} onChange={maj('telephone')} autoComplete="tel" style={espace} />
                 <input className="champ" placeholder="Votre activité (facultatif)" value={champs.activite} onChange={maj('activite')} style={espace} />
