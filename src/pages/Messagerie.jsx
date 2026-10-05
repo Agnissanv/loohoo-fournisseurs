@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { AlertCircle, ArrowLeft, BadgeCheck, MessageCircle, Search, Send } from 'lucide-react';
+import { AlertCircle, ArrowLeft, BadgeCheck, MessageCircle, Package, Search, Send } from 'lucide-react';
 import {
   suivreSession, recupererMonRole, recupererConversationsRiches, suivreActiviteMessages,
   recupererMessages, envoyerMessage, marquerMessagesLus, suivreFil,
@@ -208,6 +208,7 @@ function Fil({ conversation, role, onChange }) {
     if (!el) return;
     el.style.height = 'auto';
     el.style.height = `${Math.min(el.scrollHeight, 140)}px`;
+    el.style.overflowY = el.scrollHeight > 140 ? 'auto' : 'hidden'; // pas de flèches de défilement tant que le texte tient
   }
   useEffect(ajusterHauteur, [texte]);
 
@@ -273,7 +274,7 @@ function Fil({ conversation, role, onChange }) {
 
       {p && (
         <Link to={`/produit/${p.id}`} target={fournisseur ? '_blank' : undefined} className="msg-produit-carte">
-          {p.photo_url ? <img src={p.photo_url} alt="" /> : <span className="msg-produit-vide" />}
+          {p.photo_url ? <img src={p.photo_url} alt="" /> : <span className="msg-produit-vide"><Package size={20} opacity={0.5} /></span>}
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: '0.74rem', opacity: 0.6 }}>À propos du produit</div>
             <strong style={{ fontSize: '0.9rem' }}>{p.nom}</strong>
@@ -332,7 +333,7 @@ function Fil({ conversation, role, onChange }) {
           </p>
         )}
         <form onSubmit={(e) => { e.preventDefault(); envoyer(); }} style={{ display: 'flex', gap: '0.6rem', alignItems: 'flex-end' }}>
-          <textarea ref={champ} className="champ" rows={1} placeholder="Écrivez votre message…" value={texte} onChange={(e) => setTexte(e.target.value)} onKeyDown={toucheEnfoncee} maxLength={2000} style={{ resize: 'none', maxHeight: 140 }} />
+          <textarea ref={champ} className="champ" rows={1} placeholder="Écrivez votre message…" value={texte} onChange={(e) => setTexte(e.target.value)} onKeyDown={toucheEnfoncee} maxLength={2000} style={{ resize: 'none', maxHeight: 140, overflowY: 'hidden' }} />
           <button type="submit" className="btn btn-primary" disabled={!texte.trim()} aria-label="Envoyer" style={{ padding: '0.85em 1.1em' }}><Send size={17} /></button>
         </form>
         <div className="esp-aide" style={{ marginTop: '0.3rem' }}>Entrée pour envoyer, Maj+Entrée pour un retour à la ligne.</div>
