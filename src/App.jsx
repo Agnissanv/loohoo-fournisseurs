@@ -17,6 +17,9 @@ import Statistiques from './pages/Statistiques.jsx';
 import MentionsLegales from './pages/MentionsLegales.jsx';
 import Confidentialite from './pages/Confidentialite.jsx';
 import Conditions from './pages/Conditions.jsx';
+import MotDePasseOublie from './pages/MotDePasseOublie.jsx';
+import NouveauMotDePasse from './pages/NouveauMotDePasse.jsx';
+import DevenirFournisseur from './pages/DevenirFournisseur.jsx';
 
 function GestionDuScroll() {
   const { pathname } = useLocation();
@@ -51,6 +54,9 @@ export default function App() {
         <Route path="/produit/:id" element={<ProduitDetail />} />
         <Route path="/connexion" element={<Connexion />} />
         <Route path="/inscription" element={<Inscription />} />
+        <Route path="/devenir-fournisseur" element={<DevenirFournisseur />} />
+        <Route path="/mot-de-passe-oublie" element={<MotDePasseOublie />} />
+        <Route path="/nouveau-mot-de-passe" element={<NouveauMotDePasse />} />
         <Route path="/creer-compte" element={<InscriptionVendeur />} />
         <Route path="/tableau-de-bord" element={<TableauDeBord />} />
         <Route path="/conversations" element={<Conversations />} />

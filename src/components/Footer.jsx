@@ -11,9 +11,7 @@ export default function Footer() {
           <Link to="/confidentialite" style={styles.lien}>Confidentialité</Link>
           <Link to="/conditions" style={styles.lien}>Conditions d'utilisation</Link>
           {/* Inscription fournisseur volontairement discrète, en pied de page (PDF §10) */}
-          <a href="mailto:contact@looh-oo.com?subject=Référencer%20mon%20entreprise%20comme%20fournisseur" style={styles.lien}>
-            Vous êtes fournisseur ?
-          </a>
+          <Link to="/devenir-fournisseur" style={styles.lien}>Vous êtes fournisseur ?</Link>
         </nav>
         <a href="https://www.agnissanisaac.com/" target="_blank" rel="noreferrer" style={styles.lien}>Créé par Code A-Z</a>
       </div>

@@ -166,5 +166,12 @@ Nettoyage des doublons, migrations SQL versionnées dans le dépôt, `CRON_SECRE
 - Catalogue : modification d'un produit, activer/désactiver, confirmation avant suppression.
 - `supabase/migrations/0001_protection_moderation_produit.sql` : à exécuter dans Supabase (empêche l'auto-publication, remet en vérification un produit publié dont le contenu change, permet de resoumettre un produit rejeté).
 
+### Fait ensuite (2026-10-05, build OK, rendu des pages vérifié, parcours non testé avec Supabase)
+- Migration 0001 appliquée par Isaac.
+- « Mot de passe oublié » (/mot-de-passe-oublie, /nouveau-mot-de-passe), lien depuis la connexion. Nécessite le sous-domaine branché et ajouté dans Supabase > Authentication > URL Configuration.
+- Page marketing /devenir-fournisseur (liée depuis le pied de page et la connexion). Aucune mention de tarif, la monétisation n'étant pas décidée.
+- Inscription guidée : 3 blocs, type d'entreprise (local / étranger), stock confirmé, téléphone normalisé, case conditions obligatoire, gestion de la confirmation d'e-mail (profil créé à la première connexion).
+- Catégories en liste fermée (src/data/categories.js, liste de départ à valider par le client) à l'inscription, au profil et sur les produits.
+
 ### Reporté (dépend du nom de domaine / registrar)
 Brevo (authentification DNS, expéditeur), SMTP personnalisé Supabase, adresse contact@, Search Console, branchement de fournisseurs.looh-oo.com et boutique.looh-oo.com, puis réglage Site URL / Redirect URLs dans Supabase.

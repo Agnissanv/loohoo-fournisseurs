@@ -55,15 +55,44 @@ export async function contacterGrossiste({ nom, telephone, email, activite, gros
 
 
 // ---- Compte fournisseur ----
-export async function inscrireFournisseur({ email, password, nom, categorie, ville, commune, telephone, estFabricant }) {
-  const { error: erreurCompte } = await supabase.auth.signUp({ email, password });
-  if (erreurCompte) throw erreurCompte;
+const CLE_INSCRIPTION_EN_ATTENTE = 'loohoo_inscription_fournisseur';
 
-  const { error: erreurProfil } = await supabase.rpc('creer_profil_fournisseur', {
+async function creerProfilFournisseur({ nom, categorie, ville, commune, telephone, estFabricant, origine, stockConfirme }) {
+  const { error } = await supabase.rpc('creer_profil_fournisseur', {
     p_nom: nom, p_categorie: categorie, p_ville: ville, p_commune: commune || null,
     p_telephone: telephone, p_est_fabricant: !!estFabricant,
   });
-  if (erreurProfil) throw erreurProfil;
+  if (error) throw error;
+  // Champs que la fonction SQL ne prend pas encore en paramètre : mise à jour séparée, non bloquante
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) {
+    await supabase.from('grossiste')
+      .update({ origine: origine || 'local', stock_confirme: !!stockConfirme })
+      .eq('user_id', session.user.id);
+  }
+}
+
+// Renvoie { confirmationRequise } : si Supabase exige la confirmation de l'e-mail, il n'y a pas encore de session
+// et le profil ne peut pas être créé. On garde les infos sur l'appareil et on les envoie à la première connexion.
+export async function inscrireFournisseur({ email, password, ...profil }) {
+  const { data, error } = await supabase.auth.signUp({ email, password });
+  if (error) throw error;
+  if (!data.session) {
+    try { localStorage.setItem(CLE_INSCRIPTION_EN_ATTENTE, JSON.stringify(profil)); } catch { /* stockage indisponible */ }
+    return { confirmationRequise: true };
+  }
+  await creerProfilFournisseur(profil);
+  return { confirmationRequise: false };
+}
+
+// À appeler quand un compte connecté n'a pas encore de profil fournisseur. Renvoie true si un profil a été créé.
+export async function finaliserInscriptionEnAttente() {
+  let brut = null;
+  try { brut = localStorage.getItem(CLE_INSCRIPTION_EN_ATTENTE); } catch { /* stockage indisponible */ }
+  if (!brut) return false;
+  await creerProfilFournisseur(JSON.parse(brut));
+  try { localStorage.removeItem(CLE_INSCRIPTION_EN_ATTENTE); } catch { /* ignoré */ }
+  return true;
 }
 
 export async function connecterFournisseur(email, password) {
@@ -369,5 +398,19 @@ export async function inscrireVendeur({ email, password, nom, telephone, activit
   const { error: erreurCompte } = await supabase.auth.signUp({ email, password });
   if (erreurCompte) throw erreurCompte;
   const { error } = await supabase.rpc('creer_profil_vendeur', { p_nom: nom, p_telephone: telephone, p_activite: activite || null });
+  if (error) throw error;
+}
+// ---- Mot de passe oublié ----
+// Le lien reçu par e-mail ramène sur /nouveau-mot-de-passe, déjà connecté (session de récupération).
+// L'adresse doit figurer dans Supabase > Authentication > URL Configuration > Redirect URLs.
+export async function demanderReinitialisation(email) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/nouveau-mot-de-passe`,
+  });
+  if (error) throw error;
+}
+
+export async function changerMotDePasse(motDePasse) {
+  const { error } = await supabase.auth.updateUser({ password: motDePasse });
   if (error) throw error;
 }

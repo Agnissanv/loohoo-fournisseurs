@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { connecterFournisseur, recupererMonRole } from '../api/fournisseurs.js';
+import { connecterFournisseur, recupererMonRole, finaliserInscriptionEnAttente } from '../api/fournisseurs.js';
 
 export default function Connexion() {
   const navigate = useNavigate();
@@ -15,7 +15,8 @@ export default function Connexion() {
     setErreur('');
     try {
       await connecterFournisseur(email, motDePasse);
-      const { role } = await recupererMonRole();
+      let { role } = await recupererMonRole();
+      if (!role && await finaliserInscriptionEnAttente().catch(() => false)) role = 'fournisseur';
       navigate(role === 'fournisseur' ? '/tableau-de-bord' : '/conversations');
     } catch {
       setErreur('E-mail ou mot de passe incorrect.');
@@ -36,6 +37,7 @@ export default function Connexion() {
           <button type="submit" className="btn btn-primary" disabled={envoi} style={{ justifyContent: 'center' }}>
             {envoi ? 'Connexion…' : 'Se connecter'}
           </button>
+          <Link to="/mot-de-passe-oublie" style={{ fontSize: '0.88rem', textDecoration: 'underline' }}>Mot de passe oublié ?</Link>
         </form>
         <p style={{ marginTop: '1.2rem', fontSize: '0.9rem' }}>
           Pas encore de compte ?{' '}
@@ -43,7 +45,7 @@ export default function Connexion() {
         </p>
         <p style={{ marginTop: '0.5rem', fontSize: '0.85rem', opacity: 0.7 }}>
           Vous êtes un fournisseur ?{' '}
-          <Link to="/inscription" style={{ textDecoration: 'underline' }}>Créer votre compte fournisseur</Link>
+          <Link to="/devenir-fournisseur" style={{ textDecoration: 'underline' }}>Découvrir l'offre fournisseur</Link>
         </p>
       </div>
     </section>

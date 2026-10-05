@@ -3,10 +3,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import NavFournisseur from '../components/NavFournisseur.jsx';
 import SelecteurPhoto from '../components/SelecteurPhoto.jsx';
 import GaleriePhotosProduit from '../components/GaleriePhotosProduit.jsx';
+import SelectCategorie from '../components/SelectCategorie.jsx';
 import { Image as IconeImage, Pencil, Plus, Trash2, LogOut } from 'lucide-react';
 import {
   suivreSession, recupererMonProfil, deconnecterFournisseur,
-  mettreAJourProfil, ajouterProduit, modifierProduit, supprimerProduit,
+  mettreAJourProfil, ajouterProduit, modifierProduit, supprimerProduit, finaliserInscriptionEnAttente,
 } from '../api/fournisseurs.js';
 
 const STATUTS = {
@@ -32,7 +33,15 @@ export default function TableauDeBord() {
   useEffect(() => {
     if (session === undefined) return;
     if (session === null) { navigate('/connexion'); return; }
-    recupererMonProfil(session.user.id).then(setProfil).catch((err) => setErreur('Impossible de charger votre profil : ' + err.message));
+    recupererMonProfil(session.user.id)
+      .then(async (p) => {
+        if (p) return p;
+        // Compte confirmé par e-mail mais profil pas encore créé : on le crée avec les infos saisies à l'inscription
+        const cree = await finaliserInscriptionEnAttente().catch(() => false);
+        return cree ? recupererMonProfil(session.user.id) : null;
+      })
+      .then(setProfil)
+      .catch((err) => setErreur('Impossible de charger votre profil : ' + err.message));
   }, [session, navigate]);
 
   if (erreur) {
@@ -217,7 +226,7 @@ export default function TableauDeBord() {
             <div style={{ display: 'flex', gap: '0.7rem', marginTop: '0.8rem' }}>
               <div style={{ flex: 1 }}>
                 <label style={styles.etiquette}>Catégorie</label>
-                <input className="champ" name="categorie" defaultValue={produitEdite?.categorie ?? ''} placeholder="Ex. : Textile" />
+                <SelectCategorie name="categorie" defaultValue={produitEdite?.categorie ?? profil.categorie ?? ''} valeurActuelle={produitEdite?.categorie ?? profil.categorie ?? ''} vide="—" />
               </div>
               <div style={{ flex: 1 }}>
                 <label style={styles.etiquette}>Sous-catégorie</label>

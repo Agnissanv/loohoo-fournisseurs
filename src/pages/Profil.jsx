@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download, Image as IconeImage, Trash2, Upload } from 'lucide-react';
 import NavFournisseur from '../components/NavFournisseur.jsx';
+import SelectCategorie from '../components/SelectCategorie.jsx';
 import {
   suivreSession, recupererMonProfil, mettreAJourProfilComplet, mettreAJourTelephone,
   ajouterPhotoProfil, supprimerPhotoProfil,
@@ -211,7 +212,7 @@ export default function Profil() {
             <div style={{ display: 'flex', gap: '0.7rem', marginTop: '0.8rem' }}>
               <div style={{ flex: 1 }}>
                 <label style={styles.etiquette}>Catégorie</label>
-                <input className="champ" name="categorie" defaultValue={profil.categorie} required />
+                <SelectCategorie name="categorie" defaultValue={profil.categorie} valeurActuelle={profil.categorie} required />
               </div>
               <div style={{ flex: 1 }}>
                 <label style={styles.etiquette}>Ville</label>
