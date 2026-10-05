@@ -299,3 +299,33 @@ img { max-width: 100%; display: block; }
 .esp-liste-ligne:first-of-type { border-top: 0; }
 .esp-progression { height: 8px; border-radius: 999px; background: var(--loo-papier-ombre); overflow: hidden; }
 .esp-progression > div { height: 100%; background: var(--gradient-marque); border-radius: 999px; }
+
+/* ---- formulaire produit ---- */
+.esp-formulaire { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 1rem; align-items: start; }
+@media (max-width: 980px) { .esp-formulaire { grid-template-columns: minmax(0, 1fr); } }
+.esp-champ-bloc { display: grid; gap: 0.3rem; margin-bottom: 0.9rem; }
+.esp-champ-bloc > label { font-weight: 600; font-size: 0.86rem; }
+.esp-aide { font-size: 0.76rem; opacity: 0.6; margin: 0; line-height: 1.4; }
+.esp-ligne-champs { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.8rem; }
+.esp-zone-depot { border: 2px dashed var(--loo-orange); border-radius: 12px; padding: 1.3rem; text-align: center; background: #FFFAF3; cursor: pointer; transition: background 0.15s ease; }
+.esp-zone-depot:hover, .esp-zone-depot-survol { background: #FFF1E0; }
+.esp-vignettes { display: flex; gap: 0.7rem; flex-wrap: wrap; margin-top: 0.9rem; }
+.esp-vignette { position: relative; width: 104px; height: 78px; border-radius: 8px; overflow: hidden; background: var(--loo-papier-ombre); border: 1px solid var(--loo-papier-ombre); }
+.esp-vignette img { width: 100%; height: 100%; object-fit: cover; }
+.esp-vignette button { position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border-radius: 50%; border: 0; background: var(--loo-rouge); color: #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+.esp-vignette-principale::after { content: 'Principale'; position: absolute; left: 0; bottom: 0; right: 0; background: rgba(23, 18, 13, 0.65); color: #fff; font-size: 0.64rem; text-align: center; padding: 1px 0; }
+.esp-interrupteur { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding: 0.4rem 0; }
+.esp-interrupteur input { position: absolute; opacity: 0; pointer-events: none; }
+.esp-interrupteur-piste { flex-shrink: 0; width: 46px; height: 26px; border-radius: 999px; background: #cfc6b8; position: relative; transition: background 0.15s ease; cursor: pointer; }
+.esp-interrupteur-piste::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: transform 0.15s ease; }
+.esp-interrupteur input:checked + .esp-interrupteur-piste { background: var(--loo-rouge); }
+.esp-interrupteur input:checked + .esp-interrupteur-piste::after { transform: translateX(20px); }
+.esp-interrupteur input:focus-visible + .esp-interrupteur-piste { outline: 2px solid var(--loo-rouge); outline-offset: 2px; }
+.esp-pastilles-saisie { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0.5rem; border: 1.5px solid var(--loo-papier-ombre); border-radius: var(--rayon-sm); background: #fff; }
+.esp-pastilles-saisie input { border: 0; outline: 0; flex: 1; min-width: 120px; font: inherit; padding: 0.2rem; background: transparent; }
+.esp-tag { display: inline-flex; align-items: center; gap: 0.3rem; background: #FFE9E6; color: #B42318; border-radius: 999px; padding: 0.15rem 0.3rem 0.15rem 0.7rem; font-size: 0.82rem; font-weight: 600; }
+.esp-tag button { border: 0; background: none; cursor: pointer; color: inherit; display: inline-flex; padding: 0.1rem; }
+.esp-barre-actions { position: sticky; bottom: 0; z-index: 10; margin-top: 1rem; display: flex; justify-content: flex-end; gap: 0.7rem; flex-wrap: wrap; padding: 0.9rem 1.2rem; background: #fff; border: 1px solid var(--loo-papier-ombre); border-radius: 14px; box-shadow: 0 -4px 16px rgba(23, 18, 13, 0.06); }
+.esp-fil { display: flex; align-items: center; gap: 0.5rem; font-size: 0.88rem; margin-bottom: 0.4rem; }
+.esp-fil a { opacity: 0.7; }
+.esp-fil span:last-child { color: var(--loo-rouge); font-weight: 600; }

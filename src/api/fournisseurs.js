@@ -126,9 +126,11 @@ export async function mettreAJourProfil(id, champs) {
   if (error) throw error;
 }
 
+// Renvoie l'id du produit créé (pour y rattacher ses photos)
 export async function ajouterProduit(grossisteId, produit) {
-  const { error } = await supabase.from('produit').insert({ grossiste_id: grossisteId, ...produit });
+  const { data, error } = await supabase.from('produit').insert({ grossiste_id: grossisteId, ...produit }).select('id').single();
   if (error) throw error;
+  return data.id;
 }
 
 export async function modifierProduit(id, champs) {

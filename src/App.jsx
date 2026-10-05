@@ -4,6 +4,7 @@ import Header from './components/Header.jsx';
 import Footer from './components/Footer.jsx';
 import LayoutEspace from './components/LayoutEspace.jsx';
 import Produits from './pages/Produits.jsx';
+import ProduitFormulaire from './pages/ProduitFormulaire.jsx';
 import Annuaire from './pages/Annuaire.jsx';
 import ProfilGrossiste from './pages/ProfilGrossiste.jsx';
 import ProduitDetail from './pages/ProduitDetail.jsx';
@@ -80,6 +81,8 @@ export default function App() {
         <Route element={<LayoutEspace />}>
           <Route path="/tableau-de-bord" element={<TableauDeBord />} />
           <Route path="/produits" element={<Produits />} />
+          <Route path="/produits/nouveau" element={<ProduitFormulaire />} />
+          <Route path="/produits/:id/modifier" element={<ProduitFormulaire />} />
           <Route path="/mediatheque" element={<Mediatheque />} />
           <Route path="/profil" element={<Profil />} />
           <Route path="/statistiques" element={<Statistiques />} />
