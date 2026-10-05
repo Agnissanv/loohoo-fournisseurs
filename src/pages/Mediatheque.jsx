@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Copy, Trash2, Upload } from 'lucide-react';
 import { suivreSession, recupererMonProfil, recupererMedia, ajouterMedia, supprimerMedia, modifierProduitPhoto } from '../api/fournisseurs.js';
 import { televerserMedia, supprimerPhotoStockage } from '../utils/stockagePhotos.js';
-import NavFournisseur from '../components/NavFournisseur.jsx';
 
 function formaterPoids(octets) {
   if (!octets) return '—';
@@ -90,7 +89,6 @@ export default function Mediatheque() {
   return (
     <section className="section">
       <div className="container">
-        <NavFournisseur />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.6rem' }}>
           <h1 className="section-titre" style={{ margin: 0 }}>Médiathèque</h1>
           <label className="btn btn-primary" style={{ cursor: 'pointer' }}>

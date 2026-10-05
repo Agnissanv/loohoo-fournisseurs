@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import NavFournisseur from '../components/NavFournisseur.jsx';
 import { suivreSession, recupererMesStats } from '../api/fournisseurs.js';
 
 export default function Statistiques() {
@@ -30,7 +29,6 @@ export default function Statistiques() {
   return (
     <section className="section">
       <div className="container">
-        <NavFournisseur />
         <h1 className="section-titre">Statistiques</h1>
 
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', margin: '1.6rem 0 2rem' }}>

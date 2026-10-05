@@ -224,3 +224,78 @@ img { max-width: 100%; display: block; }
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 1rem;
 }
+
+/* ====== Espace fournisseur : cadre (barre du haut + menu latéral) ====== */
+.esp { min-height: 100vh; display: flex; flex-direction: column; background: var(--loo-papier); }
+.esp-haut {
+  position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: 0.7rem 1.4rem; background: var(--loo-blanc); border-bottom: 1px solid var(--loo-papier-ombre);
+}
+.esp-marque { display: flex; align-items: center; gap: 0.7rem; min-width: 0; }
+.esp-marque img { border-radius: 8px 8px 8px 2px; }
+.esp-marque-nom { font-family: var(--police-affiche); font-weight: 800; font-size: 1.2rem; letter-spacing: -0.01em; }
+.esp-marque-sep { width: 1px; height: 26px; background: var(--loo-papier-ombre); }
+.esp-marque-titre { font-weight: 600; font-size: 1.02rem; white-space: nowrap; }
+.esp-haut-droite { display: flex; align-items: center; gap: 0.5rem; }
+.esp-bouton-icone { position: relative; background: none; border: 0; padding: 0.5rem; border-radius: 10px; cursor: pointer; color: var(--loo-encre); display: inline-flex; }
+.esp-bouton-icone:hover { background: var(--loo-papier); }
+.esp-pastille { position: absolute; top: 2px; right: 2px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--loo-rouge); color: #fff; font-size: 0.68rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+.esp-utilisateur { display: inline-flex; align-items: center; gap: 0.55rem; background: none; border: 0; cursor: pointer; padding: 0.25rem 0.4rem; border-radius: 999px; font: inherit; color: inherit; }
+.esp-utilisateur:hover { background: var(--loo-papier); }
+.esp-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--gradient-marque); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; overflow: hidden; flex-shrink: 0; }
+.esp-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.esp-nom { font-weight: 600; font-size: 0.92rem; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.esp-menu-deroulant { position: absolute; right: 0; top: calc(100% + 6px); min-width: 250px; background: var(--loo-blanc); border: 1px solid var(--loo-papier-ombre); border-radius: 12px; box-shadow: var(--ombre-carte); padding: 0.4rem; z-index: 40; }
+.esp-menu-deroulant a, .esp-menu-deroulant button { display: flex; align-items: center; gap: 0.6rem; width: 100%; padding: 0.6rem 0.7rem; border: 0; background: none; border-radius: 8px; font: inherit; font-size: 0.9rem; font-weight: 500; text-align: left; cursor: pointer; color: inherit; }
+.esp-menu-deroulant a:hover, .esp-menu-deroulant button:hover { background: var(--loo-papier); }
+.esp-menu-titre { padding: 0.5rem 0.7rem 0.3rem; font-family: var(--police-etiquette); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; opacity: 0.55; }
+.esp-menu-deroulant a.esp-notification { display: block; }
+.esp-notification small { display: block; opacity: 0.65; font-weight: 400; }
+.esp-relatif { position: relative; }
+
+.esp-corps { display: grid; grid-template-columns: 236px minmax(0, 1fr); flex: 1; }
+.esp-menu { background: var(--loo-blanc); border-right: 1px solid var(--loo-papier-ombre); padding: 1rem 0.8rem; display: flex; flex-direction: column; gap: 0.2rem; position: sticky; top: 61px; align-self: start; height: calc(100vh - 61px); overflow-y: auto; }
+.esp-lien { display: flex; align-items: center; gap: 0.75rem; padding: 0.7rem 0.9rem; border-radius: 10px; font-weight: 600; font-size: 0.94rem; color: var(--loo-encre); border-left: 3px solid transparent; }
+.esp-lien:hover { background: var(--loo-papier); }
+.esp-lien-actif { background: #FFF1E0; color: var(--loo-rouge); border-left-color: var(--loo-rouge); }
+.esp-lien .esp-pastille { position: static; margin-left: auto; }
+.esp-menu-bas { margin-top: auto; padding-top: 0.8rem; border-top: 1px solid var(--loo-papier-ombre); }
+.esp-contenu { padding: 1.6rem clamp(1rem, 3vw, 2.2rem) 3rem; min-width: 0; }
+.esp-contenu .section { padding: 0; }
+.esp-contenu .container { max-width: none; padding: 0; }
+.esp-titre-page { font-size: clamp(1.5rem, 2.6vw, 2rem); margin: 0 0 1.3rem; }
+.esp-burger { display: none; }
+.esp-voile { display: none; }
+
+@media (max-width: 860px) {
+  .esp-corps { grid-template-columns: minmax(0, 1fr); }
+  .esp-burger { display: inline-flex; }
+  .esp-marque-sep, .esp-marque-titre, .esp-nom { display: none; }
+  .esp-menu { position: fixed; z-index: 45; top: 0; left: 0; bottom: 0; width: 262px; height: 100vh; transform: translateX(-100%); transition: transform 0.2s ease; box-shadow: var(--ombre-carte); }
+  .esp-menu-ouvert .esp-menu { transform: translateX(0); }
+  .esp-menu-ouvert .esp-voile { display: block; position: fixed; inset: 0; z-index: 44; background: rgba(23, 18, 13, 0.45); }
+}
+
+/* ---- cartes et indicateurs de l'espace ---- */
+.esp-grille { display: grid; gap: 1rem; }
+.esp-deux { grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); }
+.esp-carte { background: var(--loo-blanc); border: 1px solid var(--loo-papier-ombre); border-radius: 14px; padding: 1.2rem; box-shadow: 0 4px 14px rgba(23, 18, 13, 0.05); min-width: 0; }
+.esp-carte-titre { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; font-size: 1.05rem; margin: 0 0 0.9rem; font-family: var(--police-affiche); font-weight: 700; }
+.esp-carte-titre a { font-family: var(--police-texte); font-size: 0.82rem; font-weight: 600; color: var(--loo-rouge); }
+.esp-bandeau { background: var(--gradient-marque); color: #fff; border-radius: 16px; padding: 1.4rem; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 1.2rem; align-items: center; }
+.esp-bandeau h1 { color: #fff; font-size: clamp(1.4rem, 2.4vw, 1.9rem); margin: 0 0 0.3rem; }
+.esp-bandeau p { margin: 0; opacity: 0.92; font-size: 0.92rem; }
+.esp-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.8rem; }
+.esp-kpi { background: var(--loo-blanc); color: var(--loo-encre); border-radius: 12px; padding: 0.9rem 1rem; }
+.esp-kpi-etiquette { font-size: 0.78rem; opacity: 0.7; margin-bottom: 0.25rem; }
+.esp-kpi-valeur { font-family: var(--police-affiche); font-weight: 800; font-size: 1.7rem; line-height: 1.1; display: flex; align-items: center; gap: 0.5rem; }
+@media (max-width: 760px) { .esp-bandeau { grid-template-columns: minmax(0, 1fr); } }
+.esp-puce { display: inline-flex; align-items: center; gap: 0.3em; padding: 0.22em 0.7em; border-radius: 999px; font-size: 0.74rem; font-weight: 700; white-space: nowrap; }
+.esp-puce-vert { background: #E3F4E8; color: #1f7a3d; }
+.esp-puce-orange { background: #FFEBD2; color: #B8650A; }
+.esp-puce-rouge { background: #FDE3E1; color: #B42318; }
+.esp-puce-neutre { background: var(--loo-papier-ombre); color: var(--loo-encre); }
+.esp-liste-ligne { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; padding: 0.7rem 0; border-top: 1px solid var(--loo-papier-ombre); }
+.esp-liste-ligne:first-of-type { border-top: 0; }
+.esp-progression { height: 8px; border-radius: 999px; background: var(--loo-papier-ombre); overflow: hidden; }
+.esp-progression > div { height: 100%; background: var(--gradient-marque); border-radius: 999px; }

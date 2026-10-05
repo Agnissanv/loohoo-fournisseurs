@@ -414,3 +414,44 @@ export async function changerMotDePasse(motDePasse) {
   const { error } = await supabase.auth.updateUser({ password: motDePasse });
   if (error) throw error;
 }
+
+
+// ---- Cadre de l'espace fournisseur ----
+// Identité légère (sans le catalogue) : sert au menu, à l'avatar et à la détection du rôle
+export async function recupererIdentiteFournisseur(userId) {
+  const { data, error } = await supabase
+    .from('grossiste')
+    .select('id, nom, logo_url, statut, badge_verifie, est_fabricant, stock_confirme, date_ajout')
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+// Prévient dès qu'un message est reçu ou lu (pour la pastille du menu et la cloche)
+export function suivreActiviteMessages(callback) {
+  const canal = supabase
+    .channel(`activite-messages-${Math.random().toString(36).slice(2, 8)}`)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'message' }, () => callback())
+    .subscribe();
+  return () => supabase.removeChannel(canal);
+}
+
+// Conversations ayant au moins un message non lu de l'autre camp, les plus récentes d'abord
+export async function recupererNotifications(role) {
+  const autre = role === 'vendeur' ? 'fournisseur' : 'vendeur';
+  const { data, error } = await supabase
+    .from('conversation')
+    .select('id, derniere_activite, vendeur(nom), grossiste(nom), produit(nom), message(contenu, date_envoi, expediteur, lu)')
+    .order('derniere_activite', { ascending: false })
+    .limit(30);
+  if (error) throw error;
+  return data
+    .map((c) => {
+      const nonLus = c.message.filter((m) => !m.lu && m.expediteur === autre)
+        .sort((a, b) => new Date(b.date_envoi) - new Date(a.date_envoi));
+      return { id: c.id, auteur: role === 'fournisseur' ? c.vendeur?.nom : c.grossiste?.nom, produit: c.produit?.nom, nonLus: nonLus.length, dernier: nonLus[0] };
+    })
+    .filter((n) => n.nonLus > 0)
+    .slice(0, 6);
+}

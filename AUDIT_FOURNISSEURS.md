@@ -173,5 +173,12 @@ Nettoyage des doublons, migrations SQL versionnées dans le dépôt, `CRON_SECRE
 - Inscription guidée : 3 blocs, type d'entreprise (local / étranger), stock confirmé, téléphone normalisé, case conditions obligatoire, gestion de la confirmation d'e-mail (profil créé à la première connexion).
 - Catégories en liste fermée (src/data/categories.js, liste de départ à valider par le client) à l'inscription, au profil et sur les produits.
 
+### Intégration des 4 maquettes validées par le client (option A : pas de commandes ni de chiffre d'affaires)
+- Étape 1 faite : cadre de l'espace fournisseur (barre du haut, menu latéral, cloche de notifications avec liste des nouveaux messages, menu utilisateur, version mobile en tiroir). Les routes /tableau-de-bord, /produits, /mediatheque, /profil, /statistiques, /conversations utilisent ce cadre; un vendeur garde l'en-tête public.
+- Étape 2 faite : nouveau tableau de bord (bandeau + indicateurs réels, checklist de publication, produits récents, dernières demandes, graphique des demandes, messages non lus). L'ancienne page est devenue /produits.
+- À faire : formulaire produit selon la maquette 1 (deux colonnes, glisser-déposer, sous-catégories, pastilles de mots-clés), page profil selon la maquette 2 (texte de présentation, tableau modifiable), « Demandes » et statistiques selon la maquette 4 (délai de réponse, taux de réponse, origine des visites, export CSV).
+- Équivalences retenues : Commandes devient Demandes; chiffre d'affaires devient demandes reçues; panier moyen devient délai de réponse moyen; taux de conversion devient taux de réponse; note moyenne reportée après le lancement.
+- Logique Alibaba à appliquer côté acheteur : catégories à parcourir, demande de devis structurée (quantité, ville de livraison, délai), page entreprise, fournisseurs vérifiés mis en avant.
+
 ### Reporté (dépend du nom de domaine / registrar)
 Brevo (authentification DNS, expéditeur), SMTP personnalisé Supabase, adresse contact@, Search Console, branchement de fournisseurs.looh-oo.com et boutique.looh-oo.com, puis réglage Site URL / Redirect URLs dans Supabase.

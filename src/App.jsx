@@ -1,7 +1,9 @@
 import React, { useEffect } from 'react';
-import { Routes, Route, Link, useLocation } from 'react-router-dom';
+import { Routes, Route, Link, Outlet, useLocation } from 'react-router-dom';
 import Header from './components/Header.jsx';
 import Footer from './components/Footer.jsx';
+import LayoutEspace from './components/LayoutEspace.jsx';
+import Produits from './pages/Produits.jsx';
 import Annuaire from './pages/Annuaire.jsx';
 import ProfilGrossiste from './pages/ProfilGrossiste.jsx';
 import ProduitDetail from './pages/ProduitDetail.jsx';
@@ -43,33 +45,48 @@ function Introuvable() {
   );
 }
 
+function LayoutPublic() {
+  return (
+    <>
+      <Header />
+      <Outlet />
+      <Footer />
+    </>
+  );
+}
+
 export default function App() {
   return (
     <div>
       <GestionDuScroll />
-      <Header />
       <Routes>
-        <Route path="/" element={<Annuaire />} />
-        <Route path="/grossiste/:id" element={<ProfilGrossiste />} />
-        <Route path="/produit/:id" element={<ProduitDetail />} />
-        <Route path="/connexion" element={<Connexion />} />
-        <Route path="/inscription" element={<Inscription />} />
-        <Route path="/devenir-fournisseur" element={<DevenirFournisseur />} />
-        <Route path="/mot-de-passe-oublie" element={<MotDePasseOublie />} />
-        <Route path="/nouveau-mot-de-passe" element={<NouveauMotDePasse />} />
-        <Route path="/creer-compte" element={<InscriptionVendeur />} />
-        <Route path="/tableau-de-bord" element={<TableauDeBord />} />
-        <Route path="/conversations" element={<Conversations />} />
-        <Route path="/conversations/:id" element={<Conversation />} />
-        <Route path="/mediatheque" element={<Mediatheque />} />
-        <Route path="/profil" element={<Profil />} />
-        <Route path="/statistiques" element={<Statistiques />} />
-        <Route path="/mentions-legales" element={<MentionsLegales />} />
-        <Route path="/confidentialite" element={<Confidentialite />} />
-        <Route path="/conditions" element={<Conditions />} />
-        <Route path="*" element={<Introuvable />} />
+        <Route element={<LayoutPublic />}>
+          <Route path="/" element={<Annuaire />} />
+          <Route path="/grossiste/:id" element={<ProfilGrossiste />} />
+          <Route path="/produit/:id" element={<ProduitDetail />} />
+          <Route path="/connexion" element={<Connexion />} />
+          <Route path="/inscription" element={<Inscription />} />
+          <Route path="/devenir-fournisseur" element={<DevenirFournisseur />} />
+          <Route path="/mot-de-passe-oublie" element={<MotDePasseOublie />} />
+          <Route path="/nouveau-mot-de-passe" element={<NouveauMotDePasse />} />
+          <Route path="/creer-compte" element={<InscriptionVendeur />} />
+          <Route path="/mentions-legales" element={<MentionsLegales />} />
+          <Route path="/confidentialite" element={<Confidentialite />} />
+          <Route path="/conditions" element={<Conditions />} />
+          <Route path="*" element={<Introuvable />} />
+        </Route>
+
+        {/* Espace connecté : cadre application pour un fournisseur, en-tête public pour un vendeur */}
+        <Route element={<LayoutEspace />}>
+          <Route path="/tableau-de-bord" element={<TableauDeBord />} />
+          <Route path="/produits" element={<Produits />} />
+          <Route path="/mediatheque" element={<Mediatheque />} />
+          <Route path="/profil" element={<Profil />} />
+          <Route path="/statistiques" element={<Statistiques />} />
+          <Route path="/conversations" element={<Conversations />} />
+          <Route path="/conversations/:id" element={<Conversation />} />
+        </Route>
       </Routes>
-      <Footer />
     </div>
   );
 }

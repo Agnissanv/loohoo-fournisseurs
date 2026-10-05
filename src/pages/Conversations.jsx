@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { MessageCircle } from 'lucide-react';
 import { recupererMesConversations, suivreSession, recupererMonRole } from '../api/fournisseurs.js';
-import NavFournisseur from '../components/NavFournisseur.jsx';
 
 export default function Conversations() {
   const navigate = useNavigate();
@@ -30,12 +29,12 @@ export default function Conversations() {
   return (
     <section className="section">
       <div className="container">
-        {role === 'fournisseur' ? <NavFournisseur /> : (
+        {role !== 'fournisseur' && (
           <Link to="/" style={{ display: 'inline-block', marginBottom: '1.2rem', fontWeight: 600, fontSize: '0.9rem', color: 'var(--loo-rouge)' }}>
             ← Retour à l'annuaire
           </Link>
         )}
-        <h1 className="section-titre">Mes conversations</h1>
+        <h1 className={role === 'fournisseur' ? 'esp-titre-page' : 'section-titre'}>Mes conversations</h1>
         {liste.length === 0 && <p style={{ opacity: 0.7 }}>Aucune conversation pour l'instant.</p>}
 
         <div style={{ display: 'grid', gap: '0.7rem' }}>

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download, Image as IconeImage, Trash2, Upload } from 'lucide-react';
-import NavFournisseur from '../components/NavFournisseur.jsx';
 import SelectCategorie from '../components/SelectCategorie.jsx';
 import {
   suivreSession, recupererMonProfil, mettreAJourProfilComplet, mettreAJourTelephone,
@@ -197,7 +196,6 @@ export default function Profil() {
   return (
     <section className="section">
       <div className="container">
-        <NavFournisseur />
         <h1 className="section-titre">Mon profil</h1>
 
         {erreur && <p style={{ color: 'var(--loo-rouge)', fontWeight: 600 }}>{erreur}</p>}
