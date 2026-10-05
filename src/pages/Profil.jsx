@@ -169,7 +169,7 @@ export default function Profil() {
     });
   }
 
-  const ctx = { enEdition, setEnEdition, brouillon, setBrouillon, commencer, enregistrerChamps };
+  const ctx = { enEdition, setEnEdition, brouillon, setBrouillon, commencer, enregistrerChamps, erreur };
 
   const membreDepuis = profil.date_ajout ? new Date(profil.date_ajout).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) : '–';
 
@@ -378,7 +378,7 @@ export default function Profil() {
 
 // Une ligne du tableau d'informations, avec crayon de modification (composant à part pour garder le focus pendant la frappe)
 function Ligne({ ctx, cle, libelle, valeur, affichage, type = 'text', enregistrer, lectureSeule, aide }) {
-  const { enEdition, setEnEdition, brouillon, setBrouillon, commencer, enregistrerChamps } = ctx;
+  const { enEdition, setEnEdition, brouillon, setBrouillon, commencer, enregistrerChamps, erreur } = ctx;
   const edite = enEdition === cle;
   return (
     <div className="esp-liste-ligne" style={{ alignItems: 'flex-start' }}>
@@ -391,6 +391,7 @@ function Ligne({ ctx, cle, libelle, valeur, affichage, type = 'text', enregistre
             : <input className="champ" style={{ flex: 1, minWidth: '140px', padding: '0.55em 0.8em' }} type={type} value={brouillon} onChange={(e) => setBrouillon(e.target.value)} autoFocus required={['nom', 'ville', 'categorie'].includes(cle)} />}
           <button type="submit" className="esp-bouton-icone" aria-label="Enregistrer" style={{ color: '#1f7a3d' }}><Check size={18} /></button>
           <button type="button" className="esp-bouton-icone" aria-label="Annuler" onClick={() => setEnEdition(null)}><X size={18} /></button>
+          {erreur && <p role="alert" className="esp-aide" style={{ flexBasis: '100%', color: 'var(--loo-rouge)', opacity: 1, fontWeight: 600 }}>{erreur}</p>}
           {aide && <p className="esp-aide" style={{ flexBasis: '100%' }}>{aide}</p>}
         </form>
       ) : (

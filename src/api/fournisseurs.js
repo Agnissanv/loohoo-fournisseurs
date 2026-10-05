@@ -395,6 +395,11 @@ export async function compterMessagesNonLus(role) {
 export async function mettreAJourTelephone(grossisteId, telephone) {
   const { error } = await supabase.from('grossiste_contact').upsert({ grossiste_id: grossisteId, telephone }, { onConflict: 'grossiste_id' });
   if (error) throw error;
+  // Relecture : si la base accepte l'écriture mais refuse la lecture (droits manquants), on le dit au lieu de faire croire que c'est enregistré
+  const { data } = await supabase.from('grossiste_contact').select('telephone').eq('grossiste_id', grossisteId).maybeSingle();
+  if (!data?.telephone) {
+    throw new Error("Le numéro n'a pas pu être relu après l'enregistrement : les droits de lecture manquent sur la base (migration 0004 à exécuter).");
+  }
 }
 
 export async function ajouterPhotoProfil(grossisteId, url, ordre) {
