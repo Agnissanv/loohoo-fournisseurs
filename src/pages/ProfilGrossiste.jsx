@@ -1,37 +1,78 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, BadgeCheck, Clock, Factory, MapPin, MessageCircle } from 'lucide-react';
+import { ArrowLeft, BadgeCheck, Check, Clock, Copy, Factory, MapPin, MessageCircle, Search, Share2 } from 'lucide-react';
 import { recupererGrossiste, recupererDescriptionGrossiste, incrementerVueProfil } from '../api/fournisseurs.js';
 import CarteProduit from '../components/CarteProduit.jsx';
 import CaptureSortie from '../components/CaptureSortie.jsx';
 import ModaleContact from '../components/ModaleContact.jsx';
 import { noterVisite } from '../utils/suiviVisites.js';
+import { useTitre } from '../utils/useTitre.js';
 
 const JOURS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
+const ORIGINES = { local: 'Entreprise locale', grossiste_etranger_ci: "Grossiste installé en Côte d'Ivoire" };
 
 export default function ProfilGrossiste() {
   const { id } = useParams();
   const [grossiste, setGrossiste] = useState(undefined);
   const [contactOuvert, setContactOuvert] = useState(false);
   const [description, setDescription] = useState(null);
+  const [recherche, setRecherche] = useState('');
+  const [categorie, setCategorie] = useState('');
+  const [tri, setTri] = useState('nom');
+  const [lienCopie, setLienCopie] = useState(false);
+
+  useTitre(
+    grossiste ? `${grossiste.nom}, fournisseur à ${grossiste.ville}` : null,
+    grossiste ? `${grossiste.nom} (${grossiste.categorie}) à ${grossiste.ville} : catalogue au prix de gros et demande de devis.` : null,
+  );
 
   useEffect(() => {
     let annule = false;
-    recupererGrossiste(id).then((g) => { if (!annule) setGrossiste(g); if (g) { incrementerVueProfil(id); noterVisite({ grossisteId: id }); } }).catch(() => setGrossiste(null));
+    setGrossiste(undefined);
+    window.scrollTo({ top: 0 });
+    recupererGrossiste(id).then((g) => {
+      if (!annule) setGrossiste(g);
+      if (g) { incrementerVueProfil(id); noterVisite({ grossisteId: id }); }
+    }).catch(() => { if (!annule) setGrossiste(null); });
     recupererDescriptionGrossiste(id).then((d) => { if (!annule) setDescription(d); });
     return () => { annule = true; };
   }, [id]);
+
+  const produits = grossiste?.produits;
+  const categories = useMemo(() => [...new Set((produits || []).map((p) => p.categorie).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'fr')), [produits]);
+  const visibles = useMemo(() => {
+    const q = recherche.trim().toLowerCase();
+    let l = (produits || []).filter((p) => (!categorie || p.categorie === categorie)
+      && (!q || p.nom.toLowerCase().includes(q) || (p.tags || []).some((t) => t.toLowerCase().includes(q))));
+    if (tri === 'prix_asc') l = [...l].sort((a, b) => a.prix_gros_fcfa - b.prix_gros_fcfa);
+    if (tri === 'prix_desc') l = [...l].sort((a, b) => b.prix_gros_fcfa - a.prix_gros_fcfa);
+    return l;
+  }, [produits, recherche, categorie, tri]);
 
   if (grossiste === undefined) {
     return <section className="section"><div className="container"><div className="loo-squelette" style={{ height: '400px' }} /></div></section>;
   }
   if (!grossiste) {
-    return <section className="section"><div className="container"><h1 className="section-titre">Fournisseur introuvable.</h1></div></section>;
+    return (
+      <section className="section">
+        <div className="container">
+          <h1 className="section-titre">Fournisseur introuvable.</h1>
+          <p className="section-intro">Cette page n'est plus disponible ou le fournisseur n'est pas encore publié.</p>
+          <Link to="/" className="btn btn-primary" style={{ marginTop: '1.2rem' }}>Voir les produits</Link>
+        </div>
+      </section>
+    );
   }
 
   const horaires = grossiste.horaires_ouverture || {};
   // « Fermé » et « non renseigné » sont tous deux enregistrés à null : on n'affiche rien tant qu'aucun jour n'a de plage.
   const horairesAffiches = JOURS.some((j) => horaires[j]) ? JOURS.map((j) => [j, horaires[j]]) : [];
+  const membreDepuis = grossiste.date_ajout ? new Date(grossiste.date_ajout).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) : null;
+  const lien = window.location.href;
+
+  async function copierLien() {
+    try { await navigator.clipboard.writeText(lien); setLienCopie(true); setTimeout(() => setLienCopie(false), 2000); } catch { /* indisponible */ }
+  }
 
   return (
     <>
@@ -43,8 +84,8 @@ export default function ProfilGrossiste() {
 
           <div style={styles.entete}>
             {grossiste.logo_url ? <img src={grossiste.logo_url} alt="" style={styles.logo} /> : <div style={{ ...styles.logo, background: 'var(--loo-papier-ombre)' }} />}
-            <div>
-              <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '0.3rem' }}>
+            <div style={{ flex: '1 1 260px', minWidth: 0 }}>
+              <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '0.3rem', flexWrap: 'wrap' }}>
                 {grossiste.badge_verifie && <span className="badge badge-verifie"><BadgeCheck size={13} /> Vérifié</span>}
                 {grossiste.est_fabricant && <span className="badge badge-fabricant"><Factory size={13} /> Fabricant local</span>}
               </div>
@@ -53,46 +94,93 @@ export default function ProfilGrossiste() {
                 <MapPin size={14} /> {grossiste.commune ? `${grossiste.commune}, ` : ''}{grossiste.ville}
               </span>
             </div>
-            <button type="button" className="btn btn-primary" onClick={() => setContactOuvert(true)} style={styles.boutonContact}>
-              <MessageCircle size={17} /> Contacter ce fournisseur
-            </button>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <button type="button" className="btn btn-primary" onClick={() => setContactOuvert(true)} style={{ justifyContent: 'center' }}>
+                <MessageCircle size={17} /> Demander un devis
+              </button>
+              <button type="button" className="btn btn-outline" onClick={copierLien} aria-label="Copier le lien de cette page">
+                {lienCopie ? <><Check size={16} /> Copié</> : <><Share2 size={16} /> Partager</>}
+              </button>
+            </div>
           </div>
 
-          {description && (
-            <p style={{ maxWidth: '68ch', lineHeight: 1.65, margin: '1.2rem 0 0', whiteSpace: 'pre-line' }}>{description}</p>
-          )}
+          {/* Fiche d'identité : ce qui compte pour décider de faire confiance */}
+          <div className="entreprise-infos">
+            <div><span className="etiquette-info">Catégorie</span><strong>{grossiste.categorie}</strong></div>
+            <div><span className="etiquette-info">Produits</span><strong>{grossiste.produits.length}</strong></div>
+            {ORIGINES[grossiste.origine] && <div><span className="etiquette-info">Type</span><strong>{ORIGINES[grossiste.origine]}</strong></div>}
+            {membreDepuis && <div><span className="etiquette-info">Sur LOOHOO depuis</span><strong style={{ textTransform: 'capitalize' }}>{membreDepuis}</strong></div>}
+            <div><span className="etiquette-info">Vérification</span><strong>{grossiste.badge_verifie ? 'Contrôlé par LOOHOO' : 'En cours'}</strong></div>
+          </div>
 
-          {horairesAffiches.length > 0 && (
-            <div style={styles.horaires}>
-              <span style={styles.horairesTitre}><Clock size={14} /> Horaires d'ouverture</span>
-              {horairesAffiches.map(([jour, plage]) => (
-                <div key={jour} style={styles.horairesLigne}>
-                  <span style={{ textTransform: 'capitalize' }}>{jour}</span>
-                  <span>{plage || 'Fermé'}</span>
+          {(description || horairesAffiches.length > 0) && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: '2rem', marginTop: '1.6rem' }}>
+              {description && (
+                <div>
+                  <h2 style={{ fontSize: '1.15rem', marginBottom: '0.5rem' }}>À propos</h2>
+                  <p style={{ maxWidth: '68ch', lineHeight: 1.65, margin: 0, whiteSpace: 'pre-line' }}>{description}</p>
                 </div>
-              ))}
+              )}
+              {horairesAffiches.length > 0 && (
+                <div style={styles.horaires}>
+                  <span style={styles.horairesTitre}><Clock size={15} /> Horaires d'ouverture</span>
+                  {horairesAffiches.map(([jour, plage]) => (
+                    <div key={jour} style={styles.horairesLigne}>
+                      <span style={{ textTransform: 'capitalize' }}>{jour}</span>
+                      <span>{plage || 'Fermé'}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
-          <h2 style={{ fontSize: '1.3rem', margin: '2rem 0 1.2rem' }}>
-            Catalogue ({grossiste.produits.length} produit{grossiste.produits.length > 1 ? 's' : ''})
+          <h2 style={{ fontSize: '1.3rem', margin: '2.2rem 0 1rem' }}>
+            Catalogue ({visibles.length}{visibles.length !== grossiste.produits.length ? ` sur ${grossiste.produits.length}` : ''} produit{visibles.length > 1 ? 's' : ''})
           </h2>
 
           {grossiste.produits.length === 0 ? (
             <p style={{ opacity: 0.7 }}>Le catalogue de ce fournisseur est en cours de constitution.</p>
           ) : (
-            <div className="loo-fournisseurs-grille">
-              {grossiste.produits.map((p) => (
-                <CarteProduit key={p.id} p={{ ...p, grossiste_nom: grossiste.nom, badge_verifie: grossiste.badge_verifie }} />
-              ))}
-            </div>
+            <>
+              <div className="acc-barre-outils">
+                <div style={{ position: 'relative', flex: '1 1 240px', maxWidth: '360px' }}>
+                  <Search size={15} style={{ position: 'absolute', left: '0.8rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }} />
+                  <input className="champ" style={{ paddingLeft: '2.3rem' }} type="search" placeholder="Chercher dans ce catalogue" value={recherche} onChange={(e) => setRecherche(e.target.value)} />
+                </div>
+                <select className="champ" style={{ width: 'auto', padding: '0.6em 0.9em', fontSize: '0.88rem' }} value={tri} onChange={(e) => setTri(e.target.value)} aria-label="Trier par">
+                  <option value="nom">Nom (A à Z)</option>
+                  <option value="prix_asc">Prix croissant</option>
+                  <option value="prix_desc">Prix décroissant</option>
+                </select>
+              </div>
+              {categories.length > 1 && (
+                <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+                  {['', ...categories].map((c) => (
+                    <button key={c || 'toutes'} type="button" onClick={() => setCategorie(c)} className="esp-puce" style={{
+                      border: 0, cursor: 'pointer', fontSize: '0.8rem', padding: '0.4em 0.9em',
+                      background: categorie === c ? 'var(--loo-encre)' : 'var(--loo-papier-ombre)', color: categorie === c ? 'var(--loo-papier)' : 'var(--loo-encre)',
+                    }}>{c || 'Tous'}</button>
+                  ))}
+                </div>
+              )}
+              {visibles.length === 0 ? (
+                <p style={{ opacity: 0.7 }}>Aucun produit ne correspond.</p>
+              ) : (
+                <div className="loo-fournisseurs-grille">
+                  {visibles.map((p) => (
+                    <CarteProduit key={p.id} p={{ ...p, grossiste_nom: grossiste.nom, badge_verifie: grossiste.badge_verifie }} />
+                  ))}
+                </div>
+              )}
+            </>
           )}
 
           {grossiste.photos.length > 0 && (
             <>
               <h2 style={{ fontSize: '1.2rem', margin: '2.4rem 0 1rem' }}>Photos de l'entreprise</h2>
               <div className="photos-grossiste">
-                {grossiste.photos.map((url) => <img key={url} src={url} alt="" loading="lazy" />)}
+                {grossiste.photos.map((url) => <img key={url} src={url} alt={`Photo de ${grossiste.nom}`} loading="lazy" />)}
               </div>
             </>
           )}
@@ -110,9 +198,8 @@ const styles = {
   banniere: { height: '220px', background: 'var(--gradient-marque)', backgroundSize: 'cover', backgroundPosition: 'center' },
   retour: { display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600, fontSize: '0.9rem', color: 'var(--loo-rouge)', margin: '1.2rem 0 1.2rem' },
   entete: { display: 'flex', alignItems: 'flex-end', gap: '1.2rem', marginTop: '-48px', flexWrap: 'wrap' },
-  boutonContact: { marginLeft: 'auto', justifyContent: 'center' },
-  horaires: { marginTop: '1.4rem', maxWidth: '320px', fontSize: '0.86rem' },
-  horairesTitre: { display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700, marginBottom: '0.4rem' },
-  horairesLigne: { display: 'flex', justifyContent: 'space-between', padding: '0.15rem 0', opacity: 0.8 },
-  logo: { width: '96px', height: '96px', borderRadius: '12px', objectFit: 'cover', border: '4px solid var(--loo-papier)' },
+  horaires: { maxWidth: '340px', fontSize: '0.88rem' },
+  horairesTitre: { display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700, marginBottom: '0.5rem', fontSize: '1.05rem' },
+  horairesLigne: { display: 'flex', justifyContent: 'space-between', padding: '0.2rem 0', opacity: 0.85 },
+  logo: { width: '96px', height: '96px', borderRadius: '12px', objectFit: 'cover', border: '4px solid var(--loo-papier)', background: 'var(--loo-papier)' },
 };

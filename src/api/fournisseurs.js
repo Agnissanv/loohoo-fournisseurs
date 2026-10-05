@@ -25,17 +25,20 @@ export async function recupererFiltres() {
 
 // Profil complet d'un grossiste publié (photos + catalogue). Renvoie null s'il n'existe pas ou n'est pas publié.
 export async function recupererGrossiste(id) {
-  const { data, error } = await supabase
-    .from('grossiste')
-    .select('id, nom, categorie, ville, commune, pays, origine, est_fabricant, badge_verifie, statut, horaires_ouverture, grossiste_photo(url, ordre), produit(id, nom, description, poids_grammes, prix_gros_fcfa, moq, photo_url, date_ajout)')
-    .eq('id', id)
-    .maybeSingle();
+  const produits = 'produit(id, nom, description, tags, categorie, poids_grammes, prix_gros_fcfa, moq, unite, photo_url, date_ajout, statut, actif)';
+  const base = `id, nom, categorie, ville, commune, pays, origine, est_fabricant, badge_verifie, statut, horaires_ouverture, grossiste_photo(url, ordre), ${produits}`;
+  const requete = (colonnes) => supabase.from('grossiste').select(colonnes).eq('id', id).maybeSingle();
+  // logo, bannière et date d'inscription : lus d'abord, avec repli si les droits de la base ne les exposent pas
+  let { data, error } = await requete(`${base}, logo_url, banniere_url, date_ajout`);
+  if (error) ({ data, error } = await requete(base));
   if (error) throw error;
   if (!data) return null;
+  // Seuls les produits publiés et actifs sont montrés aux acheteurs
+  const visibles = (data.produit || []).filter((p) => (p.statut === undefined || p.statut === 'publie') && p.actif !== false);
   return {
     ...data,
     photos: [...data.grossiste_photo].sort((a, b) => a.ordre - b.ordre).map((p) => p.url),
-    produits: [...data.produit].sort((a, b) => a.nom.localeCompare(b.nom, 'fr')),
+    produits: visibles.sort((a, b) => a.nom.localeCompare(b.nom, 'fr')),
   };
 }
 
@@ -416,19 +419,29 @@ export async function rechercherProduits({ q = '', categorie = '', ville = '', c
 
 // Fiche produit publique complète (galerie, vidéo, infos du fournisseur)
 export async function recupererProduitPublic(id) {
-  const { data, error } = await supabase
-    .from('produit')
-    .select(`
-      id, nom, description, tags, categorie, sous_categorie, video_url,
+  const base = `id, nom, description, tags, categorie, sous_categorie, video_url,
       prix_gros_fcfa, prix_unitaire_fcfa, moq, unite, poids_grammes,
       produit_photo(url, ordre),
-      grossiste(id, nom, badge_verifie, est_fabricant, ville, commune, statut, logo_url)
-    `)
-    .eq('id', id).eq('statut', 'publie').eq('actif', true)
-    .maybeSingle();
+      grossiste(id, nom, badge_verifie, est_fabricant, ville, commune, statut, logo_url)`;
+  const requete = (colonnes) => supabase.from('produit').select(colonnes)
+    .eq('id', id).eq('statut', 'publie').eq('actif', true).maybeSingle();
+  // Stock, dimensions et référence : lus d'abord, avec repli si les droits de la base ne les exposent pas
+  let { data, error } = await requete(`${base}, stock_disponible, longueur_cm, largeur_cm, hauteur_cm, sku`);
+  if (error) ({ data, error } = await requete(base));
   if (error) throw error;
   if (!data || data.grossiste?.statut !== 'publie') return null;
   return { ...data, photos: [...(data.produit_photo || [])].sort((a, b) => a.ordre - b.ordre).map((p) => p.url) };
+}
+
+// Autres produits publiés d'un fournisseur (pour « Du même fournisseur »)
+export async function recupererAutresProduitsFournisseur(grossisteId, sauf) {
+  const { data, error } = await supabase
+    .from('produit')
+    .select('id, nom, photo_url, prix_gros_fcfa, moq, unite')
+    .eq('grossiste_id', grossisteId).eq('statut', 'publie').eq('actif', true)
+    .neq('id', sauf).limit(10);
+  if (error) return [];
+  return data;
 }
 
 // ---- Galerie et vidéo d'un produit (gérées par le fournisseur) ----
