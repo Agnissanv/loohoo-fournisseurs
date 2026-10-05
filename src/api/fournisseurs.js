@@ -475,3 +475,30 @@ export async function recupererStatsVisites(jours = 30) {
   if (error) return null;
   return data;
 }
+
+
+// ---- Messagerie (liste + fil) ----
+// Liste riche : logo et badge du fournisseur, activité de l'acheteur, produit avec photo et prix.
+// Si un champ n'est pas lisible selon les droits de la base, on retombe sur la sélection de base.
+export async function recupererConversationsRiches() {
+  const requete = (grossiste, vendeur, produit) => supabase
+    .from('conversation')
+    .select(`id, derniere_activite, grossiste(${grossiste}), vendeur(${vendeur}), produit(${produit}), message(id, contenu, date_envoi, expediteur, lu)`)
+    .order('derniere_activite', { ascending: false });
+  let { data, error } = await requete('id, nom, logo_url, badge_verifie, ville', 'id, nom, activite', 'id, nom, photo_url, prix_gros_fcfa, moq, unite');
+  if (error) ({ data, error } = await requete('id, nom', 'id, nom', 'id, nom'));
+  if (error) throw error;
+  return data;
+}
+
+// Messages d'un fil : INSERT (nouveau message) et UPDATE (message marqué lu)
+export function suivreFil(conversationId, { onInsert, onUpdate }) {
+  const canal = supabase
+    .channel(`fil-${conversationId}-${Math.random().toString(36).slice(2, 7)}`)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'message', filter: `conversation_id=eq.${conversationId}` },
+      (payload) => onInsert?.(payload.new))
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'message', filter: `conversation_id=eq.${conversationId}` },
+      (payload) => onUpdate?.(payload.new))
+    .subscribe();
+  return () => supabase.removeChannel(canal);
+}

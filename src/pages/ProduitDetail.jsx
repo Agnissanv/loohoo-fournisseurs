@@ -84,7 +84,7 @@ export default function ProduitDetail() {
       </div>
 
       {contactOuvert && (
-        <ModaleContact grossiste={g} produit={{ id: produit.id, nom: produit.nom }} onClose={() => setContactOuvert(false)} />
+        <ModaleContact grossiste={g} produit={{ id: produit.id, nom: produit.nom, unite: produit.unite, moq: produit.moq }} onClose={() => setContactOuvert(false)} />
       )}
     </section>
   );

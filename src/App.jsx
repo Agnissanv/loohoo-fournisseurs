@@ -12,8 +12,7 @@ import Connexion from './pages/Connexion.jsx';
 import Inscription from './pages/Inscription.jsx';
 import InscriptionVendeur from './pages/InscriptionVendeur.jsx';
 import TableauDeBord from './pages/TableauDeBord.jsx';
-import Conversations from './pages/Conversations.jsx';
-import Conversation from './pages/Conversation.jsx';
+import Messagerie from './pages/Messagerie.jsx';
 import Mediatheque from './pages/Mediatheque.jsx';
 import Profil from './pages/Profil.jsx';
 import Statistiques from './pages/Statistiques.jsx';
@@ -86,8 +85,8 @@ export default function App() {
           <Route path="/mediatheque" element={<Mediatheque />} />
           <Route path="/profil" element={<Profil />} />
           <Route path="/statistiques" element={<Statistiques />} />
-          <Route path="/conversations" element={<Conversations />} />
-          <Route path="/conversations/:id" element={<Conversation />} />
+          <Route path="/conversations" element={<Messagerie />} />
+          <Route path="/conversations/:id" element={<Messagerie />} />
         </Route>
       </Routes>
     </div>
