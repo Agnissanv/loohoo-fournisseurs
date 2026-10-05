@@ -15,6 +15,7 @@ export default function ModaleContact({ grossiste, produit, onClose }) {
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState('');
   const [conversationId, setConversationId] = useState(null);
+  const [confirmationRequise, setConfirmationRequise] = useState(false);
 
   useEffect(() => {
     recupererSessionVendeur().then((r) => {
@@ -46,12 +47,13 @@ export default function ModaleContact({ grossiste, produit, onClose }) {
         delai: champs.delai,
         message: champs.message,
       });
-      const id = await demarrerConversation({
+      const resultat = await demarrerConversation({
         grossisteId: grossiste.id, produitId: produit ? produit.id : null, message,
         nom: champs.nom, telephone: dejaConnecte ? champs.telephone : normaliserTelephone(champs.telephone), activite: champs.activite,
         email: champs.email, password: champs.motDePasse,
       });
-      setConversationId(id);
+      if (resultat.confirmationRequise) setConfirmationRequise(true);
+      else setConversationId(resultat.conversationId);
     } catch (err) {
       setErreur(err.message || "Impossible d'envoyer la demande pour le moment.");
     } finally {
@@ -66,7 +68,17 @@ export default function ModaleContact({ grossiste, produit, onClose }) {
       <div className="modale" role="dialog" aria-modal="true" aria-labelledby="titre-contact" style={{ width: 'min(100%, 520px)' }} onClick={(e) => e.stopPropagation()}>
         <button type="button" className="modale-fermer" onClick={onClose} aria-label="Fermer"><X size={20} /></button>
 
-        {conversationId ? (
+        {confirmationRequise ? (
+          <div style={{ textAlign: 'center', padding: '0.5rem 0' }}>
+            <MessageCircle size={36} color="var(--loo-rouge)" />
+            <h2 style={{ fontSize: '1.2rem', margin: '0.8rem 0 0.5rem' }}>Confirmez votre e-mail</h2>
+            <p style={{ opacity: 0.85, lineHeight: 1.6, marginBottom: '0.6rem' }}>
+              Nous avons envoyé un lien de confirmation à <strong>{champs.email}</strong>. Cliquez dessus : votre demande de devis
+              sera envoyée à {grossiste.nom} automatiquement, et vous la retrouverez dans vos conversations.
+            </p>
+            <p style={{ opacity: 0.65, fontSize: '0.82rem', margin: 0 }}>Rien reçu ? Regardez vos courriers indésirables.</p>
+          </div>
+        ) : conversationId ? (
           <div style={{ textAlign: 'center', padding: '0.5rem 0' }}>
             <MessageCircle size={36} color="var(--loo-rouge)" />
             <h2 style={{ fontSize: '1.2rem', margin: '0.8rem 0 0.5rem' }}>Demande envoyée</h2>

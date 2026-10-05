@@ -55,7 +55,28 @@ export async function contacterGrossiste({ nom, telephone, email, activite, gros
 
 
 // ---- Compte fournisseur ----
-const CLE_INSCRIPTION_EN_ATTENTE = 'loohoo_inscription_fournisseur';
+// ---- Inscription (fournisseur, acheteur, demande de devis) ----
+// Avec la confirmation d'e-mail activée dans Supabase, signUp ne donne pas de session : le profil ne peut pas être
+// créé tout de suite. On range donc ce qu'il faut (profil, et au besoin la demande de devis) dans les métadonnées du
+// compte ; dès que la personne a confirmé son e-mail et se connecte, on termine le travail (finaliserInscriptionEnAttente).
+// Ça marche même si elle confirme depuis un autre appareil, et la demande de devis n'est jamais perdue.
+
+function traduireErreurAuth(erreur) {
+  const m = erreur?.message || '';
+  if (/rate limit/i.test(m)) return new Error("Trop d'e-mails de confirmation envoyés pour l'instant. Réessayez dans quelques minutes.");
+  if (/already registered|already been registered/i.test(m)) return new Error('Un compte existe déjà avec cet e-mail. Connectez-vous, ou utilisez « Mot de passe oublié ».');
+  return erreur;
+}
+
+async function ouvrirCompte(email, password, attente) {
+  const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { loohoo: attente } } });
+  if (error) throw traduireErreurAuth(error);
+  // E-mail déjà utilisé : Supabase répond sans erreur mais sans identité
+  if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+    throw new Error('Un compte existe déjà avec cet e-mail. Connectez-vous, ou utilisez « Mot de passe oublié ».');
+  }
+  return data.session ? { confirmationRequise: false } : { confirmationRequise: true };
+}
 
 async function creerProfilFournisseur({ nom, categorie, ville, commune, telephone, estFabricant, origine, stockConfirme }) {
   const { error } = await supabase.rpc('creer_profil_fournisseur', {
@@ -72,27 +93,52 @@ async function creerProfilFournisseur({ nom, categorie, ville, commune, telephon
   }
 }
 
-// Renvoie { confirmationRequise } : si Supabase exige la confirmation de l'e-mail, il n'y a pas encore de session
-// et le profil ne peut pas être créé. On garde les infos sur l'appareil et on les envoie à la première connexion.
-export async function inscrireFournisseur({ email, password, ...profil }) {
-  const { data, error } = await supabase.auth.signUp({ email, password });
+async function creerProfilVendeur({ nom, telephone, activite }) {
+  const { error } = await supabase.rpc('creer_profil_vendeur', { p_nom: nom, p_telephone: telephone, p_activite: activite || null });
   if (error) throw error;
-  if (!data.session) {
-    try { localStorage.setItem(CLE_INSCRIPTION_EN_ATTENTE, JSON.stringify(profil)); } catch { /* stockage indisponible */ }
-    return { confirmationRequise: true };
-  }
-  await creerProfilFournisseur(profil);
-  return { confirmationRequise: false };
 }
 
-// À appeler quand un compte connecté n'a pas encore de profil fournisseur. Renvoie true si un profil a été créé.
-export async function finaliserInscriptionEnAttente() {
-  let brut = null;
-  try { brut = localStorage.getItem(CLE_INSCRIPTION_EN_ATTENTE); } catch { /* stockage indisponible */ }
-  if (!brut) return false;
-  await creerProfilFournisseur(JSON.parse(brut));
-  try { localStorage.removeItem(CLE_INSCRIPTION_EN_ATTENTE); } catch { /* ignoré */ }
-  return true;
+// Renvoie { confirmationRequise }
+export async function inscrireFournisseur({ email, password, ...profil }) {
+  const resultat = await ouvrirCompte(email, password, { type: 'fournisseur', profil });
+  if (!resultat.confirmationRequise) await finaliserInscriptionEnAttente();
+  return resultat;
+}
+
+// Compte acheteur seul (page « Créer un compte »). Renvoie { confirmationRequise }
+export async function inscrireVendeur({ email, password, nom, telephone, activite }) {
+  const resultat = await ouvrirCompte(email, password, { type: 'vendeur', profil: { nom, telephone, activite } });
+  if (!resultat.confirmationRequise) await finaliserInscriptionEnAttente();
+  return resultat;
+}
+
+let finalisationEnCours = null;
+
+// À appeler quand un compte connecté porte une inscription en attente. Renvoie false s'il n'y en a pas,
+// sinon { type, conversationId } (conversationId si une demande de devis était jointe).
+export function finaliserInscriptionEnAttente() {
+  if (!finalisationEnCours) finalisationEnCours = executerFinalisation().finally(() => { finalisationEnCours = null; });
+  return finalisationEnCours;
+}
+
+async function executerFinalisation() {
+  const { data: { session } } = await supabase.auth.getSession();
+  const attente = session?.user?.user_metadata?.loohoo;
+  if (!attente) return false;
+
+  const { role } = await recupererMonRole();
+  let conversationId = null;
+  if (attente.type === 'fournisseur') {
+    if (!role) await creerProfilFournisseur(attente.profil);
+  } else {
+    if (!role) await creerProfilVendeur(attente.profil);
+    if (attente.demande) {
+      conversationId = await ouvrirConversation({ ...attente.demande, ...attente.profil });
+    }
+  }
+  // Fait : on retire les données de l'inscription du compte
+  await supabase.auth.updateUser({ data: { loohoo: null } });
+  return { type: attente.type, conversationId };
 }
 
 export async function connecterFournisseur(email, password) {
@@ -166,12 +212,24 @@ export async function recupererSessionVendeur() {
 }
 
 // ---- Démarrer ou poursuivre une conversation (remplace l'ancien lien WhatsApp) ----
+// Un acheteur connecté démarre la conversation tout de suite. Sans session, on crée son compte en rangeant la demande de devis
+// dans le compte : elle part automatiquement dès que l'e-mail est confirmé. Renvoie { conversationId } ou { confirmationRequise }.
 export async function demarrerConversation({ grossisteId, produitId, message, nom, telephone, activite, email, password }) {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) {
-    const { error: erreurCompte } = await supabase.auth.signUp({ email, password });
-    if (erreurCompte) throw erreurCompte;
+    const resultat = await ouvrirCompte(email, password, {
+      type: 'vendeur',
+      profil: { nom, telephone, activite },
+      demande: { grossisteId, produitId: produitId || null, message },
+    });
+    if (resultat.confirmationRequise) return { confirmationRequise: true };
+    const fini = await finaliserInscriptionEnAttente();
+    return { conversationId: fini?.conversationId || null };
   }
+  return { conversationId: await ouvrirConversation({ grossisteId, produitId, message, nom, telephone, activite }) };
+}
+
+async function ouvrirConversation({ grossisteId, produitId, message, nom, telephone, activite }) {
   const { data, error } = await supabase.rpc('demarrer_conversation', {
     p_grossiste_id: grossisteId, p_message: message, p_produit_id: produitId || null,
     p_nom: nom || null, p_telephone: telephone || null, p_activite: activite || null,
@@ -396,12 +454,6 @@ export async function mettreAJourVideoProduit(produitId, videoUrl) {
 }
 
 
-export async function inscrireVendeur({ email, password, nom, telephone, activite }) {
-  const { error: erreurCompte } = await supabase.auth.signUp({ email, password });
-  if (erreurCompte) throw erreurCompte;
-  const { error } = await supabase.rpc('creer_profil_vendeur', { p_nom: nom, p_telephone: telephone, p_activite: activite || null });
-  if (error) throw error;
-}
 // ---- Mot de passe oublié ----
 // Le lien reçu par e-mail ramène sur /nouveau-mot-de-passe, déjà connecté (session de récupération).
 // L'adresse doit figurer dans Supabase > Authentication > URL Configuration > Redirect URLs.

@@ -16,7 +16,7 @@ export default function Connexion() {
     try {
       await connecterFournisseur(email, motDePasse);
       let { role } = await recupererMonRole();
-      if (!role && await finaliserInscriptionEnAttente().catch(() => false)) role = 'fournisseur';
+      if (!role) role = (await finaliserInscriptionEnAttente().catch(() => false))?.type || null;
       navigate(role === 'fournisseur' ? '/tableau-de-bord' : '/conversations');
     } catch {
       setErreur('E-mail ou mot de passe incorrect.');

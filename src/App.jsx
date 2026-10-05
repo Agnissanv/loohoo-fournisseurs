@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
-import { Routes, Route, Link, Outlet, useLocation } from 'react-router-dom';
+import { Routes, Route, Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Header from './components/Header.jsx';
 import Footer from './components/Footer.jsx';
 import LayoutEspace from './components/LayoutEspace.jsx';
+import { suivreSession, finaliserInscriptionEnAttente } from './api/fournisseurs.js';
 import Produits from './pages/Produits.jsx';
 import ProduitFormulaire from './pages/ProduitFormulaire.jsx';
 import Annuaire from './pages/Annuaire.jsx';
@@ -45,6 +46,19 @@ function Introuvable() {
   );
 }
 
+// Après confirmation de l'e-mail, termine l'inscription (création du profil, envoi de la demande de devis en attente)
+function FinaliseurInscription() {
+  const navigate = useNavigate();
+  useEffect(() => suivreSession((session) => {
+    if (!session?.user?.user_metadata?.loohoo) return;
+    finaliserInscriptionEnAttente().then((r) => {
+      if (!r) return;
+      navigate(r.type === 'fournisseur' ? '/tableau-de-bord' : r.conversationId ? `/conversations/${r.conversationId}` : '/conversations');
+    }).catch(() => {});
+  }), [navigate]);
+  return null;
+}
+
 function LayoutPublic() {
   return (
     <>
@@ -59,6 +73,7 @@ export default function App() {
   return (
     <div>
       <GestionDuScroll />
+      <FinaliseurInscription />
       <Routes>
         <Route element={<LayoutPublic />}>
           <Route path="/" element={<Annuaire />} />
