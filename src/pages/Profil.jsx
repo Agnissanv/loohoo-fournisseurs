@@ -11,7 +11,7 @@ import {
   recupererDocuments, televerserDocument, supprimerDocument, obtenirLienDocument,
 } from '../api/fournisseurs.js';
 import { televerserPhoto, supprimerPhotoStockage } from '../utils/stockagePhotos.js';
-import { normaliserTelephone, formaterTelephone } from '../utils/telephone.js';
+import { normaliserTelephone, formaterTelephone, telephoneDuProfil } from '../utils/telephone.js';
 
 const JOURS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
 const TYPES_DOCUMENT = {
@@ -55,7 +55,7 @@ export default function Profil() {
   if (session === undefined || profil === undefined) return <div className="loo-squelette" style={{ height: '300px' }} />;
   if (!profil) return <p>Aucun profil fournisseur associé à ce compte.</p>;
 
-  const telephone = profil.grossiste_contact?.[0]?.telephone || '';
+  const telephone = telephoneDuProfil(profil);
   const horaires = profil.horaires_ouverture || {};
   const reseaux = profil.reseaux_sociaux || {};
   const photosProfil = [...(profil.grossiste_photo || [])].sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0));

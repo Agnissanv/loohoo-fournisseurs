@@ -5,6 +5,7 @@ import {
   suivreSession, recupererMonProfil, mettreAJourProfil, finaliserInscriptionEnAttente,
   recupererMesStats, recupererMesConversations,
 } from '../api/fournisseurs.js';
+import { telephoneDuProfil } from '../utils/telephone.js';
 
 const STATUTS = {
   en_attente: { texte: 'En attente de vérification', classe: 'esp-puce-orange' },
@@ -72,7 +73,7 @@ export default function TableauDeBord() {
   const produits = profil.produit || [];
   const produitsPublies = produits.filter((p) => p.statut === 'publie' && p.actif);
   const recents = [...produits].sort((a, b) => new Date(b.date_ajout || 0) - new Date(a.date_ajout || 0)).slice(0, 4);
-  const telephone = profil.grossiste_contact?.[0]?.telephone;
+  const telephone = telephoneDuProfil(profil);
 
   // Ce qui reste à faire pour être publié et bien visible
   const etapes = [
