@@ -3,10 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import NavFournisseur from '../components/NavFournisseur.jsx';
 import SelecteurPhoto from '../components/SelecteurPhoto.jsx';
 import GaleriePhotosProduit from '../components/GaleriePhotosProduit.jsx';
-import { Image as IconeImage, Plus, Trash2, LogOut } from 'lucide-react';
+import { Image as IconeImage, Pencil, Plus, Trash2, LogOut } from 'lucide-react';
 import {
   suivreSession, recupererMonProfil, deconnecterFournisseur,
-  mettreAJourProfil, ajouterProduit, supprimerProduit,
+  mettreAJourProfil, ajouterProduit, modifierProduit, supprimerProduit,
 } from '../api/fournisseurs.js';
 
 const STATUTS = {
@@ -25,6 +25,7 @@ export default function TableauDeBord() {
   const [photoChoisie, setPhotoChoisie] = useState(null);
   const [selecteurOuvert, setSelecteurOuvert] = useState(false);
   const [galerieProduit, setGalerieProduit] = useState(null);
+  const [produitEdite, setProduitEdite] = useState(null); // null = formulaire d'ajout
 
   useEffect(() => suivreSession(setSession), []);
 
@@ -56,11 +57,12 @@ export default function TableauDeBord() {
     }
   }
 
-  async function ajouter(e) {
+  async function enregistrerProduit(e) {
     e.preventDefault();
-    const form = new FormData(e.target);
+    const formulaire = e.target;
+    const form = new FormData(formulaire);
     const nombreOuNull = (cle) => (form.get(cle) ? Number(form.get(cle)) : null);
-    const nouveau = {
+    const champs = {
       nom: form.get('nom'),
       categorie: form.get('categorie') || null,
       sous_categorie: form.get('sous_categorie') || null,
@@ -76,20 +78,43 @@ export default function TableauDeBord() {
       longueur_cm: nombreOuNull('longueur'),
       largeur_cm: nombreOuNull('largeur'),
       hauteur_cm: nombreOuNull('hauteur'),
-      photo_url: photoChoisie,
       actif: form.get('actif') === 'on',
     };
+    setErreur('');
     try {
-      await ajouterProduit(profil.id, nouveau);
-      e.target.reset();
-      setPhotoChoisie(null);
+      if (produitEdite) {
+        // Les photos se gèrent via « Photos & vidéo » : on ne touche pas à photo_url ici
+        await modifierProduit(produitEdite.id, champs);
+        setProduitEdite(null);
+      } else {
+        await ajouterProduit(profil.id, { ...champs, photo_url: photoChoisie });
+        formulaire.reset();
+        setPhotoChoisie(null);
+      }
       setProfil(await recupererMonProfil(session.user.id));
     } catch (err) {
-      setErreur("Impossible d'ajouter le produit : " + err.message);
+      setErreur(`Impossible d'enregistrer le produit : ${err.message}`);
     }
   }
 
-  async function supprimer(id) {
+  function commencerEdition(produit) {
+    setProduitEdite(produit);
+    setErreur('');
+    requestAnimationFrame(() => document.getElementById('formulaire-produit')?.scrollIntoView({ behavior: 'smooth' }));
+  }
+
+  async function basculerActif(produit) {
+    try {
+      await modifierProduit(produit.id, { actif: !produit.actif });
+      setProfil((p) => ({ ...p, produit: p.produit.map((x) => (x.id === produit.id ? { ...x, actif: !produit.actif } : x)) }));
+    } catch (err) {
+      setErreur('Impossible de modifier le produit : ' + err.message);
+    }
+  }
+
+  async function supprimer(produit) {
+    if (!window.confirm(`Supprimer « ${produit.nom} » définitivement ? Ses photos et ses statistiques seront perdues.`)) return;
+    const id = produit.id;
     try {
       await supprimerProduit(id);
       setProfil((p) => ({ ...p, produit: p.produit.filter((x) => x.id !== id) }));
@@ -155,11 +180,17 @@ export default function TableauDeBord() {
                   )}
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                 <button type="button" className="btn btn-outline" style={{ padding: '0.4em 0.8em', fontSize: '0.8rem' }} onClick={() => setGalerieProduit(p)}>
                   Photos & vidéo
                 </button>
-                <button type="button" className="btn btn-outline" style={{ padding: '0.4em 0.8em' }} onClick={() => supprimer(p.id)} aria-label="Supprimer">
+                <button type="button" className="btn btn-outline" style={{ padding: '0.4em 0.8em', fontSize: '0.8rem' }} onClick={() => commencerEdition(p)}>
+                  <Pencil size={14} /> Modifier
+                </button>
+                <button type="button" className="btn btn-outline" style={{ padding: '0.4em 0.8em', fontSize: '0.8rem' }} onClick={() => basculerActif(p)}>
+                  {p.actif ? 'Désactiver' : 'Activer'}
+                </button>
+                <button type="button" className="btn btn-outline" style={{ padding: '0.4em 0.8em' }} onClick={() => supprimer(p)} aria-label="Supprimer">
                   <Trash2 size={15} />
                 </button>
               </div>
@@ -167,30 +198,38 @@ export default function TableauDeBord() {
           ))}
         </div>
 
-        <h2 style={{ fontSize: '1.3rem', marginBottom: '1rem' }}>Ajouter un produit</h2>
-        <form onSubmit={ajouter} className="carte" style={{ padding: '1.4rem', display: 'grid', gap: '1.4rem', maxWidth: '680px' }}>
+        <h2 id="formulaire-produit" style={{ fontSize: '1.3rem', marginBottom: '1rem' }}>
+          {produitEdite ? `Modifier « ${produitEdite.nom} »` : 'Ajouter un produit'}
+        </h2>
+        {produitEdite && (
+          <p style={{ maxWidth: '680px', fontSize: '0.88rem', opacity: 0.75, margin: '0 0 1rem' }}>
+            Si vous changez le nom, la description, la catégorie ou les mots-clés d'un produit publié, il repassera
+            en vérification. Les changements de prix, de stock ou de quantité minimale restent immédiats.
+          </p>
+        )}
+        <form key={produitEdite?.id ?? 'nouveau'} onSubmit={enregistrerProduit} className="carte" style={{ padding: '1.4rem', display: 'grid', gap: '1.4rem', maxWidth: '680px' }}>
 
           <fieldset style={styles.groupe}>
             <legend style={styles.legende}>Informations générales</legend>
             <label style={styles.etiquette}>Nom du produit</label>
-            <input className="champ" name="nom" required placeholder="Ex. : Pagne wax 6 yards" />
+            <input className="champ" name="nom" defaultValue={produitEdite?.nom ?? ''} required placeholder="Ex. : Pagne wax 6 yards" />
 
             <div style={{ display: 'flex', gap: '0.7rem', marginTop: '0.8rem' }}>
               <div style={{ flex: 1 }}>
                 <label style={styles.etiquette}>Catégorie</label>
-                <input className="champ" name="categorie" placeholder="Ex. : Textile" />
+                <input className="champ" name="categorie" defaultValue={produitEdite?.categorie ?? ''} placeholder="Ex. : Textile" />
               </div>
               <div style={{ flex: 1 }}>
                 <label style={styles.etiquette}>Sous-catégorie</label>
-                <input className="champ" name="sous_categorie" placeholder="Ex. : Pagnes" />
+                <input className="champ" name="sous_categorie" defaultValue={produitEdite?.sous_categorie ?? ''} placeholder="Ex. : Pagnes" />
               </div>
             </div>
 
             <label style={{ ...styles.etiquette, marginTop: '0.8rem' }}>Description</label>
-            <textarea className="champ" name="description" placeholder="Caractéristiques, composition, utilisation…" rows={3} />
+            <textarea className="champ" name="description" defaultValue={produitEdite?.description ?? ''} placeholder="Caractéristiques, composition, utilisation…" rows={3} />
 
             <label style={{ ...styles.etiquette, marginTop: '0.8rem' }}>Mots-clés</label>
-            <input className="champ" name="tags" placeholder="Séparés par une virgule (ex. tissu, couture, pagne)" />
+            <input className="champ" name="tags" defaultValue={produitEdite?.tags?.join(', ') ?? ''} placeholder="Séparés par une virgule (ex. tissu, couture, pagne)" />
           </fieldset>
 
           <fieldset style={styles.groupe}>
@@ -198,25 +237,25 @@ export default function TableauDeBord() {
             <div style={{ display: 'flex', gap: '0.7rem' }}>
               <div style={{ flex: 1 }}>
                 <label style={styles.etiquette}>Prix de gros (F CFA)</label>
-                <input className="champ" name="prix_gros" type="number" min="0" required placeholder="0" />
+                <input className="champ" name="prix_gros" defaultValue={produitEdite?.prix_gros_fcfa ?? ''} type="number" min="0" required placeholder="0" />
               </div>
               <div style={{ flex: 1 }}>
                 <label style={styles.etiquette}>Prix unitaire (facultatif)</label>
-                <input className="champ" name="prix_unitaire" type="number" min="0" placeholder="0" />
+                <input className="champ" name="prix_unitaire" defaultValue={produitEdite?.prix_unitaire_fcfa ?? ''} type="number" min="0" placeholder="0" />
               </div>
             </div>
             <div style={{ display: 'flex', gap: '0.7rem', marginTop: '0.8rem' }}>
               <div style={{ flex: 1 }}>
                 <label style={styles.etiquette}>Quantité minimale (MOQ)</label>
-                <input className="champ" name="moq" type="number" min="1" placeholder="1" />
+                <input className="champ" name="moq" defaultValue={produitEdite?.moq ?? ''} type="number" min="1" placeholder="1" />
               </div>
               <div style={{ flex: 1 }}>
                 <label style={styles.etiquette}>Stock disponible</label>
-                <input className="champ" name="stock" type="number" min="0" placeholder="Facultatif" />
+                <input className="champ" name="stock" defaultValue={produitEdite?.stock_disponible ?? ''} type="number" min="0" placeholder="Facultatif" />
               </div>
               <div style={{ flex: 1 }}>
                 <label style={styles.etiquette}>Unité</label>
-                <select className="champ" name="unite" defaultValue="">
+                <select className="champ" name="unite" defaultValue={produitEdite?.unite ?? ''}>
                   <option value="">—</option>
                   {UNITES.map((u) => <option key={u} value={u}>{u}</option>)}
                 </select>
@@ -224,6 +263,7 @@ export default function TableauDeBord() {
             </div>
           </fieldset>
 
+          {!produitEdite && (
           <fieldset style={styles.groupe}>
             <legend style={styles.legende}>Photo</legend>
             {photoChoisie ? (
@@ -238,37 +278,43 @@ export default function TableauDeBord() {
               </button>
             )}
           </fieldset>
+          )}
 
           <fieldset style={styles.groupe}>
             <legend style={styles.legende}>Options avancées</legend>
             <div style={{ display: 'flex', gap: '0.7rem' }}>
               <div style={{ flex: 1 }}>
                 <label style={styles.etiquette}>SKU / Référence</label>
-                <input className="champ" name="sku" placeholder="Facultatif" />
+                <input className="champ" name="sku" defaultValue={produitEdite?.sku ?? ''} placeholder="Facultatif" />
               </div>
               <div style={{ flex: 1 }}>
                 <label style={styles.etiquette}>Poids (grammes)</label>
-                <input className="champ" name="poids" type="number" min="0" placeholder="Facultatif" />
+                <input className="champ" name="poids" defaultValue={produitEdite?.poids_grammes ?? ''} type="number" min="0" placeholder="Facultatif" />
               </div>
             </div>
             <label style={{ ...styles.etiquette, marginTop: '0.8rem' }}>Dimensions (cm)</label>
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-              <input className="champ" name="longueur" type="number" min="0" placeholder="L" />
+              <input className="champ" name="longueur" defaultValue={produitEdite?.longueur_cm ?? ''} type="number" min="0" placeholder="L" />
               <span>×</span>
-              <input className="champ" name="largeur" type="number" min="0" placeholder="l" />
+              <input className="champ" name="largeur" defaultValue={produitEdite?.largeur_cm ?? ''} type="number" min="0" placeholder="l" />
               <span>×</span>
-              <input className="champ" name="hauteur" type="number" min="0" placeholder="H" />
+              <input className="champ" name="hauteur" defaultValue={produitEdite?.hauteur_cm ?? ''} type="number" min="0" placeholder="H" />
             </div>
           </fieldset>
 
           <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontWeight: 600 }}>
-            <input type="checkbox" name="actif" defaultChecked />
+            <input type="checkbox" name="actif" defaultChecked={produitEdite ? produitEdite.actif : true} />
             Produit actif (visible dès que publié)
           </label>
 
           <button type="submit" className="btn btn-primary" style={{ justifyContent: 'center' }}>
-            <Plus size={16} /> Ajouter le produit
+            {produitEdite ? 'Enregistrer les modifications' : <><Plus size={16} /> Ajouter le produit</>}
           </button>
+          {produitEdite && (
+            <button type="button" className="btn btn-outline" style={{ justifyContent: 'center' }} onClick={() => setProduitEdite(null)}>
+              Annuler la modification
+            </button>
+          )}
         </form>
       </div>
 

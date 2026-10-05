@@ -102,6 +102,11 @@ export async function ajouterProduit(grossisteId, produit) {
   if (error) throw error;
 }
 
+export async function modifierProduit(id, champs) {
+  const { error } = await supabase.from('produit').update(champs).eq('id', id);
+  if (error) throw error;
+}
+
 export async function supprimerProduit(id) {
   const { error } = await supabase.from('produit').delete().eq('id', id);
   if (error) throw error;
@@ -162,9 +167,25 @@ export async function recupererMessages(conversationId) {
   return data;
 }
 
+// Renvoie le message créé (id, expediteur, contenu, date_envoi, lu) pour l'afficher sans attendre Realtime
 export async function envoyerMessage(conversationId, contenu) {
-  const { error } = await supabase.from('message').insert({ conversation_id: conversationId, contenu });
+  const { data, error } = await supabase
+    .from('message').insert({ conversation_id: conversationId, contenu })
+    .select('id, expediteur, contenu, date_envoi, lu').single();
   if (error) throw error;
+  return data;
+}
+
+// En-tête d'une conversation : qui parle à qui, à propos de quel produit
+export async function recupererConversation(id) {
+  const requete = (colonnesVendeur) => supabase
+    .from('conversation')
+    .select(`id, grossiste(id, nom), vendeur(${colonnesVendeur}), produit(id, nom)`)
+    .eq('id', id).maybeSingle();
+  let { data, error } = await requete('id, nom, activite');
+  if (error) ({ data, error } = await requete('id, nom'));
+  if (error) throw error;
+  return data;
 }
 
 export function suivreMessages(conversationId, callback) {

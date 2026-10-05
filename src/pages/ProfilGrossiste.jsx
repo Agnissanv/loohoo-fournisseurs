@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, BadgeCheck, Factory, MapPin } from 'lucide-react';
+import { ArrowLeft, BadgeCheck, Clock, Factory, MapPin, MessageCircle } from 'lucide-react';
 import { recupererGrossiste, incrementerVueProfil } from '../api/fournisseurs.js';
 import CarteProduit from '../components/CarteProduit.jsx';
 import CaptureSortie from '../components/CaptureSortie.jsx';
+import ModaleContact from '../components/ModaleContact.jsx';
+
+const JOURS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
 
 export default function ProfilGrossiste() {
   const { id } = useParams();
   const [grossiste, setGrossiste] = useState(undefined);
+  const [contactOuvert, setContactOuvert] = useState(false);
 
   useEffect(() => {
     let annule = false;
@@ -21,6 +25,10 @@ export default function ProfilGrossiste() {
   if (!grossiste) {
     return <section className="section"><div className="container"><h1 className="section-titre">Fournisseur introuvable.</h1></div></section>;
   }
+
+  const horaires = grossiste.horaires_ouverture || {};
+  // « Fermé » et « non renseigné » sont tous deux enregistrés à null : on n'affiche rien tant qu'aucun jour n'a de plage.
+  const horairesAffiches = JOURS.some((j) => horaires[j]) ? JOURS.map((j) => [j, horaires[j]]) : [];
 
   return (
     <>
@@ -42,7 +50,22 @@ export default function ProfilGrossiste() {
                 <MapPin size={14} /> {grossiste.commune ? `${grossiste.commune}, ` : ''}{grossiste.ville}
               </span>
             </div>
+            <button type="button" className="btn btn-primary" onClick={() => setContactOuvert(true)} style={styles.boutonContact}>
+              <MessageCircle size={17} /> Contacter ce fournisseur
+            </button>
           </div>
+
+          {horairesAffiches.length > 0 && (
+            <div style={styles.horaires}>
+              <span style={styles.horairesTitre}><Clock size={14} /> Horaires d'ouverture</span>
+              {horairesAffiches.map(([jour, plage]) => (
+                <div key={jour} style={styles.horairesLigne}>
+                  <span style={{ textTransform: 'capitalize' }}>{jour}</span>
+                  <span>{plage || 'Fermé'}</span>
+                </div>
+              ))}
+            </div>
+          )}
 
           <h2 style={{ fontSize: '1.3rem', margin: '2rem 0 1.2rem' }}>
             Catalogue ({grossiste.produits.length} produit{grossiste.produits.length > 1 ? 's' : ''})
@@ -68,6 +91,9 @@ export default function ProfilGrossiste() {
           )}
         </div>
       </section>
+      {contactOuvert && (
+        <ModaleContact grossiste={grossiste} produit={null} onClose={() => setContactOuvert(false)} />
+      )}
       <CaptureSortie recherche={grossiste.nom} />
     </>
   );
@@ -76,6 +102,10 @@ export default function ProfilGrossiste() {
 const styles = {
   banniere: { height: '220px', background: 'var(--gradient-marque)', backgroundSize: 'cover', backgroundPosition: 'center' },
   retour: { display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600, fontSize: '0.9rem', color: 'var(--loo-rouge)', margin: '1.2rem 0 1.2rem' },
-  entete: { display: 'flex', alignItems: 'flex-end', gap: '1.2rem', marginTop: '-48px' },
+  entete: { display: 'flex', alignItems: 'flex-end', gap: '1.2rem', marginTop: '-48px', flexWrap: 'wrap' },
+  boutonContact: { marginLeft: 'auto', justifyContent: 'center' },
+  horaires: { marginTop: '1.4rem', maxWidth: '320px', fontSize: '0.86rem' },
+  horairesTitre: { display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700, marginBottom: '0.4rem' },
+  horairesLigne: { display: 'flex', justifyContent: 'space-between', padding: '0.15rem 0', opacity: 0.8 },
   logo: { width: '96px', height: '96px', borderRadius: '12px', objectFit: 'cover', border: '4px solid var(--loo-papier)' },
 };
