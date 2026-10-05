@@ -457,3 +457,21 @@ export async function recupererNotifications(role) {
     .filter((n) => n.nonLus > 0)
     .slice(0, 6);
 }
+
+
+// Présentation publique du fournisseur. Lecture à part et tolérante : tant que la migration 0002
+// n'est pas exécutée, la colonne n'existe pas et on renvoie simplement null.
+export async function recupererDescriptionGrossiste(id) {
+  const { data, error } = await supabase.from('grossiste').select('description').eq('id', id).maybeSingle();
+  if (error) return null;
+  return data?.description || null;
+}
+
+
+// Visites du fournisseur connecté (origine, jours, produits les plus vus). Renvoie null tant que la migration 0003
+// n'est pas exécutée, pour que la page Statistiques affiche « bientôt disponible » au lieu d'une erreur.
+export async function recupererStatsVisites(jours = 30) {
+  const { data, error } = await supabase.rpc('stats_visites', { p_jours: jours });
+  if (error) return null;
+  return data;
+}

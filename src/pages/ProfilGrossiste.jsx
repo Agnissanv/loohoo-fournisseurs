@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, BadgeCheck, Clock, Factory, MapPin, MessageCircle } from 'lucide-react';
-import { recupererGrossiste, incrementerVueProfil } from '../api/fournisseurs.js';
+import { recupererGrossiste, recupererDescriptionGrossiste, incrementerVueProfil } from '../api/fournisseurs.js';
 import CarteProduit from '../components/CarteProduit.jsx';
 import CaptureSortie from '../components/CaptureSortie.jsx';
 import ModaleContact from '../components/ModaleContact.jsx';
+import { noterVisite } from '../utils/suiviVisites.js';
 
 const JOURS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
 
@@ -12,10 +13,12 @@ export default function ProfilGrossiste() {
   const { id } = useParams();
   const [grossiste, setGrossiste] = useState(undefined);
   const [contactOuvert, setContactOuvert] = useState(false);
+  const [description, setDescription] = useState(null);
 
   useEffect(() => {
     let annule = false;
-    recupererGrossiste(id).then((g) => { if (!annule) setGrossiste(g); if (g) incrementerVueProfil(id); }).catch(() => setGrossiste(null));
+    recupererGrossiste(id).then((g) => { if (!annule) setGrossiste(g); if (g) { incrementerVueProfil(id); noterVisite({ grossisteId: id }); } }).catch(() => setGrossiste(null));
+    recupererDescriptionGrossiste(id).then((d) => { if (!annule) setDescription(d); });
     return () => { annule = true; };
   }, [id]);
 
@@ -54,6 +57,10 @@ export default function ProfilGrossiste() {
               <MessageCircle size={17} /> Contacter ce fournisseur
             </button>
           </div>
+
+          {description && (
+            <p style={{ maxWidth: '68ch', lineHeight: 1.65, margin: '1.2rem 0 0', whiteSpace: 'pre-line' }}>{description}</p>
+          )}
 
           {horairesAffiches.length > 0 && (
             <div style={styles.horaires}>

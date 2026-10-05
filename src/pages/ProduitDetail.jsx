@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, BadgeCheck, Factory, MapPin, MessageCircle } from 'lucide-react';
 import { recupererProduitPublic } from '../api/fournisseurs.js';
 import ModaleContact from '../components/ModaleContact.jsx';
+import { noterVisite } from '../utils/suiviVisites.js';
 
 export default function ProduitDetail() {
   const { id } = useParams();
@@ -12,7 +13,7 @@ export default function ProduitDetail() {
 
   useEffect(() => {
     let annule = false;
-    recupererProduitPublic(id).then((p) => { if (!annule) setProduit(p); }).catch(() => setProduit(null));
+    recupererProduitPublic(id).then((p) => { if (!annule) setProduit(p); if (p?.grossiste) noterVisite({ grossisteId: p.grossiste.id, produitId: p.id }); }).catch(() => setProduit(null));
     return () => { annule = true; };
   }, [id]);
 

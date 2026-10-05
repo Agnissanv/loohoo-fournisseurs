@@ -15,7 +15,7 @@ const LIENS = [
   { vers: '/tableau-de-bord', texte: 'Tableau de bord', icone: LayoutDashboard },
   { vers: '/produits', texte: 'Mes produits', icone: Package },
   { vers: '/mediatheque', texte: 'Médiathèque', icone: IconeImage },
-  { vers: '/conversations', texte: 'Messages', icone: MessageCircle, pastille: true },
+  { vers: '/conversations', texte: 'Demandes', icone: MessageCircle, pastille: true },
   { vers: '/statistiques', texte: 'Statistiques', icone: BarChart3 },
   { vers: '/profil', texte: 'Paramètres', icone: Settings },
 ];

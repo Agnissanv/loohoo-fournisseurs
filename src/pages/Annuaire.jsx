@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { rechercherProduits, recupererFiltres } from '../api/fournisseurs.js';
 import CarteProduit from '../components/CarteProduit.jsx';
 import CaptureSortie from '../components/CaptureSortie.jsx';
+import { noterPageInterne } from '../utils/suiviVisites.js';
 
 export default function Annuaire() {
   const [q, setQ] = useState('');
@@ -13,7 +14,7 @@ export default function Annuaire() {
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(false);
 
-  useEffect(() => { recupererFiltres().then(setFiltres).catch(() => {}); }, []);
+  useEffect(() => { recupererFiltres().then(setFiltres).catch(() => {}); noterPageInterne(); }, []);
 
   useEffect(() => {
     let annule = false;
