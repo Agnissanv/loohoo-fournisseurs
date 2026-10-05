@@ -1,4 +1,15 @@
 User-agent: *
 Allow: /
+# Espaces privés : inutile de les indexer
+Disallow: /tableau-de-bord
+Disallow: /produits
+Disallow: /mediatheque
+Disallow: /profil
+Disallow: /statistiques
+Disallow: /conversations
+Disallow: /connexion
+Disallow: /inscription
+Disallow: /nouveau-mot-de-passe
+Disallow: /mot-de-passe-oublie
 
-Sitemap: https://looh-oo.com/sitemap.xml
+Sitemap: https://fournisseurs.looh-oo.com/sitemap.xml

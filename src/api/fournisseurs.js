@@ -1,17 +1,5 @@
 import { supabase } from '../supabaseClient.js';
 
-// Liste filtrée (le téléphone n'est jamais renvoyé, il n'existe pas dans ces tables publiques)
-export async function rechercherGrossistes({ q = '', categorie = '', ville = '', commune = '' } = {}) {
-  const { data, error } = await supabase.rpc('rechercher_grossistes', {
-    p_q: q.trim() || null,
-    p_categorie: categorie || null,
-    p_ville: ville || null,
-    p_commune: commune || null,
-  });
-  if (error) throw error;
-  return data;
-}
-
 // Valeurs des listes déroulantes, déduites des grossistes publiés
 export async function recupererFiltres() {
   const { data, error } = await supabase.from('grossiste').select('categorie, ville, commune');
@@ -41,21 +29,6 @@ export async function recupererGrossiste(id) {
     produits: visibles.sort((a, b) => a.nom.localeCompare(b.nom, 'fr')),
   };
 }
-
-// Enregistre le vendeur + la mise en relation et renvoie le lien WhatsApp déjà construit par la base
-export async function contacterGrossiste({ nom, telephone, email, activite, grossisteId, produitId = null }) {
-  const { data, error } = await supabase.rpc('contacter_grossiste', {
-    p_nom: nom,
-    p_telephone: telephone,
-    p_email: email,
-    p_activite: activite || null,
-    p_grossiste_id: grossisteId,
-    p_produit_id: produitId,
-  });
-  if (error) throw error;
-  return data;
-}
-
 
 // ---- Compte fournisseur ----
 // ---- Inscription (fournisseur, acheteur, demande de devis) ----
@@ -266,27 +239,6 @@ export async function envoyerMessage(conversationId, contenu) {
     .select('id, expediteur, contenu, date_envoi, lu').single();
   if (error) throw error;
   return data;
-}
-
-// En-tête d'une conversation : qui parle à qui, à propos de quel produit
-export async function recupererConversation(id) {
-  const requete = (colonnesVendeur) => supabase
-    .from('conversation')
-    .select(`id, grossiste(id, nom), vendeur(${colonnesVendeur}), produit(id, nom)`)
-    .eq('id', id).maybeSingle();
-  let { data, error } = await requete('id, nom, activite');
-  if (error) ({ data, error } = await requete('id, nom'));
-  if (error) throw error;
-  return data;
-}
-
-export function suivreMessages(conversationId, callback) {
-  const canal = supabase
-    .channel(`messages-${conversationId}`)
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'message', filter: `conversation_id=eq.${conversationId}` },
-      (payload) => callback(payload.new))
-    .subscribe();
-  return () => supabase.removeChannel(canal);
 }
 
 export async function marquerMessagesLus(conversationId, role) {
