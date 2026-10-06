@@ -1,11 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import { suivreSession, recupererMonRole, deconnecterFournisseur, compterMessagesNonLus, suivreActiviteMessages } from '../api/fournisseurs.js';
 import { useTitreNonLus } from '../utils/useTitreNonLus.js';
 
 export default function Header() {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const [enHaut, setEnHaut] = useState(true);
+  // Sur l'accueil, le menu flotte sur la photo tant qu'on n'a pas fait défiler la page
+  useEffect(() => {
+    const maj = () => setEnHaut(window.scrollY < 40);
+    maj();
+    window.addEventListener('scroll', maj, { passive: true });
+    return () => window.removeEventListener('scroll', maj);
+  }, []);
+  const surPhoto = pathname === '/' && enHaut;
   const [session, setSession] = useState(undefined);
   const [identite, setIdentite] = useState(null); // null tant qu'on ne sait pas, { role, nom } sinon
   const [nonLus, setNonLus] = useState(0);
@@ -37,7 +47,7 @@ export default function Header() {
   }
 
   return (
-    <header style={styles.header}>
+    <header style={styles.header} className={surPhoto ? 'loo-header-photo' : undefined}>
       <div className="container" style={styles.barre}>
         <Link to="/" style={styles.logoLigne}>
           <img src="/logo.jpeg" alt="LOOHOO" style={styles.logo} width="38" height="38" />

@@ -462,3 +462,25 @@ img { max-width: 100%; display: block; }
 .paliers-table caption { text-align: left; font-weight: 700; padding-bottom: 0.3rem; }
 .paliers-table th { text-align: left; font-weight: 500; padding: 0.4rem 0; border-top: 1px solid var(--loo-papier-ombre); }
 .paliers-table td { text-align: right; font-weight: 700; padding: 0.4rem 0; border-top: 1px solid var(--loo-papier-ombre); }
+
+
+/* ---- bandeau d'accueil en carrousel de photos ---- */
+.loo-hero { position: relative; min-height: min(78vh, 680px); display: flex; align-items: flex-end; color: #fff; overflow: hidden; margin-top: -65px; padding: 7rem 0 3.2rem; background: var(--loo-encre); }
+.loo-hero-fond { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transform: scale(1.04); transition: opacity 1.4s ease, transform 7s ease-out; }
+.loo-hero-fond-actif { opacity: 1; transform: scale(1); }
+.loo-hero-voile { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(23, 18, 13, 0.82) 0%, rgba(23, 18, 13, 0.55) 50%, rgba(23, 18, 13, 0.2) 100%), linear-gradient(0deg, rgba(23, 18, 13, 0.55) 0%, transparent 45%); }
+.loo-hero-contenu { position: relative; width: 100%; }
+.loo-hero-points { display: flex; gap: 0.5rem; margin-top: 2rem; }
+.loo-hero-point { width: 28px; height: 4px; padding: 0; border: 0; border-radius: 2px; background: rgba(255, 255, 255, 0.35); cursor: pointer; transition: background 0.3s ease, width 0.3s ease; }
+.loo-hero-point:hover { background: rgba(255, 255, 255, 0.65); }
+.loo-hero-point-actif { width: 44px; background: var(--loo-orange); }
+.loo-hero-credit { position: absolute; right: 1.2rem; bottom: 0.8rem; font-size: 0.7rem; opacity: 0.6; }
+.loo-header-photo { background: transparent !important; backdrop-filter: none !important; border-bottom-color: transparent !important; }
+.loo-header-photo a:not(.btn), .loo-header-photo span { color: #fff !important; }
+.loo-header-photo .btn-outline { color: #fff; border-color: rgba(255, 255, 255, 0.7); }
+.loo-header-photo .btn-primary { background: #fff; color: var(--loo-encre); }
+@media (max-width: 640px) {
+  .loo-hero { min-height: 80vh; }
+  .loo-hero-voile { background: linear-gradient(0deg, rgba(23, 18, 13, 0.88) 0%, rgba(23, 18, 13, 0.55) 55%, rgba(23, 18, 13, 0.3) 100%); }
+}
+@media (prefers-reduced-motion: reduce) { .loo-hero-fond { transition: opacity 0.01ms; transform: none; } }

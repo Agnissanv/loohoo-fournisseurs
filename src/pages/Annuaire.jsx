@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { MessageSquare, Search, ShieldCheck, Truck } from 'lucide-react';
 import { rechercherProduits, recupererFiltres, capturerLead, suivreSession } from '../api/fournisseurs.js';
 import CarteProduit from '../components/CarteProduit.jsx';
+import HeroCarrousel from '../components/HeroCarrousel.jsx';
 import CaptureSortie from '../components/CaptureSortie.jsx';
 import IconeCategorie from '../components/IconeCategorie.jsx';
 import { noterPageInterne } from '../utils/suiviVisites.js';
@@ -81,8 +82,8 @@ export default function Annuaire() {
 
   return (
     <>
-      <section style={styles.hero}>
-        <div className="container">
+      <HeroCarrousel>
+        <div>
           <span className="badge" style={styles.badgeMali}>Bientôt au Mali</span>
           <h1 style={styles.titre}>Le seul endroit où trouver un fournisseur vérifié.</h1>
           <p style={styles.sousTitre}>Recherchez directement le produit que vous voulez acheter en gros.</p>
@@ -106,7 +107,7 @@ export default function Annuaire() {
             <button type="submit" className="btn btn-clair" style={{ justifyContent: 'center' }}><Search size={17} /> Rechercher</button>
           </form>
         </div>
-      </section>
+      </HeroCarrousel>
 
       {/* Ce qui rassure l'acheteur, en trois phrases */}
       <section style={{ background: 'var(--loo-blanc)', borderBottom: '1px solid var(--loo-papier-ombre)' }}>
@@ -279,9 +280,8 @@ function SqueletteGrille() {
 }
 
 const styles = {
-  hero: { background: 'var(--gradient-marque)', padding: '3.5rem 0 3rem', color: 'var(--loo-papier)' },
   badgeMali: { background: 'rgba(255,248,239,0.2)', color: 'var(--loo-papier)' },
-  titre: { fontSize: 'clamp(2rem, 4.6vw, 3.2rem)', lineHeight: 1.08, margin: '1rem 0 0.8rem', color: 'var(--loo-papier)', maxWidth: '20ch' },
+  titre: { fontSize: 'clamp(2.2rem, 5vw, 3.8rem)', lineHeight: 1.05, fontWeight: 600, letterSpacing: '-0.025em', margin: '1rem 0 0.8rem', color: '#fff', maxWidth: '18ch' },
   sousTitre: { maxWidth: '520px', opacity: 0.92, margin: '0 0 1.8rem', fontSize: '1.05rem' },
   recherche: { display: 'flex', gap: '0.7rem', flexWrap: 'wrap' },
   select: { flex: '0 1 180px', minWidth: 0 },
