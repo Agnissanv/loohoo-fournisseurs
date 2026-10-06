@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Image as IconeImage, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { FileUp, Image as IconeImage, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import GaleriePhotosProduit from '../components/GaleriePhotosProduit.jsx';
 import {
   suivreSession, recupererMonProfil, modifierProduit, supprimerProduit,
@@ -74,7 +74,10 @@ export default function Produits() {
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
         <h1 className="esp-titre-page" style={{ margin: 0 }}>Mes produits</h1>
-        <Link to="/produits/nouveau" className="btn btn-primary"><Plus size={16} /> Ajouter un produit</Link>
+        <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+          <Link to="/produits/importer" className="btn btn-outline"><FileUp size={16} /> Importer un fichier</Link>
+          <Link to="/produits/nouveau" className="btn btn-primary"><Plus size={16} /> Ajouter un produit</Link>
+        </div>
       </div>
 
       {erreur && <p role="alert" style={{ color: 'var(--loo-rouge)', fontWeight: 600 }}>{erreur}</p>}

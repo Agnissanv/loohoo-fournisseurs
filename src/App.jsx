@@ -7,6 +7,7 @@ import { suivreSession, finaliserInscriptionEnAttente } from './api/fournisseurs
 import Produits from './pages/Produits.jsx';
 import ChoixInscription from './pages/ChoixInscription.jsx';
 import ProduitFormulaire from './pages/ProduitFormulaire.jsx';
+import ImportProduits from './pages/ImportProduits.jsx';
 import Annuaire from './pages/Annuaire.jsx';
 import ProfilGrossiste from './pages/ProfilGrossiste.jsx';
 import ProduitDetail from './pages/ProduitDetail.jsx';
@@ -99,6 +100,7 @@ export default function App() {
         <Route element={<LayoutEspace />}>
           <Route path="/tableau-de-bord" element={<TableauDeBord />} />
           <Route path="/produits" element={<Produits />} />
+          <Route path="/produits/importer" element={<ImportProduits />} />
           <Route path="/produits/nouveau" element={<ProduitFormulaire />} />
           <Route path="/produits/:id/modifier" element={<ProduitFormulaire />} />
           <Route path="/mediatheque" element={<Mediatheque />} />
