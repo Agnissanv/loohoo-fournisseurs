@@ -8,7 +8,7 @@ const IMAGES = [
   { src: '/images/stock-epices.jpg', alt: "Du stock de condiments en sacs chez un fournisseur", credit: 'barrytheoctopus, Pexels', position: 'center 55%' },
   { src: '/images/hero-adjame.jpg', alt: "Pagnes et tissus empilés sur un étal du marché d'Adjamé, à Abidjan", credit: 'Eva Blue, Unsplash', position: 'center 40%' },
 ];
-const DUREE_MS = 6000;
+const DUREE_MS = 4500;
 
 // Bandeau d'accueil : photos plein cadre qui défilent en fondu, avec le contenu (children) par-dessus.
 export default function HeroCarrousel({ children }) {

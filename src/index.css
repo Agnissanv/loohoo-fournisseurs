@@ -466,7 +466,7 @@ img { max-width: 100%; display: block; }
 
 /* ---- bandeau d'accueil en carrousel de photos ---- */
 .loo-hero { position: relative; min-height: min(78vh, 680px); display: flex; align-items: flex-end; color: #fff; overflow: hidden; margin-top: -65px; padding: 7rem 0 3.2rem; background: var(--loo-encre); }
-.loo-hero-fond { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transform: scale(1.04); transition: opacity 1.4s ease, transform 7s ease-out; }
+.loo-hero-fond { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transform: scale(1.04); transition: opacity 1.4s ease, transform 5s ease-out; }
 .loo-hero-fond-actif { opacity: 1; transform: scale(1); }
 .loo-hero-voile { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(23, 18, 13, 0.82) 0%, rgba(23, 18, 13, 0.55) 50%, rgba(23, 18, 13, 0.2) 100%), linear-gradient(0deg, rgba(23, 18, 13, 0.55) 0%, transparent 45%); }
 .loo-hero-contenu { position: relative; width: 100%; }
