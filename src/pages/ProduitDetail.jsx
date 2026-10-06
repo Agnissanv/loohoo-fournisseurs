@@ -4,6 +4,7 @@ import { BadgeCheck, Check, ChevronRight, Copy, Factory, MapPin, MessageCircle, 
 import { recupererProduitPublic, recupererAutresProduitsFournisseur, rechercherProduits } from '../api/fournisseurs.js';
 import ModaleContact from '../components/ModaleContact.jsx';
 import IndicateursConfiance from '../components/IndicateursConfiance.jsx';
+import { TableauPaliers } from '../components/PaliersPrix.jsx';
 import CarteProduit from '../components/CarteProduit.jsx';
 import { noterVisite } from '../utils/suiviVisites.js';
 import { useTitre } from '../utils/useTitre.js';
@@ -141,6 +142,7 @@ export default function ProduitDetail() {
               <span style={styles.prix}>{formatPrix(produit.prix_gros_fcfa)} F CFA{produit.unite ? ` / ${produit.unite}` : ''}</span>
               <span style={styles.puce}>Minimum : {produit.moq}</span>
             </div>
+            <TableauPaliers moq={produit.moq} prix={produit.prix_gros_fcfa} paliers={produit.paliers} unite={produit.unite} />
             <p style={{ margin: '0.2rem 0 0', fontSize: '0.8rem', opacity: 0.6 }}>Prix de gros indicatif. Le fournisseur confirme son devis selon la quantité.</p>
 
             <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', margin: '1.2rem 0' }}>

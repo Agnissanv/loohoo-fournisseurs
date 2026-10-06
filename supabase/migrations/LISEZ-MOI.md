@@ -43,3 +43,8 @@ Testée sur le moteur de test (0001 à 0015 passent). Affichée sur la page four
 Table `avis` et fonctions `deposer_avis`, `avis_publics`, `resume_avis`, `admin_moderer_avis`, `admin_liste_avis`.
 Un avis ne peut venir que de l'acheteur d'une affaire confirmée (un seul par affaire), sans coordonnées dans le commentaire,
 et n'est visible qu'après validation par l'équipe (page « Avis des acheteurs » de l'admin). Testée sur le moteur de test.
+
+## 0017 — Prix par paliers
+Ajoute `produit.paliers` (jusqu'à 4 paliers : quantité de départ et prix) avec contrôle de cohérence par la base :
+quantités croissantes au-dessus du minimum de commande, prix strictement décroissants sous le prix de base.
+Un fournisseur qui relève son minimum ou baisse son prix de base sous un palier doit d'abord ajuster ses paliers.

@@ -413,7 +413,7 @@ export async function recupererProduitPublic(id) {
   // Stock, dimensions et référence : lus d'abord, avec repli si les droits de la base ne les exposent pas
   let data = null;
   let error = null;
-  for (const extra of [', stock_disponible, longueur_cm, largeur_cm, hauteur_cm, sku, stock_verifie_le', ', stock_disponible, longueur_cm, largeur_cm, hauteur_cm, sku', '']) {
+  for (const extra of [', paliers, stock_disponible, longueur_cm, largeur_cm, hauteur_cm, sku, stock_verifie_le', ', stock_disponible, longueur_cm, largeur_cm, hauteur_cm, sku, stock_verifie_le', ', stock_disponible, longueur_cm, largeur_cm, hauteur_cm, sku', '']) {
     ({ data, error } = await requete(`${base}${extra}`));
     if (!error) break;
   }

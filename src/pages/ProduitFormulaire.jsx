@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { EditeurPaliers, normaliserPaliers } from '../components/PaliersPrix.jsx';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Image as IconeImage, Video, X } from 'lucide-react';
 import SelecteurPhoto from '../components/SelecteurPhoto.jsx';
@@ -35,6 +36,7 @@ export default function ProduitFormulaire() {
     stock: '', unite: '', sku: '', poids_kg: '', longueur: '', largeur: '', hauteur: '', actif: true,
   });
   const [tags, setTags] = useState([]);
+  const [paliers, setPaliers] = useState([]); // { min, prix } saisis en texte
   const [saisieTag, setSaisieTag] = useState('');
   const [photos, setPhotos] = useState([]); // { id?, url }
   const [videoUrl, setVideoUrl] = useState(null);
@@ -67,6 +69,7 @@ export default function ProduitFormulaire() {
         actif: existant.actif,
       });
       setTags(existant.tags || []);
+      setPaliers((existant.paliers || []).map((x) => ({ min: String(x.min), prix: String(x.prix) })));
       setVideoUrl(existant.video_url || null);
       setPhotos(await recupererGaleriePhotosProduit(id));
     }).catch((err) => setErreur(err.message));
@@ -150,6 +153,8 @@ export default function ProduitFormulaire() {
     e.preventDefault();
     setErreur('');
     if (Number(champs.prix_gros) < 0 || champs.prix_gros === '') { setErreur('Indiquez un prix de gros.'); return; }
+    const verif = normaliserPaliers(paliers, champs.moq, champs.prix_gros);
+    if (verif.erreur) { setErreur(verif.erreur); return; }
     setEnregistrement(true);
     try {
       const donnees = {
@@ -170,6 +175,8 @@ export default function ProduitFormulaire() {
         hauteur_cm: versNombre(champs.hauteur),
         actif: champs.actif,
       };
+      // Envoyé seulement s'il y en a (ou s'il y en avait) : un produit sans palier s'enregistre même avant la migration 0017
+      if (verif.paliers.length > 0 || produit?.paliers?.length > 0) donnees.paliers = verif.paliers;
       if (nouvelleVideo) {
         if (videoUrl) await supprimerVideoStockage(videoUrl).catch(() => {});
         donnees.video_url = await televerserVideo(profil.id, nouvelleVideo);
@@ -252,6 +259,8 @@ export default function ProduitFormulaire() {
                 <p className="esp-aide">Le minimum que l'acheteur doit commander.</p>
               </div>
             </div>
+
+            <EditeurPaliers paliers={paliers} onChange={setPaliers} moq={champs.moq} prixBase={champs.prix_gros} />
 
             <div className="esp-ligne-champs">
               <div className="esp-champ-bloc">
