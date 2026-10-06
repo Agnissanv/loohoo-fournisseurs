@@ -597,3 +597,26 @@ export async function recupererIndicateursConfiance(grossisteId) {
   if (error) throw error;
   return data?.[0] || null;
 }
+
+// ---- Avis après affaire confirmée (migration 0016) ----
+export async function deposerAvis(affaireId, note, commentaire) {
+  const { error } = await supabase.rpc('deposer_avis', { p_affaire_id: affaireId, p_note: note, p_commentaire: commentaire || null });
+  if (error) throw error;
+}
+
+// Avis déjà donnés par l'acheteur connecté (null si la migration n'est pas exécutée)
+export async function recupererMesAvis(affaireIds) {
+  if (!affaireIds.length) return [];
+  const { data, error } = await supabase.from('avis').select('affaire_id, note, statut, motif_rejet').in('affaire_id', affaireIds);
+  if (error) return null;
+  return data;
+}
+
+export async function recupererAvisPublics(grossisteId) {
+  const [liste, resume] = await Promise.all([
+    supabase.rpc('avis_publics', { p_grossiste_id: grossisteId, p_limite: 20 }),
+    supabase.rpc('resume_avis', { p_grossiste_id: grossisteId }),
+  ]);
+  if (liste.error || resume.error) return null;
+  return { avis: liste.data || [], nombre: resume.data?.[0]?.nombre || 0, moyenne: Number(resume.data?.[0]?.moyenne) || 0 };
+}

@@ -6,6 +6,7 @@ import CarteProduit from '../components/CarteProduit.jsx';
 import CaptureSortie from '../components/CaptureSortie.jsx';
 import ModaleContact from '../components/ModaleContact.jsx';
 import IndicateursConfiance from '../components/IndicateursConfiance.jsx';
+import AvisFournisseur from '../components/AvisFournisseur.jsx';
 import { noterVisite } from '../utils/suiviVisites.js';
 import { useTitre } from '../utils/useTitre.js';
 
@@ -192,6 +193,8 @@ export default function ProfilGrossiste() {
               )}
             </>
           )}
+
+          <AvisFournisseur grossisteId={grossiste.id} />
 
           {grossiste.photos.length > 0 && (
             <>

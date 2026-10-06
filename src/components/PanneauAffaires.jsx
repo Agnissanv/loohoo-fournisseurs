@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Check, Handshake, X } from 'lucide-react';
-import { recupererAffaires, declarerAffaire, repondreAffaire, annulerAffaire } from '../api/fournisseurs.js';
+import { recupererAffaires, declarerAffaire, repondreAffaire, annulerAffaire, recupererMesAvis, deposerAvis } from '../api/fournisseurs.js';
+import { ChoixNote, Etoiles } from './Etoiles.jsx';
 
 const STATUTS = {
   proposee: { texte: 'En attente de confirmation', classe: 'esp-puce-orange' },
@@ -20,7 +21,16 @@ export default function PanneauAffaires({ conversationId, role }) {
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState('');
 
-  const charger = useCallback(() => recupererAffaires(conversationId).then(setAffaires), [conversationId]);
+  const [avis, setAvis] = useState([]);
+  const [avisOuvert, setAvisOuvert] = useState(null); // id de l'affaire dont le formulaire d'avis est ouvert
+  const [note, setNote] = useState(0);
+  const [commentaire, setCommentaire] = useState('');
+  const charger = useCallback(async () => {
+    const liste = await recupererAffaires(conversationId);
+    setAffaires(liste);
+    const confirmees = (liste || []).filter((a) => a.statut === 'confirmee').map((a) => a.id);
+    setAvis((await recupererMesAvis(confirmees)) || []);
+  }, [conversationId]);
   useEffect(() => {
     charger();
     const releve = setInterval(() => { if (document.visibilityState === 'visible') charger(); }, 30000);
@@ -47,6 +57,21 @@ export default function PanneauAffaires({ conversationId, role }) {
       await charger();
     } catch (err) {
       setErreur(err.message || "Impossible d'enregistrer la déclaration.");
+    } finally {
+      setEnvoi(false);
+    }
+  }
+
+  async function envoyerAvis(e, affaireId) {
+    e.preventDefault();
+    setEnvoi(true);
+    setErreur('');
+    try {
+      await deposerAvis(affaireId, note, commentaire.trim());
+      setAvisOuvert(null); setNote(0); setCommentaire('');
+      await charger();
+    } catch (err) {
+      setErreur(err.message || "Impossible d'enregistrer votre avis.");
     } finally {
       setEnvoi(false);
     }
@@ -102,6 +127,27 @@ export default function PanneauAffaires({ conversationId, role }) {
                 <button type="button" className="btn btn-outline" style={{ padding: '0.3em 0.8em', fontSize: '0.78rem' }} onClick={() => agir(() => annulerAffaire(a.id))}>Retirer</button>
               )}
             </div>
+            {role === 'vendeur' && a.statut === 'confirmee' && (() => {
+              const donne = avis.find((v) => v.affaire_id === a.id);
+              if (donne) {
+                const suite = donne.statut === 'publie' ? 'est publié.' : donne.statut === 'rejete' ? `n'a pas été retenu${donne.motif_rejet ? ` : ${donne.motif_rejet}` : '.'}` : 'est en cours de lecture par notre équipe.';
+                return <div className="esp-aide" style={{ flexBasis: '100%' }}><Etoiles note={donne.note} taille={14} /> Votre avis {suite}</div>;
+              }
+              if (avisOuvert !== a.id) {
+                return <button type="button" className="btn btn-outline" style={{ padding: '0.3em 0.8em', fontSize: '0.78rem' }} onClick={() => setAvisOuvert(a.id)}>Donner mon avis</button>;
+              }
+              return (
+                <form onSubmit={(e) => envoyerAvis(e, a.id)} style={{ display: 'grid', gap: '0.5rem', flexBasis: '100%' }}>
+                  <p className="esp-aide" style={{ margin: 0 }}>Comment s'est passée cette affaire ? Pas de numéro ni de lien dans le commentaire.</p>
+                  <ChoixNote valeur={note} onChange={setNote} />
+                  <textarea className="champ" rows={3} maxLength={500} placeholder="Votre commentaire (facultatif)" value={commentaire} onChange={(e) => setCommentaire(e.target.value)} />
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button type="submit" className="btn btn-primary" style={{ padding: '0.5em 1.1em', fontSize: '0.82rem' }} disabled={envoi || !note}>{envoi ? 'Envoi…' : 'Envoyer mon avis'}</button>
+                    <button type="button" className="btn btn-outline" style={{ padding: '0.5em 1.1em', fontSize: '0.82rem' }} onClick={() => setAvisOuvert(null)}>Annuler</button>
+                  </div>
+                </form>
+              );
+            })()}
           </div>
         );
       })}
