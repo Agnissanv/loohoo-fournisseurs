@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { MessageCircle, X } from 'lucide-react';
 import { demarrerConversation, recupererSessionVendeur } from '../api/fournisseurs.js';
-import { composerDemande, DELAIS_DEVIS } from '../utils/messagerie.js';
+import { composerDemande, DELAIS_DEVIS, PREMIERS_MESSAGES_PRODUIT, PREMIERS_MESSAGES_FOURNISSEUR } from '../utils/messagerie.js';
 import { normaliserTelephone } from '../utils/telephone.js';
 
 // Demande de devis : quantité, ville de livraison et délai, pour que le fournisseur puisse répondre précisément du premier coup.
@@ -17,6 +17,8 @@ export default function ModaleContact({ grossiste, produit, onClose }) {
   const [erreur, setErreur] = useState('');
   const [conversationId, setConversationId] = useState(null);
   const [confirmationRequise, setConfirmationRequise] = useState(false);
+  const [modeleChoisi, setModeleChoisi] = useState(null); // visiteur : message prêt choisi (envoyé avec ses coordonnées)
+  const [envoiRapide, setEnvoiRapide] = useState('');   // libellé du message en cours d'envoi
 
   useEffect(() => {
     recupererSessionVendeur().then((r) => {
@@ -31,6 +33,28 @@ export default function ModaleContact({ grossiste, produit, onClose }) {
 
   const maj = (cle) => (e) => setChamps((c) => ({ ...c, [cle]: e.target.value }));
 
+  // Un clic = message envoyé tout de suite (acheteur déjà connecté) ; sinon on le garde et on demande les coordonnées
+  async function choisirModele(modele) {
+    setErreur('');
+    if (!dejaConnecte) {
+      setModeleChoisi(modele);
+      setChamps((ch) => ({ ...ch, message: modele.texte }));
+      return;
+    }
+    setEnvoiRapide(modele.libelle);
+    try {
+      const resultat = await demarrerConversation({
+        grossisteId: grossiste.id, produitId: produit ? produit.id : null, message: modele.texte,
+        nom: champs.nom, telephone: champs.telephone, activite: champs.activite, email: '', password: '',
+      });
+      setConversationId(resultat.conversationId);
+    } catch (err) {
+      setErreur(err.message || "Impossible d'envoyer le message pour le moment.");
+    } finally {
+      setEnvoiRapide('');
+    }
+  }
+
   async function envoyer(e) {
     e.preventDefault();
     setErreur('');
@@ -40,14 +64,17 @@ export default function ModaleContact({ grossiste, produit, onClose }) {
     }
     setEnvoi(true);
     try {
-      const message = composerDemande({
-        produit: produit ? produit.nom : champs.besoin.trim(),
-        quantite: champs.quantite,
-        unite: produit?.unite,
-        ville: champs.ville.trim(),
-        delai: champs.delai,
-        message: champs.message,
-      });
+      // Message prêt choisi : texte simple. Sinon : demande de devis structurée.
+      const message = modeleChoisi
+        ? (champs.message.trim() || modeleChoisi.texte)
+        : composerDemande({
+          produit: produit ? produit.nom : champs.besoin.trim(),
+          quantite: champs.quantite,
+          unite: produit?.unite,
+          ville: champs.ville.trim(),
+          delai: champs.delai,
+          message: champs.message,
+        });
       const resultat = await demarrerConversation({
         grossisteId: grossiste.id, produitId: produit ? produit.id : null, message,
         nom: champs.nom, telephone: dejaConnecte ? champs.telephone : normaliserTelephone(champs.telephone), activite: champs.activite,
@@ -82,7 +109,7 @@ export default function ModaleContact({ grossiste, produit, onClose }) {
         ) : conversationId ? (
           <div style={{ textAlign: 'center', padding: '0.5rem 0' }}>
             <MessageCircle size={36} color="var(--loo-rouge)" />
-            <h2 style={{ fontSize: '1.2rem', margin: '0.8rem 0 0.5rem' }}>Demande envoyée</h2>
+            <h2 style={{ fontSize: '1.2rem', margin: '0.8rem 0 0.5rem' }}>Message envoyé</h2>
             <p style={{ opacity: 0.8, marginBottom: '1.2rem' }}>{grossiste.nom} vous répondra directement dans votre messagerie LOOHOO.</p>
             <Link to={`/conversations/${conversationId}`} className="btn btn-primary" onClick={onClose}>Ouvrir la conversation</Link>
           </div>
@@ -95,6 +122,35 @@ export default function ModaleContact({ grossiste, produit, onClose }) {
 
             {dejaConnecte === null && <div className="loo-squelette" style={{ height: '120px' }} />}
 
+            {dejaConnecte !== null && !modeleChoisi && (
+              <div style={{ marginBottom: '1rem' }}>
+                <p style={{ margin: '0 0 0.5rem', fontWeight: 700, fontSize: '0.88rem' }}>
+                  {dejaConnecte ? 'Pas d\'idée ? Envoyez un message en un clic' : 'Pas d\'idée ? Choisissez un message'}
+                </p>
+                <div className="msg-modeles">
+                  {(produit ? PREMIERS_MESSAGES_PRODUIT : PREMIERS_MESSAGES_FOURNISSEUR).map((mo) => (
+                    <button key={mo.libelle} type="button" disabled={!!envoiRapide} onClick={() => choisirModele(mo)}>
+                      {envoiRapide === mo.libelle ? 'Envoi…' : mo.libelle}
+                    </button>
+                  ))}
+                </div>
+                <p className="esp-aide" style={{ margin: '0.5rem 0 0' }}>
+                  {dejaConnecte ? 'Un clic envoie le message tout de suite.' : 'Vous le validerez avec vos coordonnées, juste en dessous.'}
+                  {' '}Ou remplissez la demande de devis détaillée ci-dessous.
+                </p>
+              </div>
+            )}
+
+            {modeleChoisi && (
+              <div style={{ marginBottom: '0.9rem', padding: '0.7rem 0.9rem', background: '#FFF6E9', border: '1px solid var(--loo-orange)', borderRadius: 'var(--rayon-sm)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.6rem', alignItems: 'baseline' }}>
+                  <strong style={{ fontSize: '0.86rem' }}>Votre message</strong>
+                  <button type="button" onClick={() => { setModeleChoisi(null); setChamps((ch) => ({ ...ch, message: '' })); }} style={{ background: 'none', border: 0, textDecoration: 'underline', cursor: 'pointer', font: 'inherit', fontSize: '0.8rem' }}>Changer</button>
+                </div>
+                <textarea className="champ" rows={3} style={{ marginTop: '0.4rem' }} value={champs.message} onChange={maj('message')} aria-label="Votre message" />
+              </div>
+            )}
+
             {dejaConnecte !== null && (
               <>
                 {produit ? (
@@ -103,9 +159,10 @@ export default function ModaleContact({ grossiste, produit, onClose }) {
                     <strong>{produit.nom}</strong>{produit.moq ? <span style={{ opacity: 0.7 }}> · minimum {produit.moq}</span> : null}
                   </div>
                 ) : (
-                  <input className="champ" required placeholder="Que recherchez-vous ? (ex. pagnes wax, sacs en toile…)" value={champs.besoin} onChange={maj('besoin')} style={espace} />
+                  !modeleChoisi && <input className="champ" required placeholder="Que recherchez-vous ? (ex. pagnes wax, sacs en toile…)" value={champs.besoin} onChange={maj('besoin')} style={espace} />
                 )}
 
+                {!modeleChoisi && <>
                 <div style={{ display: 'flex', gap: '0.6rem', ...espace }}>
                   <input className="champ" required={!!produit} type="number" min="1" placeholder={`Quantité souhaitée${produit?.unite ? ` (${produit.unite})` : ''}`} value={champs.quantite} onChange={maj('quantite')} aria-label="Quantité souhaitée" />
                   <input className="champ" required placeholder="Ville de livraison" value={champs.ville} onChange={maj('ville')} aria-label="Ville de livraison" />
@@ -115,6 +172,7 @@ export default function ModaleContact({ grossiste, produit, onClose }) {
                   {DELAIS_DEVIS.map((d) => <option key={d} value={d}>{d}</option>)}
                 </select>
                 <textarea className="champ" rows={3} placeholder="Précisions : couleurs, tailles, conditionnement, questions…" value={champs.message} onChange={maj('message')} style={espace} />
+                </>}
               </>
             )}
 
@@ -137,7 +195,7 @@ export default function ModaleContact({ grossiste, produit, onClose }) {
 
             {dejaConnecte !== null && (
               <button type="submit" className="btn btn-primary" disabled={envoi} style={{ width: '100%', justifyContent: 'center' }}>
-                {envoi ? 'Envoi…' : 'Envoyer ma demande'}
+                {envoi ? 'Envoi…' : modeleChoisi ? 'Envoyer mon message' : 'Envoyer ma demande'}
               </button>
             )}
 

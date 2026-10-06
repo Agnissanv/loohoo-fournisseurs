@@ -141,7 +141,7 @@ export async function recupererMonProfil(userId) {
     .maybeSingle();
   let data = null;
   let error = null;
-  for (const contact of ['telephone, adresse, site_web, reseaux_sociaux, motif_statut', 'telephone, adresse, site_web, reseaux_sociaux', 'telephone']) {
+  for (const contact of ['telephone, adresse, site_web, reseaux_sociaux', 'telephone']) {
     ({ data, error } = await requete(contact));
     if (!error) break;
   }
@@ -156,10 +156,16 @@ export async function mettreAJourContactPrive(grossisteId, champs) {
     throw new Error(/column|schema cache/i.test(error.message) ? "Ces informations privées ne peuvent pas encore être enregistrées (migration 0006 à exécuter)." : error.message);
   }
   if (!data || data.length === 0) {
-    // Pas encore de ligne de contact (profil sans téléphone) : on la crée
-    const { error: erreurAjout } = await supabase.from('grossiste_contact').insert({ grossiste_id: grossisteId, telephone: '', ...champs });
-    if (erreurAjout) throw erreurAjout;
+    // La ligne de contact n'existe qu'avec un téléphone valide (obligatoire) : on ne peut pas la créer sans lui
+    throw new Error("Renseignez d'abord votre numéro de téléphone, puis complétez ces informations.");
   }
+}
+
+// Motif de la dernière décision de l'équipe sur ce profil (suspension, mise en attente). Vide si aucun ou si la fonction n'est pas activée.
+export async function recupererMotifDecision(grossisteId) {
+  const { data, error } = await supabase.from('grossiste_decision').select('motif').eq('grossiste_id', grossisteId).maybeSingle();
+  if (error) return '';
+  return data?.motif || '';
 }
 
 export async function mettreAJourProfil(id, champs) {

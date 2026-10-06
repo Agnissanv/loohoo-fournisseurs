@@ -96,3 +96,10 @@ L'autre développeur a cessé de travailler sur l'admin : travail libre sur looh
 - Toutes les migrations 0001 à 0013 passent de bout en bout sur le moteur de test; les règles de sécurité sont vérifiées (un fournisseur ne peut pas décider, un modérateur ne touche pas aux commissions, la commission est invisible des participants).
 
 Reste (idées) : notifications par e-mail après une décision (domaine et Brevo requis), mode « avertir seulement » configurable pour les coordonnées, pièces jointes dans les conversations, statuts « conclue / archivée » des demandes, signalement d'abus par les utilisateurs.
+
+## 10. Deux espaces dans l'administration et premiers messages prêts (2026-10-06)
+
+- Administration séparée en deux espaces : Fournisseurs (adresses /f/..., couleurs LOOHOO) et Boutiques (adresses /b/..., teinte vert-bleu), avec un sélecteur en haut, un menu propre à chaque espace, et des pages communes (accueil, journal d'audit, équipe).
+  Les anciennes adresses redirigent. Les demandes « créer ma boutique » de la landing (source landing-*) vont dans l'espace Boutiques, les autres leads dans l'espace Fournisseurs.
+  L'espace Boutiques affiche sans chiffres inventés ce qui existe (boutiques connectées, demandes d'ouverture) et ce qui est « à venir ».
+- Fenêtre de contact : six premiers messages prêts à envoyer (produit) ou quatre (page fournisseur). Acheteur connecté : un clic envoie le message tout de suite. Visiteur : le message est choisi puis validé avec ses coordonnées.

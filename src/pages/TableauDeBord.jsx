@@ -3,9 +3,9 @@ import { Link, useNavigate, useOutletContext } from 'react-router-dom';
 import { BadgeCheck, Check, Circle, Image as IconeImage, MessageCircle } from 'lucide-react';
 import {
   suivreSession, recupererMonProfil, mettreAJourProfil, finaliserInscriptionEnAttente,
-  recupererMesStats, recupererMesConversations, recupererDocuments,
+  recupererMesStats, recupererMesConversations, recupererDocuments, recupererMotifDecision,
 } from '../api/fournisseurs.js';
-import { telephoneDuProfil, contactDuProfil } from '../utils/telephone.js';
+import { telephoneDuProfil } from '../utils/telephone.js';
 
 const STATUTS = {
   en_attente: { texte: 'En attente de vérification', classe: 'esp-puce-orange' },
@@ -34,6 +34,7 @@ export default function TableauDeBord() {
   const [stats, setStats] = useState(null);
   const [conversations, setConversations] = useState([]);
   const [documents, setDocuments] = useState([]);
+  const [motifStatut, setMotifStatut] = useState('');
   const [erreur, setErreur] = useState('');
 
   useEffect(() => suivreSession(setSession), []);
@@ -59,7 +60,10 @@ export default function TableauDeBord() {
   // Les décisions de l'équipe sur les documents (motif en cas de rejet)
   const idProfil = profil?.id;
   useEffect(() => {
-    if (idProfil) recupererDocuments(idProfil).then(setDocuments).catch(() => {});
+    if (idProfil) {
+      recupererDocuments(idProfil).then(setDocuments).catch(() => {});
+      recupererMotifDecision(idProfil).then(setMotifStatut);
+    }
   }, [idProfil]);
 
   if (erreur) return <p style={{ color: 'var(--loo-rouge)', fontWeight: 600 }}>{erreur}</p>;
@@ -106,11 +110,10 @@ export default function TableauDeBord() {
   const totalNonLus = conversations.reduce((n, c) => n + (c.message || []).filter((m) => !m.lu && m.expediteur === 'vendeur').length, 0);
 
   // Ce que l'équipe a décidé et qui demande une réaction du fournisseur
-  const contactPrive = contactDuProfil(profil);
   const decisions = [
     profil.statut === 'suspendu' && {
       cle: 'profil', grave: true, titre: "Votre profil est suspendu : il n'apparaît plus dans l'annuaire.",
-      motif: contactPrive.motif_statut ? `Motif : ${contactPrive.motif_statut}` : "Contactez l'équipe LOOHOO pour en savoir plus.",
+      motif: motifStatut ? `Motif : ${motifStatut}` : "Contactez l'équipe LOOHOO pour en savoir plus.",
       vers: '/profil', action: 'Voir mon profil',
     },
     ...produits.filter((p) => p.statut === 'rejete').map((p) => ({

@@ -87,3 +87,21 @@ export function contientCoordonnees(texte = '') {
     || /[\w.+-]+@[\w-]+\.[\w.]+/.test(texte)
     || /(https?:\/\/|www\.)\S+/i.test(texte);
 }
+
+// ---- Premiers messages prêts à envoyer (fenêtre de contact) ----
+// Pour l'acheteur qui ne sait pas quoi écrire : un clic envoie le message. Aucun n'a de partie à compléter.
+export const PREMIERS_MESSAGES_PRODUIT = [
+  { libelle: 'Quel est votre meilleur prix ?', texte: "Bonjour, ce produit m'intéresse. Quel est votre meilleur prix pour une commande en gros ?" },
+  { libelle: 'Est-il disponible en stock ?', texte: 'Bonjour, ce produit est-il actuellement disponible en stock ?' },
+  { libelle: 'Quel est le délai de livraison ?', texte: 'Bonjour, quel est votre délai de livraison pour ce produit ?' },
+  { libelle: 'Quelles variantes proposez-vous ?', texte: 'Bonjour, quelles tailles, couleurs ou variantes sont disponibles pour ce produit ?' },
+  { libelle: 'Proposez-vous des échantillons ?', texte: 'Bonjour, proposez-vous des échantillons avant une commande en gros ?' },
+  { libelle: 'Je veux devenir revendeur régulier', texte: 'Bonjour, je souhaite revendre vos produits régulièrement. Quelles sont vos conditions pour un partenariat ?' },
+];
+
+export const PREMIERS_MESSAGES_FOURNISSEUR = [
+  { libelle: 'Quels produits proposez-vous ?', texte: 'Bonjour, quels produits proposez-vous actuellement en gros ?' },
+  { libelle: 'Envoyez-moi vos prix de gros', texte: "Bonjour, pouvez-vous m'indiquer vos prix de gros et vos quantités minimales de commande ?" },
+  { libelle: 'Quelles sont vos conditions de livraison ?', texte: 'Bonjour, quelles sont vos conditions et vos délais de livraison ?' },
+  { libelle: 'Je veux devenir revendeur régulier', texte: 'Bonjour, je souhaite revendre vos produits régulièrement. Quelles sont vos conditions pour un partenariat ?' },
+];

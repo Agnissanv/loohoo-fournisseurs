@@ -19,6 +19,7 @@ Les fichiers de `supabase/maintenance/` ne sont PAS des migrations (remise à z�
 | 0011 | Pouvoirs admin : journal d'audit, décisions motivées, notes internes, documents privés, tableau de bord | Dès que le site admin est déployé (avant d'ouvrir l'administration) |
 | 0012 | Affaires conclues et commissions (déclaration, confirmation par l'autre partie, commission visible de l'admin seulement) | Avec 0011 |
 | 0013 | Rôles super-admin / modérateur, équipe, catégories gérées depuis l'admin | Après 0011 et 0012 |
+| 0014 | **Correctif** : « Publier ce fournisseur » échouait (contrainte du téléphone). Les motifs de décision ont leur propre table | **Tout de suite après 0013** |
 
 Côté site fournisseur, les fonctions liées aux migrations 0012 et 0013 se masquent d'elles-mêmes tant que celles-ci ne sont pas
 passées (aucune erreur affichée). Côté ADMINISTRATION, la migration 0011 est indispensable (tableau de bord, décisions, journal),
