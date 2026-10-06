@@ -139,8 +139,12 @@ export async function recupererMonProfil(userId) {
     .select(`*, grossiste_contact(${contact}), grossiste_photo(id, url, ordre), produit(*)`)
     .eq('user_id', userId)
     .maybeSingle();
-  let { data, error } = await requete('telephone, adresse, site_web, reseaux_sociaux');
-  if (error) ({ data, error } = await requete('telephone'));
+  let data = null;
+  let error = null;
+  for (const contact of ['telephone, adresse, site_web, reseaux_sociaux, motif_statut', 'telephone, adresse, site_web, reseaux_sociaux', 'telephone']) {
+    ({ data, error } = await requete(contact));
+    if (!error) break;
+  }
   if (error) throw error;
   return data;
 }
@@ -545,4 +549,38 @@ export function suivreFil(conversationId, { onInsert, onUpdate }) {
       (payload) => onUpdate?.(payload.new))
     .subscribe();
   return () => supabase.removeChannel(canal);
+}
+
+// ---- Affaires conclues (migration 0012) ----
+// Renvoie null tant que la migration n'est pas exécutée : l'interface masque alors la fonction au lieu d'afficher une erreur.
+export async function recupererAffaires(conversationId) {
+  const { data, error } = await supabase
+    .from('affaire')
+    .select('id, montant_fcfa, description, declaree_par, statut, date_declaration, date_reponse')
+    .eq('conversation_id', conversationId)
+    .order('date_declaration', { ascending: false });
+  if (error) return null;
+  return data;
+}
+
+export async function recupererMesAffairesConfirmees() {
+  const { data, error } = await supabase.from('affaire').select('montant_fcfa, date_reponse').eq('statut', 'confirmee');
+  if (error) return null;
+  return data;
+}
+
+export async function declarerAffaire(conversationId, montant, description) {
+  const { data, error } = await supabase.rpc('declarer_affaire', { p_conversation_id: conversationId, p_montant: montant, p_description: description || null });
+  if (error) throw error;
+  return data;
+}
+
+export async function repondreAffaire(id, accepter) {
+  const { error } = await supabase.rpc('repondre_affaire', { p_id: id, p_accepter: accepter });
+  if (error) throw error;
+}
+
+export async function annulerAffaire(id) {
+  const { error } = await supabase.rpc('annuler_affaire', { p_id: id });
+  if (error) throw error;
 }

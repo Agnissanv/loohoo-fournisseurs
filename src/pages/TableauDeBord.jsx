@@ -3,9 +3,9 @@ import { Link, useNavigate, useOutletContext } from 'react-router-dom';
 import { BadgeCheck, Check, Circle, Image as IconeImage, MessageCircle } from 'lucide-react';
 import {
   suivreSession, recupererMonProfil, mettreAJourProfil, finaliserInscriptionEnAttente,
-  recupererMesStats, recupererMesConversations,
+  recupererMesStats, recupererMesConversations, recupererDocuments,
 } from '../api/fournisseurs.js';
-import { telephoneDuProfil } from '../utils/telephone.js';
+import { telephoneDuProfil, contactDuProfil } from '../utils/telephone.js';
 
 const STATUTS = {
   en_attente: { texte: 'En attente de vérification', classe: 'esp-puce-orange' },
@@ -33,6 +33,7 @@ export default function TableauDeBord() {
   const [profil, setProfil] = useState(undefined);
   const [stats, setStats] = useState(null);
   const [conversations, setConversations] = useState([]);
+  const [documents, setDocuments] = useState([]);
   const [erreur, setErreur] = useState('');
 
   useEffect(() => suivreSession(setSession), []);
@@ -54,6 +55,12 @@ export default function TableauDeBord() {
     recupererMesStats().then(setStats).catch(() => {});
     recupererMesConversations().then(setConversations).catch(() => {});
   }, [session, navigate, rafraichirIdentite]);
+
+  // Les décisions de l'équipe sur les documents (motif en cas de rejet)
+  const idProfil = profil?.id;
+  useEffect(() => {
+    if (idProfil) recupererDocuments(idProfil).then(setDocuments).catch(() => {});
+  }, [idProfil]);
 
   if (erreur) return <p style={{ color: 'var(--loo-rouge)', fontWeight: 600 }}>{erreur}</p>;
   if (session === undefined || profil === undefined) return <div className="loo-squelette" style={{ height: '240px' }} />;
@@ -98,6 +105,24 @@ export default function TableauDeBord() {
     .slice(0, 4);
   const totalNonLus = conversations.reduce((n, c) => n + (c.message || []).filter((m) => !m.lu && m.expediteur === 'vendeur').length, 0);
 
+  // Ce que l'équipe a décidé et qui demande une réaction du fournisseur
+  const contactPrive = contactDuProfil(profil);
+  const decisions = [
+    profil.statut === 'suspendu' && {
+      cle: 'profil', grave: true, titre: "Votre profil est suspendu : il n'apparaît plus dans l'annuaire.",
+      motif: contactPrive.motif_statut ? `Motif : ${contactPrive.motif_statut}` : "Contactez l'équipe LOOHOO pour en savoir plus.",
+      vers: '/profil', action: 'Voir mon profil',
+    },
+    ...produits.filter((p) => p.statut === 'rejete').map((p) => ({
+      cle: `p-${p.id}`, titre: `Produit rejeté : ${p.nom}`, motif: p.motif_rejet ? `Motif : ${p.motif_rejet}` : 'Corrigez le produit puis enregistrez-le : il repartira en vérification.',
+      vers: `/produits/${p.id}/modifier`, action: 'Corriger',
+    })),
+    ...documents.filter((d) => d.statut === 'rejete').map((d) => ({
+      cle: `d-${d.id}`, titre: `Document refusé : ${d.nom_fichier || d.type}`, motif: d.motif_rejet ? `Motif : ${d.motif_rejet}` : "Merci d'envoyer un nouveau document.",
+      vers: '/profil', action: 'Renvoyer',
+    })),
+  ].filter(Boolean);
+
   const evolution = stats?.evolution || [];
   const maxJour = Math.max(1, ...evolution.map((e) => e.nb));
   const statut = STATUTS[profil.statut] || STATUTS.en_attente;
@@ -121,6 +146,21 @@ export default function TableauDeBord() {
           </div>
         </div>
       </div>
+
+      {decisions.length > 0 && (
+        <div className="esp-carte" style={{ marginTop: '1rem', borderColor: 'var(--loo-orange)', background: '#FFFAF3' }}>
+          <h2 className="esp-carte-titre"><span>Messages de l'équipe LOOHOO</span></h2>
+          {decisions.map((d) => (
+            <div key={d.cle} className="esp-liste-ligne" style={{ alignItems: 'flex-start' }}>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: '0.92rem', color: d.grave ? 'var(--loo-rouge)' : undefined }}>{d.titre}</div>
+                <div style={{ fontSize: '0.86rem', opacity: 0.85, lineHeight: 1.5 }}>{d.motif}</div>
+              </div>
+              {d.vers && <Link to={d.vers} style={{ fontSize: '0.84rem', fontWeight: 600, color: 'var(--loo-rouge)', whiteSpace: 'nowrap' }}>{d.action}</Link>}
+            </div>
+          ))}
+        </div>
+      )}
 
       {!complet && (
         <div className="esp-carte" style={{ marginTop: '1rem' }}>

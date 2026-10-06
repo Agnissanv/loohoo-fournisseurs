@@ -29,5 +29,6 @@ export function contactDuProfil(profil) {
     adresse: contact.adresse ?? profil?.adresse ?? '',
     site_web: contact.site_web ?? profil?.site_web ?? '',
     reseaux_sociaux: contact.reseaux_sociaux ?? profil?.reseaux_sociaux ?? {},
+    motif_statut: contact.motif_statut || '',
   };
 }

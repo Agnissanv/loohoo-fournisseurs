@@ -70,3 +70,29 @@ Reprise du style des maquettes validées par le client. Modules par ordre de val
   avertissements avant envoi, puce « Coordonnées détectées », bandeau d'alerte sur le profil, « stock vérifié par LOOHOO » sur la fiche produit,
   purge des textes d'origine après 90 jours.
 - Reste côté site : rien d'obligatoire. Prochaine étape : le dossier loohoo-admin (phase 2), sur une branche séparée.
+
+## 8. Avancement de la phase 2 : interface administrateur (2026-10-06)
+
+Dossier loohoo-admin, branche `admin-controle-total` (la branche yoann-dev de l'autre développeur est identique à main, aucun conflit à ce jour).
+Migration 0011 (pouvoirs admin) écrite et testée sur le moteur de test : journal d'audit automatique, décisions motivées (motif obligatoire pour suspendre ou rejeter),
+notes internes, lecture des documents privés, messages signalés « traités », tableau de bord en un seul appel.
+
+Écrans livrés (build OK, non testés connecté) : cadre avec menu latéral et compteur « À traiter », tableau de bord, À traiter (fournisseurs, produits, documents, messages signalés),
+Fournisseurs (liste filtrable, export CSV), fiche fournisseur complète (informations privées, documents, photos, produits, stock, conversations, notes, historique),
+Produits (validation, rejet motivé, vérification du stock), Acheteurs (coordonnées, conversations, notes), Conversations (supervision en lecture seule, texte d'origine des messages masqués),
+Leads (export CSV), Journal d'audit, Boutiques (existant, déplacé dans le cadre). Le pont serveur des boutiques a été déplacé dans api/ pour être réellement déployé par Vercel.
+
+Reste : rôles (super-admin / modérateur), gestion des catégories depuis l'admin, registre des affaires conclues et commissions, notifications au fournisseur après décision (côté fournisseur : afficher le motif de suspension), connexion admin restylée.
+
+## 9. Avancement (2026-10-06, suite)
+
+L'autre développeur a cessé de travailler sur l'admin : travail libre sur loohoo-admin (branche admin-controle-total).
+
+- Côté fournisseur : décisions de l'équipe visibles (suspension avec motif, produits rejetés, documents refusés) dans un bloc du tableau de bord.
+- Migration 0012 + écrans : « Déclarer une affaire conclue » dans la conversation (une partie déclare, l'autre confirme ou conteste, annulation possible tant qu'il n'y a pas de réponse),
+  chiffre « Affaires conclues » réel dans les statistiques du fournisseur; côté admin, page Affaires et commissions (taux, arbitrage des contestations, facturée / payée / annulée, export).
+- Migration 0013 + écrans : rôles super-admin et modérateur, page Équipe, page Catégories (ajout, renommage propagé, activation, ordre), formulaires du site lus depuis la base avec repli sur la liste intégrée.
+- Connexion admin restylée.
+- Toutes les migrations 0001 à 0013 passent de bout en bout sur le moteur de test; les règles de sécurité sont vérifiées (un fournisseur ne peut pas décider, un modérateur ne touche pas aux commissions, la commission est invisible des participants).
+
+Reste (idées) : notifications par e-mail après une décision (domaine et Brevo requis), mode « avertir seulement » configurable pour les coordonnées, pièces jointes dans les conversations, statuts « conclue / archivée » des demandes, signalement d'abus par les utilisateurs.

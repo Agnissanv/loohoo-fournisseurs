@@ -429,3 +429,8 @@ img { max-width: 100%; display: block; }
 .entreprise-infos > div { min-width: 120px; }
 .entreprise-infos .etiquette-info { font-size: 0.72rem; opacity: 0.6; text-transform: uppercase; letter-spacing: 0.06em; font-family: var(--police-etiquette); }
 .entreprise-infos strong { display: block; font-size: 1rem; margin-top: 0.15rem; }
+
+/* ---- affaires conclues dans la conversation ---- */
+.msg-affaires { padding: 0.6rem 1rem; background: #FFFCF8; border-bottom: 1px solid var(--loo-papier-ombre); }
+.msg-affaire-ligne { display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; flex-wrap: wrap; padding: 0.5rem 0; border-top: 1px dashed var(--loo-papier-ombre); margin-top: 0.5rem; }
+.adm-confirmer { background: #1f7a3d; color: #fff; }

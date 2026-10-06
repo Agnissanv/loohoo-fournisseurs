@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Clock, Download, Eye, MessageSquare, Package, Reply } from 'lucide-react';
+import { Clock, Download, Eye, Handshake, MessageSquare, Package, Reply } from 'lucide-react';
 import {
-  suivreSession, recupererMesStats, recupererMesConversations, recupererStatsVisites,
+  suivreSession, recupererMesStats, recupererMesConversations, recupererStatsVisites, recupererMesAffairesConfirmees,
 } from '../api/fournisseurs.js';
 import { calculerStats, exporterCsv, formaterDuree } from '../utils/statsDemandes.js';
 
@@ -30,6 +30,7 @@ export default function Statistiques() {
   const [statsGlobales, setStatsGlobales] = useState(null);
   const [visites, setVisites] = useState(undefined); // undefined = chargement, null = migration 0003 absente
   const [erreur, setErreur] = useState('');
+  const [affaires, setAffaires] = useState(null); // null = fonction non activée
 
   useEffect(() => suivreSession(setSession), []);
 
@@ -38,6 +39,7 @@ export default function Statistiques() {
     if (session === null) { navigate('/connexion'); return; }
     recupererMesConversations().then(setConversations).catch((err) => setErreur(err.message));
     recupererMesStats().then(setStatsGlobales).catch(() => {});
+    recupererMesAffairesConfirmees().then(setAffaires);
   }, [session, navigate]);
 
   useEffect(() => {
@@ -77,6 +79,10 @@ export default function Statistiques() {
         <Indicateur icone={Clock} titre="Délai de réponse" valeur={formaterDuree(stats.delaiMedianMs)} detail="Médiane, première réponse" />
         <Indicateur icone={Eye} titre="Vues du profil" valeur={vuesPeriode ?? (statsGlobales ? statsGlobales.vues_profil : '–')}
           detail={vuesPeriode != null ? 'Sur la période' : 'Total depuis le début'} />
+        {affaires && (
+          <Indicateur icone={Handshake} titre="Affaires conclues" valeur={affaires.length}
+            detail={`${affaires.reduce((n, a) => n + Number(a.montant_fcfa), 0).toLocaleString('fr-FR')} F CFA, confirmées par les deux parties`} />
+        )}
         <Indicateur icone={Package} titre="Produits actifs" valeur={statsGlobales ? statsGlobales.produits_actifs : '–'} detail="Publiés et visibles" />
       </div>
 

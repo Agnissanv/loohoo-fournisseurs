@@ -6,6 +6,7 @@ import {
   recupererMessages, envoyerMessage, marquerMessagesLus, suivreFil,
 } from '../api/fournisseurs.js';
 import { analyserConversation } from '../utils/statsDemandes.js';
+import PanneauAffaires from '../components/PanneauAffaires.jsx';
 import {
   trierMessages, formatHeure, formatJour, formatRelatif, initiales, analyserDemande,
   REPONSES_FOURNISSEUR, REPONSES_ACHETEUR, contientCoordonnees,
@@ -286,6 +287,8 @@ function Fil({ conversation, role, onChange }) {
           </div>
         </Link>
       )}
+
+      <PanneauAffaires conversationId={id} role={role} />
 
       <div className="msg-fil-corps" ref={zone}>
         {messages === undefined && <div className="loo-squelette" style={{ height: 120 }} />}

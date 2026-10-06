@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Image as IconeImage, Video, X } from 'lucide-react';
 import SelecteurPhoto from '../components/SelecteurPhoto.jsx';
 import SelectCategorie from '../components/SelectCategorie.jsx';
-import { SOUS_CATEGORIES } from '../data/categories.js';
+import { useCategories } from '../utils/useCategories.js';
 import {
   suivreSession, recupererMonProfil, ajouterProduit, modifierProduit,
   recupererGaleriePhotosProduit, ajouterPhotoProduit, supprimerPhotoProduit, ajouterMedia,
@@ -26,6 +26,7 @@ const versNombre = (v) => (v === '' || v == null ? null : Number(v));
 export default function ProduitFormulaire() {
   const { id } = useParams(); // absent = création
   const navigate = useNavigate();
+  const { sous } = useCategories(); // sous-catégories par catégorie (hook : avant tout retour anticipé)
   const [session, setSession] = useState(undefined);
   const [profil, setProfil] = useState(undefined);
   const [produit, setProduit] = useState(null);
@@ -83,7 +84,7 @@ export default function ProduitFormulaire() {
   }
 
   const maj = (cle) => (e) => setChamps((c) => ({ ...c, [cle]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
-  const sousCategories = SOUS_CATEGORIES[champs.categorie] || [];
+  const sousCategories = sous[champs.categorie] || [];
 
   function ajouterTag(brut) {
     const t = brut.trim().replace(/,$/, '').trim();
