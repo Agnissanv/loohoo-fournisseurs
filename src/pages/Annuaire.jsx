@@ -25,6 +25,8 @@ export default function Annuaire() {
   const commune = params.get('commune') || '';
   const tri = params.get('tri') || 'pertinence';
   const verifies = params.get('verifies') === '1';
+  const prixMax = Number(params.get('prix_max')) || 0;
+  const moqMax = Number(params.get('moq_max')) || 0;
 
   const [saisie, setSaisie] = useState(q);
   const [filtres, setFiltres] = useState({ categories: [], villes: [], communes: [] });
@@ -33,7 +35,7 @@ export default function Annuaire() {
   const [erreur, setErreur] = useState(false);
   const [affiches, setAffiches] = useState(PAR_PAGE);
 
-  const rechercheActive = !!(q || categorie || ville || commune);
+  const rechercheActive = !!(q || categorie || ville || commune || prixMax || moqMax);
   useTitre(categorie ? `${categorie} en gros` : q ? `« ${q} » en gros` : null, categorie || q ? `Fournisseurs vérifiés et prix de gros : ${categorie || q}.` : null);
 
   const changer = (cles) => setParams((p) => {
@@ -67,11 +69,13 @@ export default function Annuaire() {
   const liste = useMemo(() => {
     if (!resultats) return [];
     let l = verifies ? resultats.filter((p) => p.badge_verifie) : resultats;
+    if (prixMax) l = l.filter((p) => p.prix_gros_fcfa <= prixMax);
+    if (moqMax) l = l.filter((p) => (p.moq || 1) <= moqMax);
     if (tri === 'prix_asc') l = [...l].sort((a, b) => a.prix_gros_fcfa - b.prix_gros_fcfa);
     if (tri === 'prix_desc') l = [...l].sort((a, b) => b.prix_gros_fcfa - a.prix_gros_fcfa);
     if (tri === 'moq_asc') l = [...l].sort((a, b) => (a.moq || 1) - (b.moq || 1));
     return l;
-  }, [resultats, verifies, tri]);
+  }, [resultats, verifies, tri, prixMax, moqMax]);
 
   const nb = liste.length;
 
@@ -87,14 +91,14 @@ export default function Annuaire() {
             <input
               className="champ" style={{ flex: '1 1 320px' }} type="search" value={saisie} aria-label="Rechercher un produit"
               onChange={(e) => setSaisie(e.target.value)}
-              placeholder="Que cherchez-vous ? (ex. sac à main, sérum visage, pagne…)"
+              placeholder="Que cherchez-vous ? (pagne, sac…)"
             />
-            <select className="champ" style={styles.select} value={ville} onChange={(e) => changer({ ville: e.target.value, commune: '' })} aria-label="Ville">
+            <select className="champ loo-recherche-sel" style={styles.select} value={ville} onChange={(e) => changer({ ville: e.target.value, commune: '' })} aria-label="Ville">
               <option value="">Toutes les villes</option>
               {filtres.villes.map((v) => <option key={v} value={v}>{v}</option>)}
             </select>
             {filtres.communes.length > 0 && (
-              <select className="champ" style={styles.select} value={commune} onChange={(e) => changer({ commune: e.target.value })} aria-label="Commune">
+              <select className="champ loo-recherche-sel" style={styles.select} value={commune} onChange={(e) => changer({ commune: e.target.value })} aria-label="Commune">
                 <option value="">Toutes les communes</option>
                 {filtres.communes.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
@@ -148,6 +152,12 @@ export default function Annuaire() {
                 <div style={{ display: 'flex', gap: '0.9rem', alignItems: 'center', flexWrap: 'wrap' }}>
                   <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.88rem' }}>
                     <input type="checkbox" checked={verifies} onChange={(e) => changer({ verifies: e.target.checked ? '1' : '' })} /> Fournisseurs vérifiés seulement
+                  </label>
+                  <label className="acc-filtre-nombre">Prix max
+                    <input className="champ" type="number" inputMode="numeric" min="0" step="500" placeholder="F CFA" value={prixMax || ''} onChange={(e) => changer({ prix_max: e.target.value })} />
+                  </label>
+                  <label className="acc-filtre-nombre">Quantité min. max
+                    <input className="champ" type="number" inputMode="numeric" min="0" placeholder="unités" value={moqMax || ''} onChange={(e) => changer({ moq_max: e.target.value })} />
                   </label>
                   <select className="champ" style={{ width: 'auto', padding: '0.5em 0.8em', fontSize: '0.88rem' }} value={tri} onChange={(e) => changer({ tri: e.target.value === 'pertinence' ? '' : e.target.value })} aria-label="Trier par">
                     {TRIS.map(([v, t]) => <option key={v} value={v}>{t}</option>)}
@@ -274,5 +284,5 @@ const styles = {
   titre: { fontSize: 'clamp(2rem, 4.6vw, 3.2rem)', lineHeight: 1.08, margin: '1rem 0 0.8rem', color: 'var(--loo-papier)', maxWidth: '20ch' },
   sousTitre: { maxWidth: '520px', opacity: 0.92, margin: '0 0 1.8rem', fontSize: '1.05rem' },
   recherche: { display: 'flex', gap: '0.7rem', flexWrap: 'wrap' },
-  select: { flex: '0 1 180px' },
+  select: { flex: '0 1 180px', minWidth: 0 },
 };

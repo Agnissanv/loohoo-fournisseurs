@@ -447,3 +447,11 @@ img { max-width: 100%; display: block; }
 .confiance-liste { list-style: none; padding: 0; margin: 1.2rem 0 0; display: grid; gap: 0.5rem; }
 .confiance-liste li { display: flex; align-items: flex-start; gap: 0.55rem; line-height: 1.4; }
 .confiance-liste svg { flex-shrink: 0; margin-top: 0.1em; color: #1f7a3d; }
+
+.acc-filtre-nombre { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.88rem; }
+.acc-filtre-nombre .champ { width: 7.5rem; padding: 0.5em 0.7em; font-size: 0.88rem; }
+
+@media (max-width: 640px) {
+  .loo-cache-mobile { display: none !important; }
+  .loo-recherche-sel { flex: 1 1 calc(50% - 0.4rem) !important; }
+}

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
-import { suivreSession, recupererMonRole, deconnecterFournisseur, compterMessagesNonLus } from '../api/fournisseurs.js';
+import { suivreSession, recupererMonRole, deconnecterFournisseur, compterMessagesNonLus, suivreActiviteMessages } from '../api/fournisseurs.js';
+import { useTitreNonLus } from '../utils/useTitreNonLus.js';
 
 export default function Header() {
   const navigate = useNavigate();
@@ -10,17 +11,24 @@ export default function Header() {
   const [nonLus, setNonLus] = useState(0);
 
   useEffect(() => suivreSession(setSession), []);
+  useTitreNonLus(nonLus);
 
   useEffect(() => {
     if (!session) { setIdentite(null); setNonLus(0); return; }
+    let arreter = () => {};
+    let annule = false;
     recupererMonRole().then((r) => {
+      if (annule) return;
       if (r.role) {
         setIdentite({ role: r.role, nom: r.profil?.nom });
-        compterMessagesNonLus(r.role).then(setNonLus);
+        const rafraichir = () => compterMessagesNonLus(r.role).then(setNonLus).catch(() => {});
+        rafraichir();
+        arreter = suivreActiviteMessages(rafraichir);
       } else {
         setIdentite(null);
       }
     });
+    return () => { annule = true; arreter(); };
   }, [session]);
 
   async function seDeconnecter() {
@@ -56,7 +64,7 @@ export default function Header() {
             </>
           ) : (
             <>
-              <Link to="/devenir-fournisseur" style={styles.lien}>Devenir fournisseur</Link>
+              <Link to="/devenir-fournisseur" className="loo-cache-mobile" style={styles.lien}>Devenir fournisseur</Link>
               <Link to="/connexion" className="btn btn-outline" style={{ padding: '0.5em 1.1em', fontSize: '0.85rem' }}>
                 Se connecter
               </Link>
@@ -65,7 +73,7 @@ export default function Header() {
               </Link>
             </>
           )}
-          <a href="https://looh-oo.com" style={styles.lien}>← looh-oo.com</a>
+          <a href="https://looh-oo.com" className="loo-cache-mobile" style={styles.lien}>← looh-oo.com</a>
         </div>
       </div>
     </header>
@@ -77,7 +85,7 @@ const styles = {
     position: 'sticky', top: 0, zIndex: 20, background: 'rgba(255, 248, 239, 0.9)',
     backdropFilter: 'blur(8px)', borderBottom: '1px solid var(--loo-papier-ombre)',
   },
-  barre: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.85rem 1.5rem', flexWrap: 'wrap', gap: '0.8rem' },
+  barre: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.85rem 1.5rem', flexWrap: 'wrap', gap: '0.6rem' },
   logoLigne: { display: 'flex', alignItems: 'center', gap: '0.6rem' },
   logo: { borderRadius: '8px 8px 8px 2px' },
   logoTexte: { fontFamily: 'var(--police-affiche)', fontWeight: 700, fontSize: '1.25rem', color: 'var(--loo-encre)' },

@@ -1,3 +1,4 @@
+import { useTitreNonLus } from '../utils/useTitreNonLus.js';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -32,6 +33,7 @@ export default function LayoutEspace() {
   const [identite, setIdentite] = useState(undefined); // undefined = chargement, null = pas fournisseur
   const [menuOuvert, setMenuOuvert] = useState(false);
   const [nonLus, setNonLus] = useState(0);
+  useTitreNonLus(nonLus);
 
   useEffect(() => suivreSession(setSession), []);
 
