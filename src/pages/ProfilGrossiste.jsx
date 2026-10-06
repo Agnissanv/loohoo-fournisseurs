@@ -21,6 +21,8 @@ export default function ProfilGrossiste() {
   const [categorie, setCategorie] = useState('');
   const [tri, setTri] = useState('nom');
   const [lienCopie, setLienCopie] = useState(false);
+  const [panne, setPanne] = useState(false);
+  const [essai, setEssai] = useState(0);
 
   useTitre(
     grossiste ? `${grossiste.nom}, fournisseur à ${grossiste.ville}` : null,
@@ -30,14 +32,15 @@ export default function ProfilGrossiste() {
   useEffect(() => {
     let annule = false;
     setGrossiste(undefined);
+    setPanne(false);
     window.scrollTo({ top: 0 });
     recupererGrossiste(id).then((g) => {
       if (!annule) setGrossiste(g);
       if (g) { incrementerVueProfil(id); noterVisite({ grossisteId: id }); }
-    }).catch(() => { if (!annule) setGrossiste(null); });
+    }).catch(() => { if (!annule) { setGrossiste(null); setPanne(true); } });
     recupererDescriptionGrossiste(id).then((d) => { if (!annule) setDescription(d); });
     return () => { annule = true; };
-  }, [id]);
+  }, [id, essai]);
 
   const produits = grossiste?.produits;
   const categories = useMemo(() => [...new Set((produits || []).map((p) => p.categorie).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'fr')), [produits]);
@@ -52,6 +55,17 @@ export default function ProfilGrossiste() {
 
   if (grossiste === undefined) {
     return <section className="section"><div className="container"><div className="loo-squelette" style={{ height: '400px' }} /></div></section>;
+  }
+  if (!grossiste && panne) {
+    return (
+      <section className="section">
+        <div className="container">
+          <h1 className="section-titre">Chargement impossible.</h1>
+          <p className="section-intro">La connexion semble coupée. Vérifiez votre réseau, puis réessayez.</p>
+          <button type="button" className="btn btn-primary" style={{ marginTop: '1.2rem' }} onClick={() => setEssai((n) => n + 1)}>Réessayer</button>
+        </div>
+      </section>
+    );
   }
   if (!grossiste) {
     return (

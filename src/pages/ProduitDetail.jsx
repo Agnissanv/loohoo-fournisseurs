@@ -14,6 +14,8 @@ const formatPoids = (g) => (g >= 1000 ? `${(g / 1000).toLocaleString('fr-FR')} k
 export default function ProduitDetail() {
   const { id } = useParams();
   const [produit, setProduit] = useState(undefined);
+  const [panne, setPanne] = useState(false);
+  const [essai, setEssai] = useState(0);
   const [photoActive, setPhotoActive] = useState(0);
   const [contactOuvert, setContactOuvert] = useState(false);
   const [memeFournisseur, setMemeFournisseur] = useState([]);
@@ -28,6 +30,7 @@ export default function ProduitDetail() {
   useEffect(() => {
     let annule = false;
     setProduit(undefined);
+    setPanne(false);
     setPhotoActive(0);
     window.scrollTo({ top: 0 });
     recupererProduitPublic(id).then((p) => {
@@ -42,12 +45,23 @@ export default function ProduitDetail() {
           if (!annule) setSimilaires(l.filter((x) => x.id !== p.id).slice(0, 10));
         }).catch(() => {});
       }
-    }).catch(() => { if (!annule) setProduit(null); });
+    }).catch(() => { if (!annule) { setProduit(null); setPanne(true); } });
     return () => { annule = true; };
-  }, [id]);
+  }, [id, essai]);
 
   if (produit === undefined) {
     return <section className="section"><div className="container"><div className="loo-squelette" style={{ height: '400px' }} /></div></section>;
+  }
+  if (!produit && panne) {
+    return (
+      <section className="section">
+        <div className="container">
+          <h1 className="section-titre">Chargement impossible.</h1>
+          <p className="section-intro">La connexion semble coupée. Vérifiez votre réseau, puis réessayez.</p>
+          <button type="button" className="btn btn-primary" style={{ marginTop: '1.2rem' }} onClick={() => setEssai((n) => n + 1)}>Réessayer</button>
+        </div>
+      </section>
+    );
   }
   if (!produit) {
     return (
