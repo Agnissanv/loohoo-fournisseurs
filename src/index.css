@@ -484,3 +484,65 @@ img { max-width: 100%; display: block; }
   .loo-hero-voile { background: linear-gradient(0deg, rgba(23, 18, 13, 0.88) 0%, rgba(23, 18, 13, 0.55) 55%, rgba(23, 18, 13, 0.3) 100%); }
 }
 @media (prefers-reduced-motion: reduce) { .loo-hero-fond { transition: opacity 0.01ms; transform: none; } }
+
+
+/* ================= animations et fluidité ================= */
+@keyframes loo-monte { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@keyframes loo-fondu { from { opacity: 0; } to { opacity: 1; } }
+@keyframes loo-reflet { 0% { background-position: 150% 0; } 100% { background-position: -50% 0; } }
+@keyframes loo-barre { 0% { transform: translateX(-100%); } 100% { transform: translateX(260%); } }
+
+/* apparition des sections au défilement (la classe n'est ajoutée que par le script : sans lui, tout reste visible) */
+.loo-apparition { opacity: 0; transform: translateY(26px); transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.22, 0.7, 0.2, 1); }
+.loo-apparition.loo-visible { opacity: 1; transform: none; }
+
+/* entrée de page */
+.loo-page { animation: loo-fondu 0.35s ease both; }
+
+/* texte du hero : entrée en cascade */
+.loo-hero-contenu > * { animation: loo-monte 0.8s cubic-bezier(0.22, 0.7, 0.2, 1) both; }
+.loo-hero-contenu > :nth-child(2), .loo-hero-contenu > div > :nth-child(2) { animation-delay: 0.1s; }
+.loo-hero-contenu > :nth-child(3), .loo-hero-contenu > div > :nth-child(3) { animation-delay: 0.2s; }
+.loo-hero-contenu > :nth-child(4), .loo-hero-contenu > div > :nth-child(4) { animation-delay: 0.3s; }
+.loo-hero-contenu > :nth-child(5) { animation-delay: 0.4s; }
+
+/* squelette de chargement : reflet qui traverse, plus vivant qu'un clignotement */
+.loo-squelette {
+  background: linear-gradient(100deg, var(--loo-papier-ombre) 30%, #f8ecd8 50%, var(--loo-papier-ombre) 70%);
+  background-size: 200% 100%;
+  animation: loo-reflet 1.4s ease-in-out infinite;
+}
+
+/* barre de chargement en haut de page pendant l'ouverture d'une page */
+.loo-chargement-page { position: fixed; top: 0; left: 0; right: 0; height: 3px; overflow: hidden; z-index: 60; background: rgba(247, 148, 29, 0.18); }
+.loo-chargement-page::after { content: ''; display: block; width: 40%; height: 100%; background: var(--gradient-marque); animation: loo-barre 1.1s ease-in-out infinite; }
+
+/* images qui apparaissent une fois chargées */
+.loo-img-fondu { opacity: 0; transition: opacity 0.5s ease, transform 0.6s ease; }
+.loo-img-fondu.loo-img-prete { opacity: 1; }
+
+/* micro-interactions */
+.btn { transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease, opacity 0.2s ease; }
+.btn:active { transform: translateY(0) scale(0.97); }
+a.carte { transition: transform 0.25s ease, box-shadow 0.25s ease; }
+a.carte:hover { transform: translateY(-4px); box-shadow: 0 16px 32px rgba(23, 18, 13, 0.12); }
+a.carte:hover .loo-img-fondu { transform: scale(1.04); }
+a.carte:active { transform: translateY(-1px); }
+
+/* grille de produits : les cartes arrivent l'une après l'autre */
+.loo-fournisseurs-grille > * { animation: loo-monte 0.5s ease backwards; }
+.loo-fournisseurs-grille > :nth-child(2) { animation-delay: 0.04s; }
+.loo-fournisseurs-grille > :nth-child(3) { animation-delay: 0.08s; }
+.loo-fournisseurs-grille > :nth-child(4) { animation-delay: 0.12s; }
+.loo-fournisseurs-grille > :nth-child(5) { animation-delay: 0.16s; }
+.loo-fournisseurs-grille > :nth-child(6) { animation-delay: 0.2s; }
+.loo-fournisseurs-grille > :nth-child(7) { animation-delay: 0.24s; }
+.loo-fournisseurs-grille > :nth-child(8) { animation-delay: 0.28s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .loo-apparition { opacity: 1; transform: none; transition: none; }
+  .loo-page, .loo-hero-contenu > *, .loo-fournisseurs-grille > * { animation: none; }
+  .loo-squelette { animation: none; background: var(--loo-papier-ombre); }
+  .loo-chargement-page::after { animation-duration: 2.4s; }
+  a.carte:hover, a.carte:hover .loo-img-fondu { transform: none; }
+}

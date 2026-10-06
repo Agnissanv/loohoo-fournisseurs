@@ -1,30 +1,31 @@
-import React, { useEffect } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { Routes, Route, Link, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Header from './components/Header.jsx';
 import Footer from './components/Footer.jsx';
 import LayoutEspace from './components/LayoutEspace.jsx';
 import { suivreSession, finaliserInscriptionEnAttente } from './api/fournisseurs.js';
-import Produits from './pages/Produits.jsx';
-import ChoixInscription from './pages/ChoixInscription.jsx';
-import ProduitFormulaire from './pages/ProduitFormulaire.jsx';
-import ImportProduits from './pages/ImportProduits.jsx';
+import { useApparitionAuDefilement } from './utils/useApparitionAuDefilement.js';
+const Produits = lazy(() => import('./pages/Produits.jsx'));
+const ChoixInscription = lazy(() => import('./pages/ChoixInscription.jsx'));
+const ProduitFormulaire = lazy(() => import('./pages/ProduitFormulaire.jsx'));
+const ImportProduits = lazy(() => import('./pages/ImportProduits.jsx'));
 import Annuaire from './pages/Annuaire.jsx';
 import ProfilGrossiste from './pages/ProfilGrossiste.jsx';
 import ProduitDetail from './pages/ProduitDetail.jsx';
 import Connexion from './pages/Connexion.jsx';
-import Inscription from './pages/Inscription.jsx';
-import InscriptionVendeur from './pages/InscriptionVendeur.jsx';
-import TableauDeBord from './pages/TableauDeBord.jsx';
-import Messagerie from './pages/Messagerie.jsx';
-import Mediatheque from './pages/Mediatheque.jsx';
-import Profil from './pages/Profil.jsx';
-import Statistiques from './pages/Statistiques.jsx';
-import MentionsLegales from './pages/MentionsLegales.jsx';
-import Confidentialite from './pages/Confidentialite.jsx';
-import Conditions from './pages/Conditions.jsx';
-import MotDePasseOublie from './pages/MotDePasseOublie.jsx';
-import NouveauMotDePasse from './pages/NouveauMotDePasse.jsx';
-import DevenirFournisseur from './pages/DevenirFournisseur.jsx';
+const Inscription = lazy(() => import('./pages/Inscription.jsx'));
+const InscriptionVendeur = lazy(() => import('./pages/InscriptionVendeur.jsx'));
+const TableauDeBord = lazy(() => import('./pages/TableauDeBord.jsx'));
+const Messagerie = lazy(() => import('./pages/Messagerie.jsx'));
+const Mediatheque = lazy(() => import('./pages/Mediatheque.jsx'));
+const Profil = lazy(() => import('./pages/Profil.jsx'));
+const Statistiques = lazy(() => import('./pages/Statistiques.jsx'));
+const MentionsLegales = lazy(() => import('./pages/MentionsLegales.jsx'));
+const Confidentialite = lazy(() => import('./pages/Confidentialite.jsx'));
+const Conditions = lazy(() => import('./pages/Conditions.jsx'));
+const MotDePasseOublie = lazy(() => import('./pages/MotDePasseOublie.jsx'));
+const NouveauMotDePasse = lazy(() => import('./pages/NouveauMotDePasse.jsx'));
+const DevenirFournisseur = lazy(() => import('./pages/DevenirFournisseur.jsx'));
 
 function GestionDuScroll() {
   const { pathname } = useLocation();
@@ -62,10 +63,12 @@ function FinaliseurInscription() {
 }
 
 function LayoutPublic() {
+  const { pathname } = useLocation();
+  useApparitionAuDefilement(pathname);
   return (
     <>
       <Header />
-      <Outlet />
+      <div key={pathname} className="loo-page"><Outlet /></div>
       <Footer />
     </>
   );
@@ -76,6 +79,7 @@ export default function App() {
     <div>
       <GestionDuScroll />
       <FinaliseurInscription />
+      <Suspense fallback={<div className="loo-chargement-page" role="progressbar" aria-label="Chargement" />}>
       <Routes>
         <Route element={<LayoutPublic />}>
           <Route path="/" element={<Annuaire />} />
@@ -110,6 +114,7 @@ export default function App() {
           <Route path="/conversations/:id" element={<Messagerie />} />
         </Route>
       </Routes>
+      </Suspense>
     </div>
   );
 }
