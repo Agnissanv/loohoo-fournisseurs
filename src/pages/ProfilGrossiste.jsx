@@ -5,6 +5,7 @@ import { recupererGrossiste, recupererDescriptionGrossiste, incrementerVueProfil
 import CarteProduit from '../components/CarteProduit.jsx';
 import CaptureSortie from '../components/CaptureSortie.jsx';
 import ModaleContact from '../components/ModaleContact.jsx';
+import IndicateursConfiance from '../components/IndicateursConfiance.jsx';
 import { noterVisite } from '../utils/suiviVisites.js';
 import { useTitre } from '../utils/useTitre.js';
 
@@ -112,6 +113,8 @@ export default function ProfilGrossiste() {
             {membreDepuis && <div><span className="etiquette-info">Sur LOOHOO depuis</span><strong style={{ textTransform: 'capitalize' }}>{membreDepuis}</strong></div>}
             <div><span className="etiquette-info">Vérification</span><strong>{grossiste.badge_verifie ? 'Contrôlé par LOOHOO' : 'En cours'}</strong></div>
           </div>
+
+          <IndicateursConfiance grossisteId={grossiste.id} verifie={grossiste.badge_verifie} />
 
           {(description || horairesAffiches.length > 0) && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: '2rem', marginTop: '1.6rem' }}>

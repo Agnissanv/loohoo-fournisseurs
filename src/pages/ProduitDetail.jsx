@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { BadgeCheck, Check, ChevronRight, Copy, Factory, MapPin, MessageCircle, Share2 } from 'lucide-react';
 import { recupererProduitPublic, recupererAutresProduitsFournisseur, rechercherProduits } from '../api/fournisseurs.js';
 import ModaleContact from '../components/ModaleContact.jsx';
+import IndicateursConfiance from '../components/IndicateursConfiance.jsx';
 import CarteProduit from '../components/CarteProduit.jsx';
 import { noterVisite } from '../utils/suiviVisites.js';
 import { useTitre } from '../utils/useTitre.js';
@@ -168,6 +169,7 @@ export default function ProduitDetail() {
               </div>
               <ChevronRight size={18} style={{ marginLeft: 'auto', opacity: 0.5, flexShrink: 0 }} />
             </Link>
+            <IndicateursConfiance grossisteId={g.id} verifie={false} compact />
           </div>
         </div>
 

@@ -441,3 +441,9 @@ img { max-width: 100%; display: block; }
 .msg-modeles button { border: 1.5px solid var(--loo-papier-ombre); background: #fff; border-radius: 999px; padding: 0.45em 0.95em; font: inherit; font-size: 0.84rem; font-weight: 600; cursor: pointer; color: var(--loo-encre); }
 .msg-modeles button:hover:not(:disabled) { border-color: var(--loo-rouge); color: var(--loo-rouge); background: #FFF6E9; }
 .msg-modeles button:disabled { opacity: 0.55; cursor: default; }
+
+
+/* ---- indicateurs de confiance ---- */
+.confiance-liste { list-style: none; padding: 0; margin: 1.2rem 0 0; display: grid; gap: 0.5rem; }
+.confiance-liste li { display: flex; align-items: flex-start; gap: 0.55rem; line-height: 1.4; }
+.confiance-liste svg { flex-shrink: 0; margin-top: 0.1em; color: #1f7a3d; }

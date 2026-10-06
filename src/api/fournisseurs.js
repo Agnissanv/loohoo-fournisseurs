@@ -590,3 +590,10 @@ export async function annulerAffaire(id) {
   const { error } = await supabase.rpc('annuler_affaire', { p_id: id });
   if (error) throw error;
 }
+
+// Chiffres de confiance d'un fournisseur publié (affaires confirmées, délai de réponse, stock vérifié) : agrégats uniquement
+export async function recupererIndicateursConfiance(grossisteId) {
+  const { data, error } = await supabase.rpc('indicateurs_confiance', { p_ids: [grossisteId] });
+  if (error) throw error;
+  return data?.[0] || null;
+}

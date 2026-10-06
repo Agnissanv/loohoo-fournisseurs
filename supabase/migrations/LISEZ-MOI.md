@@ -33,3 +33,8 @@ retour en vérification d'un produit contenant une coordonnée, refus de l'auto-
 quand le fournisseur change le stock, vidage automatique des données privées de la table publique, refus de lecture du
 téléphone d'un acheteur par un compte connecté.
 Ce test n'est PAS fait sur la vraie base : en cas de message d'erreur à l'exécution, ne passez pas à la suivante et envoyez-le.
+
+## 0015 — Indicateurs de confiance
+Ajoute la fonction `indicateurs_confiance` : affaires confirmées, taux et délai de réponse (90 jours, seulement à partir de
+3 conversations) et date de dernière vérification du stock, pour les fournisseurs publiés. Aucun nom, montant ni message n'en sort.
+Testée sur le moteur de test (0001 à 0015 passent). Affichée sur la page fournisseur et la page produit.
