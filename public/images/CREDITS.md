@@ -1,9 +1,13 @@
 # Crédits photos (libres de droits, à valider ou remplacer par le client)
 
+Toutes montrent des fournisseurs : stock, entrepôts, étals de gros.
+
 | Fichier | Auteur | Source | Licence |
 |---|---|---|---|
-| hero-adjame.jpg | Eva Blue | Unsplash, « Assorted color textiles », marché d'Adjamé, Abidjan (https://unsplash.com/photos/SfPOkp6-2eA) | Licence Unsplash |
-| hero-marche.jpg | Al-amin Muhammad | Pexels n°28468236, rue commerçante au Nigeria | Licence Pexels |
-| hero-etal.jpg | iv image.ng | Pexels n°33203798, commerçante sur son étal | Licence Pexels |
+| fournisseur-sacs.jpg | kaybee-photography | Pexels n°31585435 | Licence Pexels |
+| tissus-pagnes.jpg | iwaria | Pexels n°8655023, tissus à Cotonou | Licence Pexels |
+| entrepot-sacs.jpg | phinley-sperrer | Pexels n°39554455 | Licence Pexels |
+| stock-epices.jpg | barrytheoctopus | Pexels n°33624063 | Licence Pexels |
+| hero-adjame.jpg | Eva Blue | Unsplash, marché d'Adjamé, Abidjan | Licence Unsplash |
 
-Seule la première photo est prise en Côte d'Ivoire. Les deux autres sont à remplacer par des photos des vrais fournisseurs.
+À remplacer par des photos des vrais fournisseurs inscrits dès qu'elles existent.

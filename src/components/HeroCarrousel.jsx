@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 
 // Pour changer une image : remplacer le fichier dans public/images/ (ou modifier cette liste).
 const IMAGES = [
+  { src: '/images/fournisseur-sacs.jpg', alt: 'Un grossiste prépare des sacs de marchandise devant son étal', credit: 'kaybee-photography, Pexels', position: 'center 40%' },
+  { src: '/images/tissus-pagnes.jpg', alt: 'Des piles de pagnes et de tissus wax chez un fournisseur', credit: 'iwaria, Pexels', position: 'center 45%' },
+  { src: '/images/entrepot-sacs.jpg', alt: "Un entrepôt de marché rempli de sacs d'épices et de tubercules", credit: 'phinley-sperrer, Pexels', position: 'center 50%' },
+  { src: '/images/stock-epices.jpg', alt: "Du stock de condiments en sacs chez un fournisseur", credit: 'barrytheoctopus, Pexels', position: 'center 55%' },
   { src: '/images/hero-adjame.jpg', alt: "Pagnes et tissus empilés sur un étal du marché d'Adjamé, à Abidjan", credit: 'Eva Blue, Unsplash', position: 'center 40%' },
-  { src: '/images/hero-marche.jpg', alt: 'Une rue commerçante animée, étals et acheteurs', credit: 'Al-amin Muhammad, Pexels', position: 'center 55%' },
-  { src: '/images/hero-etal.jpg', alt: 'Une commerçante souriante derrière son étal', credit: 'iv image.ng, Pexels', position: 'center 30%' },
 ];
 const DUREE_MS = 6000;
 
