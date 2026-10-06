@@ -134,13 +134,28 @@ export function suivreSession(callback) {
 }
 
 export async function recupererMonProfil(userId) {
-  const { data, error } = await supabase
+  const requete = (contact) => supabase
     .from('grossiste')
-    .select('*, grossiste_contact(telephone), grossiste_photo(id, url, ordre), produit(*)')
+    .select(`*, grossiste_contact(${contact}), grossiste_photo(id, url, ordre), produit(*)`)
     .eq('user_id', userId)
     .maybeSingle();
+  let { data, error } = await requete('telephone, adresse, site_web, reseaux_sociaux');
+  if (error) ({ data, error } = await requete('telephone'));
   if (error) throw error;
   return data;
+}
+
+// Adresse, site web et réseaux sociaux : privés, rangés avec le téléphone dans la table protégée des contacts
+export async function mettreAJourContactPrive(grossisteId, champs) {
+  const { data, error } = await supabase.from('grossiste_contact').update(champs).eq('grossiste_id', grossisteId).select('grossiste_id');
+  if (error) {
+    throw new Error(/column|schema cache/i.test(error.message) ? "Ces informations privées ne peuvent pas encore être enregistrées (migration 0006 à exécuter)." : error.message);
+  }
+  if (!data || data.length === 0) {
+    // Pas encore de ligne de contact (profil sans téléphone) : on la crée
+    const { error: erreurAjout } = await supabase.from('grossiste_contact').insert({ grossiste_id: grossisteId, telephone: '', ...champs });
+    if (erreurAjout) throw erreurAjout;
+  }
 }
 
 export async function mettreAJourProfil(id, champs) {
@@ -173,7 +188,7 @@ export async function recupererMonRole() {
   if (!session) return { session: null, role: null };
   const [{ data: g }, { data: v }] = await Promise.all([
     supabase.from('grossiste').select('id, nom').eq('user_id', session.user.id).maybeSingle(),
-    supabase.from('vendeur').select('id, nom, telephone').eq('user_id', session.user.id).maybeSingle(),
+    supabase.from('vendeur').select('id, nom').eq('user_id', session.user.id).maybeSingle(),
   ]);
   if (g) return { session, role: 'fournisseur', profil: g };
   if (v) return { session, role: 'vendeur', profil: v };
@@ -183,6 +198,9 @@ export async function recupererMonRole() {
 export async function recupererSessionVendeur() {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return null;
+  // L'acheteur relit son propre téléphone par une fonction réservée (migration 0010); repli sur la lecture directe avant celle-ci
+  const { data: lignes, error } = await supabase.rpc('mon_vendeur');
+  if (!error) return { session, vendeur: (Array.isArray(lignes) ? lignes[0] : lignes) || null };
   const { data } = await supabase.from('vendeur').select('nom, telephone').eq('user_id', session.user.id).maybeSingle();
   return { session, vendeur: data };
 }
@@ -383,8 +401,12 @@ export async function recupererProduitPublic(id) {
   const requete = (colonnes) => supabase.from('produit').select(colonnes)
     .eq('id', id).eq('statut', 'publie').eq('actif', true).maybeSingle();
   // Stock, dimensions et référence : lus d'abord, avec repli si les droits de la base ne les exposent pas
-  let { data, error } = await requete(`${base}, stock_disponible, longueur_cm, largeur_cm, hauteur_cm, sku`);
-  if (error) ({ data, error } = await requete(base));
+  let data = null;
+  let error = null;
+  for (const extra of [', stock_disponible, longueur_cm, largeur_cm, hauteur_cm, sku, stock_verifie_le', ', stock_disponible, longueur_cm, largeur_cm, hauteur_cm, sku', '']) {
+    ({ data, error } = await requete(`${base}${extra}`));
+    if (!error) break;
+  }
   if (error) throw error;
   if (!data || data.grossiste?.statut !== 'publie') return null;
   return { ...data, photos: [...(data.produit_photo || [])].sort((a, b) => a.ordre - b.ordre).map((p) => p.url) };

@@ -9,6 +9,7 @@ import {
   recupererGaleriePhotosProduit, ajouterPhotoProduit, supprimerPhotoProduit, ajouterMedia,
 } from '../api/fournisseurs.js';
 import { televerserMedia, televerserVideo, supprimerVideoStockage } from '../utils/stockagePhotos.js';
+import { contientCoordonnees } from '../utils/messagerie.js';
 
 const UNITES = ['pièce', 'carton', 'kg', 'litre', 'sac', 'rouleau', 'paquet', 'mètre', 'lot'];
 const MAX_PHOTOS = 4;
@@ -226,6 +227,11 @@ export default function ProduitFormulaire() {
               <label htmlFor="description">Description</label>
               <textarea id="description" className="champ" rows={4} maxLength={1000} placeholder="Décrivez votre produit : caractéristiques, composition, utilisation…" value={champs.description} onChange={maj('description')} />
               <p className="esp-aide" style={{ textAlign: 'right' }}>{champs.description.length}/1000</p>
+              {contientCoordonnees(`${champs.nom} ${champs.description} ${tags.join(' ')}`) && (
+                <p role="alert" className="esp-aide" style={{ color: '#B8650A', opacity: 1, fontWeight: 600 }}>
+                  Retirez les numéros, e-mails et liens : les acheteurs vous contactent via LOOHOO. Sinon le produit restera en vérification.
+                </p>
+              )}
             </div>
 
             <div className="esp-ligne-champs">

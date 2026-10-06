@@ -18,3 +18,16 @@ export function telephoneDuProfil(profil) {
   const contact = profil?.grossiste_contact;
   return (Array.isArray(contact) ? contact[0] : contact)?.telephone || '';
 }
+
+// Données privées du profil (téléphone, adresse, site web, réseaux) : lues dans la ligne de contact,
+// avec repli sur les anciennes colonnes de la table publique tant que la migration 0007 n'a pas été exécutée.
+export function contactDuProfil(profil) {
+  const brut = profil?.grossiste_contact;
+  const contact = (Array.isArray(brut) ? brut[0] : brut) || {};
+  return {
+    telephone: contact.telephone || '',
+    adresse: contact.adresse ?? profil?.adresse ?? '',
+    site_web: contact.site_web ?? profil?.site_web ?? '',
+    reseaux_sociaux: contact.reseaux_sociaux ?? profil?.reseaux_sociaux ?? {},
+  };
+}

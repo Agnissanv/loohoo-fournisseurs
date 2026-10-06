@@ -6,12 +6,15 @@ import {
 } from 'lucide-react';
 import SelectCategorie from '../components/SelectCategorie.jsx';
 import {
-  suivreSession, recupererMonProfil, mettreAJourProfilComplet, mettreAJourTelephone,
+  suivreSession, recupererMonProfil, mettreAJourProfilComplet, mettreAJourContactPrive, mettreAJourTelephone,
   ajouterPhotoProfil, supprimerPhotoProfil, recupererMesStats,
   recupererDocuments, televerserDocument, supprimerDocument, obtenirLienDocument,
 } from '../api/fournisseurs.js';
 import { televerserPhoto, supprimerPhotoStockage } from '../utils/stockagePhotos.js';
-import { normaliserTelephone, formaterTelephone, telephoneDuProfil } from '../utils/telephone.js';
+import { normaliserTelephone, formaterTelephone, contactDuProfil } from '../utils/telephone.js';
+
+// Ces champs vivent dans la table protégée des contacts (jamais dans la table publique)
+const CHAMPS_PRIVES = ['adresse', 'site_web', 'reseaux_sociaux'];
 
 const JOURS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
 const TYPES_DOCUMENT = {
@@ -55,9 +58,10 @@ export default function Profil() {
   if (session === undefined || profil === undefined) return <div className="loo-squelette" style={{ height: '300px' }} />;
   if (!profil) return <p>Aucun profil fournisseur associé à ce compte.</p>;
 
-  const telephone = telephoneDuProfil(profil);
+  const contact = contactDuProfil(profil);
+  const telephone = contact.telephone;
   const horaires = profil.horaires_ouverture || {};
-  const reseaux = profil.reseaux_sociaux || {};
+  const reseaux = contact.reseaux_sociaux || {};
   const photosProfil = [...(profil.grossiste_photo || [])].sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0));
   const initiales = (profil.nom || '').split(/\s+/).filter(Boolean).slice(0, 2).map((m) => m[0]).join('').toUpperCase();
 
@@ -67,8 +71,11 @@ export default function Profil() {
   async function enregistrerChamps(champs, apres) {
     setErreur('');
     try {
-      await mettreAJourProfilComplet(profil.id, champs);
-      setProfil((p) => ({ ...p, ...champs }));
+      const prives = Object.fromEntries(Object.entries(champs).filter(([k]) => CHAMPS_PRIVES.includes(k)));
+      const publics = Object.fromEntries(Object.entries(champs).filter(([k]) => !CHAMPS_PRIVES.includes(k)));
+      if (Object.keys(publics).length) await mettreAJourProfilComplet(profil.id, publics);
+      if (Object.keys(prives).length) await mettreAJourContactPrive(profil.id, prives);
+      setProfil((p) => ({ ...p, ...publics, ...(Object.keys(prives).length ? { grossiste_contact: { ...contactDuProfil(p), ...prives } } : {}) }));
       setEnEdition(null);
       apres?.();
       rafraichirIdentite?.();
@@ -84,7 +91,7 @@ export default function Profil() {
     setErreur('');
     try {
       await mettreAJourTelephone(profil.id, numero);
-      setProfil((p) => ({ ...p, grossiste_contact: [{ telephone: numero }] }));
+      setProfil((p) => ({ ...p, grossiste_contact: { ...contactDuProfil(p), telephone: numero } }));
       setEnEdition(null);
       annonce('Téléphone enregistré.');
     } catch (err) { setErreur(err.message); }
@@ -178,6 +185,12 @@ export default function Profil() {
       <h1 className="esp-titre-page">Paramètres et profil</h1>
       {erreur && <p role="alert" style={{ color: 'var(--loo-rouge)', fontWeight: 600, margin: '0 0 1rem' }}>{erreur}</p>}
       {succes && <p role="status" style={{ color: '#1f7a3d', fontWeight: 600, margin: '0 0 1rem' }}>{succes}</p>}
+      {profil.drapeau_coordonnees && (
+        <p role="alert" className="esp-carte" style={{ borderColor: 'var(--loo-orange)', background: '#FFF6E9', margin: '0 0 1rem', fontSize: '0.9rem', lineHeight: 1.5 }}>
+          <strong>Coordonnées détectées dans votre profil.</strong> Retirez tout numéro de téléphone, e-mail ou lien de votre nom et de votre présentation :
+          les échanges avec les acheteurs passent par LOOHOO. Votre profil reste en vérification tant qu'ils y figurent.
+        </p>
+      )}
 
       {/* Carte d'identité */}
       <div className="esp-carte" style={{ display: 'flex', gap: '1.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -238,10 +251,10 @@ export default function Profil() {
             <Ligne ctx={ctx} cle="categorie" libelle="Catégorie" valeur={profil.categorie} />
             <Ligne ctx={ctx} cle="ville" libelle="Ville" valeur={profil.ville} />
             <Ligne ctx={ctx} cle="commune" libelle="Commune" valeur={profil.commune} />
-            <Ligne ctx={ctx} cle="adresse" libelle="Adresse" valeur={profil.adresse} aide="Visible uniquement par vous et l'équipe LOOHOO, pour la vérification." />
+            <Ligne ctx={ctx} cle="adresse" libelle="Adresse" valeur={contact.adresse} aide="Visible uniquement par vous et l'équipe LOOHOO, pour la vérification." />
             <Ligne ctx={ctx} cle="telephone" libelle="Téléphone" valeur={telephone} affichage={telephone ? formaterTelephone(telephone) : undefined} type="tel" enregistrer={enregistrerTelephone} aide="Jamais affiché publiquement. Les acheteurs vous écrivent via la messagerie." />
             <Ligne ctx={ctx} cle="email" libelle="E-mail" valeur={session.user.email} lectureSeule />
-            <Ligne ctx={ctx} cle="site_web" libelle="Site web" valeur={profil.site_web} aide="Usage interne : jamais affiché sur votre page publique." />
+            <Ligne ctx={ctx} cle="site_web" libelle="Site web" valeur={contact.site_web} aide="Usage interne : jamais affiché sur votre page publique." />
             <p className="esp-aide" style={{ marginTop: '0.7rem' }}>Téléphone, adresse, e-mail, site web et réseaux sociaux restent privés.</p>
           </div>
 

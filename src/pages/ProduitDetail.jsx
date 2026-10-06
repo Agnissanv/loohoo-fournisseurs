@@ -69,7 +69,7 @@ export default function ProduitDetail() {
   const specs = [
     ['Quantité minimale', `${produit.moq}${produit.unite ? ` ${produit.unite}${produit.moq > 1 && produit.unite !== 'kg' ? 's' : ''}` : ''}`],
     produit.prix_unitaire_fcfa != null && ['Prix à l’unité', `${formatPrix(produit.prix_unitaire_fcfa)} F CFA`],
-    produit.stock_disponible != null && ['Stock disponible', `${formatPrix(produit.stock_disponible)}${produit.unite ? ` ${produit.unite}` : ''}`],
+    produit.stock_disponible != null && ['Stock disponible', `${formatPrix(produit.stock_disponible)}${produit.unite ? ` ${produit.unite}` : ''}${produit.stock_verifie_le ? ` · vérifié par LOOHOO le ${new Date(produit.stock_verifie_le).toLocaleDateString('fr-FR')}` : ''}`],
     produit.categorie && ['Catégorie', produit.categorie],
     produit.sous_categorie && ['Sous-catégorie', produit.sous_categorie],
     produit.poids_grammes != null && ['Poids d’une unité', formatPoids(produit.poids_grammes)],

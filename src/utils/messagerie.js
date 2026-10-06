@@ -79,9 +79,11 @@ export const REPONSES_ACHETEUR = [
   'Livrez-vous à … ?',
 ];
 
-// Numéro de téléphone ou e-mail écrit dans un message : on prévient (sans bloquer) pour garder l'échange sur LOOHOO
+// Numéro, e-mail ou lien écrit dans un message : on prévient avant l'envoi (le masquage définitif est fait par la base)
 export function contientCoordonnees(texte = '') {
   // Téléphone ivoirien (10 chiffres, souvent par paires, éventuellement précédé de +225) ou adresse e-mail.
   // Les montants (« 1 000 000 », groupes de 3 chiffres) ne déclenchent pas l'avertissement.
-  return /(?:\+?225[\s.-]?)?\b\d{2}(?:[\s.-]?\d{2}){4}\b/.test(texte) || /[\w.+-]+@[\w-]+\.[\w.]+/.test(texte);
+  return /(?:\+?225[\s.-]?)?\b\d{2}(?:[\s.-]?\d{2}){4}\b/.test(texte)
+    || /[\w.+-]+@[\w-]+\.[\w.]+/.test(texte)
+    || /(https?:\/\/|www\.)\S+/i.test(texte);
 }

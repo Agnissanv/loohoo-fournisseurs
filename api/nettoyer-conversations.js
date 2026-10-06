@@ -32,5 +32,8 @@ export default async function handler(req, res) {
   // Visites de plus d'un an (la table n'existe qu'après la migration 0003 : l'absence n'est pas une erreur)
   const visites = await admin.from('visite').delete({ count: 'exact' }).lt('date_visite', ilYaJours(JOURS_VISITES));
 
+  // Textes d'origine des messages masqués : conservés 90 jours seulement (même durée que les conversations)
+  await admin.from('message_masque').delete().lt('date_masquage', ilYaJours(JOURS_CONVERSATIONS));
+
   res.status(200).json({ conversationsSupprimees: count ?? 0, visitesSupprimees: visites.error ? 0 : (visites.count ?? 0) });
 }

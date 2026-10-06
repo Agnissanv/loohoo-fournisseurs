@@ -59,3 +59,14 @@ Reprise du style des maquettes validées par le client. Modules par ordre de val
 2. **Qui est administrateur** : un seul compte, ou des rôles (super-admin, modérateur) avec journal d'audit. Recommandé : rôles.
 3. **Commission** : comment LOOHOO saura qu'une affaire est conclue. Recommandé : bouton « Affaire conclue » dans la conversation, confirmé par les deux parties, avec montant déclaré; l'admin voit le registre et la commission due. Les paiements restent hors plateforme en phase 1.
 4. **Dossier admin** : un autre développeur en a la responsabilité. Il faut le prévenir et travailler sur une branche séparée pour éviter les conflits.
+
+## 7. Avancement de la phase 1 (2026-10-06)
+
+Écrit et vérifié sur un moteur PostgreSQL de test (migrations 0001 à 0010 de bout en bout, voir supabase/migrations/LISEZ-MOI.md) :
+- 0005 photos de produit publiques (bug visiteur), 0006 et 0007 données privées du fournisseur dans la table protégée,
+  0008 masquage des coordonnées dans les messages et drapeaux sur les contenus publics, 0009 stock vérifié et lecture admin,
+  0010 vie privée des acheteurs.
+- Site adapté : lecture et écriture des données privées dans la table protégée, téléphone de l'acheteur via mon_vendeur(),
+  avertissements avant envoi, puce « Coordonnées détectées », bandeau d'alerte sur le profil, « stock vérifié par LOOHOO » sur la fiche produit,
+  purge des textes d'origine après 90 jours.
+- Reste côté site : rien d'obligatoire. Prochaine étape : le dossier loohoo-admin (phase 2), sur une branche séparée.

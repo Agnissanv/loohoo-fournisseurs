@@ -329,7 +329,7 @@ function Fil({ conversation, role, onChange }) {
         </div>
         {contientCoordonnees(texte) && (
           <p className="esp-aide" style={{ margin: '0 0 0.4rem', color: '#B8650A', opacity: 1 }}>
-            Pour votre sécurité et pour le suivi de votre demande, gardez vos échanges sur LOOHOO plutôt que d'envoyer un numéro ou un e-mail.
+            Les numéros, e-mails et liens sont masqués automatiquement : tous les échanges se font sur LOOHOO, ce qui protège votre demande.
           </p>
         )}
         <form onSubmit={(e) => { e.preventDefault(); envoyer(); }} style={{ display: 'flex', gap: '0.6rem', alignItems: 'flex-end' }}>

@@ -123,6 +123,7 @@ export default function Produits() {
                       <div style={{ marginTop: '0.3rem', display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
                         <span className={`esp-puce ${st.classe}`}>{st.texte}</span>
                         {!p.actif && <span className="esp-puce esp-puce-neutre">Désactivé</span>}
+                        {p.drapeau_coordonnees && <span className="esp-puce esp-puce-orange" title="Retirez les numéros, e-mails et liens du nom, de la description ou des mots-clés">Coordonnées détectées</span>}
                         {p.statut === 'rejete' && p.motif_rejet && <span style={{ fontSize: '0.8rem', opacity: 0.8 }}>Motif : {p.motif_rejet}</span>}
                       </div>
                     </div>
