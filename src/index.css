@@ -578,3 +578,16 @@ a.carte:active { transform: translateY(-1px); }
 .verifie-bloc ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
 .verifie-bloc li { display: flex; gap: 0.7rem; align-items: flex-start; padding: 0.7rem 0; border-top: 1px solid rgba(255, 248, 239, 0.15); font-size: 0.95rem; }
 .verifie-bloc li svg { flex-shrink: 0; color: var(--loo-orange); margin-top: 1px; }
+
+
+/* ---- espace acheteur et calculateur ---- */
+.espace-titre { font-size: 1.2rem; margin: 1.6rem 0 0.8rem; }
+.calc-grille { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: 1.2rem; align-items: start; margin-top: 1.6rem; }
+.calc-resultat { display: flex; flex-direction: column; min-height: 260px; position: sticky; top: 90px; }
+.calc-prix { font-family: var(--police-affiche); font-weight: 800; font-size: clamp(2.2rem, 6vw, 3.2rem); line-height: 1.05; color: var(--loo-rouge); margin: 0.3rem 0 1rem; }
+.calc-prix small { font-size: 0.9rem; font-weight: 600; color: var(--loo-encre); opacity: 0.7; }
+.calc-details { margin: 0; display: grid; }
+.calc-details > div { display: flex; justify-content: space-between; gap: 1rem; padding: 0.55rem 0; border-top: 1px solid var(--loo-papier-ombre); font-size: 0.92rem; }
+.calc-details dt { opacity: 0.75; }
+.calc-details dd { margin: 0; font-weight: 600; text-align: right; }
+@media (max-width: 800px) { .calc-grille { grid-template-columns: minmax(0, 1fr); } .calc-resultat { position: static; } }

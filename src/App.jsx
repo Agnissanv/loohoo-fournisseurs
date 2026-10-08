@@ -6,6 +6,8 @@ import LayoutEspace from './components/LayoutEspace.jsx';
 import { suivreSession, finaliserInscriptionEnAttente } from './api/fournisseurs.js';
 import { useApparitionAuDefilement } from './utils/useApparitionAuDefilement.js';
 const Produits = lazy(() => import('./pages/Produits.jsx'));
+const EspaceAcheteur = lazy(() => import('./pages/EspaceAcheteur.jsx'));
+const CalculateurMarge = lazy(() => import('./pages/CalculateurMarge.jsx'));
 const ChoixInscription = lazy(() => import('./pages/ChoixInscription.jsx'));
 const ProduitFormulaire = lazy(() => import('./pages/ProduitFormulaire.jsx'));
 const ImportProduits = lazy(() => import('./pages/ImportProduits.jsx'));
@@ -85,6 +87,8 @@ export default function App() {
           <Route path="/" element={<Annuaire />} />
           <Route path="/grossiste/:id" element={<ProfilGrossiste />} />
           <Route path="/produit/:id" element={<ProduitDetail />} />
+          <Route path="/mon-espace" element={<EspaceAcheteur />} />
+          <Route path="/calculateur-marge" element={<CalculateurMarge />} />
           <Route path="/connexion" element={<Connexion />} />
           <Route path="/inscription" element={<ChoixInscription />} />
           <Route path="/inscription/fournisseur" element={<Inscription />} />

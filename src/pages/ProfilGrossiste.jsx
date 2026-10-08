@@ -7,6 +7,7 @@ import CaptureSortie from '../components/CaptureSortie.jsx';
 import ModaleContact from '../components/ModaleContact.jsx';
 import IndicateursConfiance from '../components/IndicateursConfiance.jsx';
 import AvisFournisseur from '../components/AvisFournisseur.jsx';
+import BoutonFavori from '../components/BoutonFavori.jsx';
 import { Etoiles } from '../components/Etoiles.jsx';
 import { anciennete } from '../utils/profilFournisseur.js';
 import { infosPays } from '../utils/pays.js';
@@ -128,6 +129,7 @@ export default function ProfilGrossiste() {
               <button type="button" className="btn btn-primary" onClick={() => setContactOuvert(true)} style={{ justifyContent: 'center' }}>
                 <MessageCircle size={17} /> Demander un devis
               </button>
+              <BoutonFavori grossisteId={grossiste.id} />
               <button type="button" className="btn btn-outline" onClick={copierLien} aria-label="Copier le lien de cette page">
                 {lienCopie ? <><Check size={16} /> Copié</> : <><Share2 size={16} /> Partager</>}
               </button>

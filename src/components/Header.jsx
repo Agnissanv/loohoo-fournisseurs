@@ -64,6 +64,7 @@ export default function Header() {
               {identite.role === 'fournisseur' && (
                 <Link to="/tableau-de-bord" style={styles.lien}>Tableau de bord</Link>
               )}
+              {identite.role === 'vendeur' && <Link to="/mon-espace" style={styles.lien}>Mon espace</Link>}
               <Link to="/conversations" style={styles.lien}>
                 Mes conversations
                 {nonLus > 0 && <span className="badge" style={{ background: 'var(--loo-rouge)', color: '#fff', marginLeft: '0.4rem' }}>{nonLus}</span>}

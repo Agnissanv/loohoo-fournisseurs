@@ -57,3 +57,7 @@ Aucun prix ni facturation : le montant de l'abonnement reste à fixer avec le cl
 ## 0019 — Accueil public
 Ajoute `chiffres_publics()` (fournisseurs, vérifiés, produits, pays : comptés, jamais saisis) et `fournisseurs_a_la_une(n)` (fournisseurs publiés
 avec au moins un produit publié, note moyenne des avis validés, prix de gros le plus bas). Rien de privé n'en sort. Testée sur le moteur de test.
+
+## 0020 — Fournisseurs favoris
+Table `favori` sans accès direct, et trois fonctions réservées aux comptes acheteurs : `basculer_favori`, `est_favori`, `mes_favoris`.
+Seuls les fournisseurs publiés peuvent être suivis. Testée sur le moteur de test (un fournisseur ou un autre acheteur ne peut ni suivre ni lire).

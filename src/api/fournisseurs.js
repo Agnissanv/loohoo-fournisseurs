@@ -647,3 +647,22 @@ export async function recupererFournisseursALaUne(n = 4) {
   if (error) return [];
   return data || [];
 }
+
+// ---- Fournisseurs favoris de l'acheteur (migration 0020) ----
+export async function estFavori(grossisteId) {
+  const { data, error } = await supabase.rpc('est_favori', { p_grossiste_id: grossisteId });
+  return !error && data === true;
+}
+
+// Renvoie true si le fournisseur est maintenant en favori, false s'il vient d'être retiré
+export async function basculerFavori(grossisteId) {
+  const { data, error } = await supabase.rpc('basculer_favori', { p_grossiste_id: grossisteId });
+  if (error) throw error;
+  return data === true;
+}
+
+export async function recupererMesFavoris() {
+  const { data, error } = await supabase.rpc('mes_favoris');
+  if (error) return [];
+  return data || [];
+}
