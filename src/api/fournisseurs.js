@@ -620,3 +620,17 @@ export async function recupererAvisPublics(grossisteId) {
   if (liste.error || resume.error) return null;
   return { avis: liste.data || [], nombre: resume.data?.[0]?.nombre || 0, moyenne: Number(resume.data?.[0]?.moyenne) || 0 };
 }
+
+// Ventes confirmées, seuil gratuit et état de l'abonnement du fournisseur connecté (null tant que la migration 0018 n'est pas exécutée)
+export async function recupererMonAbonnement() {
+  const { data, error } = await supabase.rpc('mon_abonnement');
+  if (error) return null;
+  return data?.[0] || null;
+}
+
+// Affaires confirmées du fournisseur connecté, avec montant et date (pour les ventes et la courbe)
+export async function recupererMesVentes() {
+  const { data, error } = await supabase.from('affaire').select('montant_fcfa, date_reponse').eq('statut', 'confirmee').not('date_reponse', 'is', null);
+  if (error) return [];
+  return data;
+}

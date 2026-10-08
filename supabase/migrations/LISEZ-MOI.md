@@ -48,3 +48,8 @@ et n'est visible qu'après validation par l'équipe (page « Avis des acheteurs 
 Ajoute `produit.paliers` (jusqu'à 4 paliers : quantité de départ et prix) avec contrôle de cohérence par la base :
 quantités croissantes au-dessus du minimum de commande, prix strictement décroissants sous le prix de base.
 Un fournisseur qui relève son minimum ou baisse son prix de base sous un palier doit d'abord ajuster ses paliers.
+
+## 0018 — Stock mis à jour, seuil de ventes gratuites
+Ajoute `produit.stock_maj_le` (rempli automatiquement quand le stock change), le paramètre `seuil_ventes_gratuites` (50 par défaut),
+`grossiste.abonnement_actif` et `date_debut_abonnement` (non modifiables par le fournisseur) et la fonction `mon_abonnement()`.
+Aucun prix ni facturation : le montant de l'abonnement reste à fixer avec le client.

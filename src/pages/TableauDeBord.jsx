@@ -1,10 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useOutletContext } from 'react-router-dom';
-import { BadgeCheck, Check, Circle, Image as IconeImage, MessageCircle } from 'lucide-react';
+import { AlertTriangle, Check, Circle, MessageCircle } from 'lucide-react';
 import {
   suivreSession, recupererMonProfil, mettreAJourProfil, finaliserInscriptionEnAttente,
   recupererMesStats, recupererMesConversations, recupererDocuments, recupererMotifDecision,
+  recupererMonAbonnement, recupererMesVentes, recupererAvisPublics, recupererIndicateursConfiance,
 } from '../api/fournisseurs.js';
+import EnTeteFournisseur from '../components/EnTeteFournisseur.jsx';
+import CourbeOnglets from '../components/CourbeOnglets.jsx';
+import GestionStock from '../components/GestionStock.jsx';
+import BlocAbonnement from '../components/BlocAbonnement.jsx';
+import { completudeProfil } from '../utils/profilFournisseur.js';
 import { telephoneDuProfil } from '../utils/telephone.js';
 
 const STATUTS = {
@@ -35,6 +41,10 @@ export default function TableauDeBord() {
   const [conversations, setConversations] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [motifStatut, setMotifStatut] = useState('');
+  const [ventes, setVentes] = useState([]);
+  const [abonnement, setAbonnement] = useState(null);
+  const [avis, setAvis] = useState(null);
+  const [indicateurs, setIndicateurs] = useState(null);
   const [erreur, setErreur] = useState('');
 
   useEffect(() => suivreSession(setSession), []);
@@ -55,6 +65,8 @@ export default function TableauDeBord() {
     // Ces blocs sont secondaires : s'ils échouent, le reste du tableau de bord s'affiche quand même
     recupererMesStats().then(setStats).catch(() => {});
     recupererMesConversations().then(setConversations).catch(() => {});
+    recupererMesVentes().then(setVentes);
+    recupererMonAbonnement().then(setAbonnement);
   }, [session, navigate, rafraichirIdentite]);
 
   // Les décisions de l'équipe sur les documents (motif en cas de rejet)
@@ -63,6 +75,8 @@ export default function TableauDeBord() {
     if (idProfil) {
       recupererDocuments(idProfil).then(setDocuments).catch(() => {});
       recupererMotifDecision(idProfil).then(setMotifStatut);
+      recupererAvisPublics(idProfil).then(setAvis);
+      recupererIndicateursConfiance(idProfil).then(setIndicateurs).catch(() => {});
     }
   }, [idProfil]);
 
@@ -127,28 +141,38 @@ export default function TableauDeBord() {
   ].filter(Boolean);
 
   const evolution = stats?.evolution || [];
-  const maxJour = Math.max(1, ...evolution.map((e) => e.nb));
   const statut = STATUTS[profil.statut] || STATUTS.en_attente;
+  const completude = completudeProfil(profil, documents, telephone);
+  const ruptures = produits.filter((p) => p.actif !== false && p.stock_disponible === 0);
+
+  // Ventes confirmées : 30 derniers jours, et variation par rapport aux 30 jours d'avant
+  const maintenant = Date.now();
+  const somme = (de, a) => ventes.filter((v) => { const t = maintenant - new Date(v.date_reponse).getTime(); return t >= de * 86400000 && t < a * 86400000; });
+  const ventes30 = somme(0, 30).reduce((n, v) => n + Number(v.montant_fcfa || 0), 0);
+  const ventesAvant = somme(30, 60).reduce((n, v) => n + Number(v.montant_fcfa || 0), 0);
+  const variationVentes = ventesAvant > 0 ? `${ventes30 >= ventesAvant ? '+' : ''}${Math.round(((ventes30 - ventesAvant) / ventesAvant) * 100)} % vs 30 jours avant` : null;
+  const contacts30 = stats?.contacts_30_jours;
+  const conversion = contacts30 > 0 ? Math.round((somme(0, 30).length / contacts30) * 100) : null;
+
+  const majProduit = (id, champs) => setProfil((p) => ({ ...p, produit: p.produit.map((x) => (x.id === id ? { ...x, ...champs } : x)) }));
 
   return (
     <>
-      <div className="esp-bandeau">
-        <div>
-          <h1>Bonjour {profil.nom}</h1>
-          <p>Voici un aperçu de votre activité sur LOOHOO Fournisseurs.</p>
-        </div>
-        <div className="esp-kpis">
-          <Kpi etiquette="Produits actifs" valeur={stats?.produits_actifs ?? produitsPublies.length} />
-          <Kpi etiquette="Demandes (30 j)" valeur={stats?.contacts_30_jours ?? '–'} />
-          <Kpi etiquette="Vues du profil" valeur={stats?.vues_profil ?? '–'} />
-          <div className="esp-kpi">
-            <div className="esp-kpi-etiquette">Votre profil</div>
-            <span className={`esp-puce ${statut.classe}`}>
-              {profil.badge_verifie && <BadgeCheck size={13} />} {profil.badge_verifie ? 'Vérifié' : statut.texte}
-            </span>
-          </div>
-        </div>
+      <EnTeteFournisseur profil={profil} avis={avis} indicateurs={indicateurs} completude={completude} />
+
+      <div className="esp-kpis" style={{ margin: '1rem 0 0' }}>
+        <Kpi etiquette="Ventes (30 j)" valeur={`${ventes30.toLocaleString('fr-FR')} F`} detail={variationVentes} />
+        <Kpi etiquette="Contacts reçus (30 j)" valeur={stats?.contacts_30_jours ?? '–'} />
+        <Kpi etiquette="Vues du profil" valeur={stats?.vues_profil ?? '–'} />
+        <Kpi etiquette="Taux de conversion" valeur={conversion == null ? '–' : `${conversion} %`} />
       </div>
+
+      {ruptures.length > 0 && (
+        <div className="esp-carte" role="status" style={{ marginTop: '1rem', borderColor: 'var(--loo-orange)', background: '#FFFAF3', display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
+          <AlertTriangle size={20} color="var(--loo-orange)" aria-hidden="true" />
+          <span>{ruptures.length} produit{ruptures.length > 1 ? 's' : ''} en rupture de stock à mettre à jour : {ruptures.slice(0, 2).map((p) => p.nom).join(', ')}{ruptures.length > 2 ? '…' : ''}</span>
+        </div>
+      )}
 
       {decisions.length > 0 && (
         <div className="esp-carte" style={{ marginTop: '1rem', borderColor: 'var(--loo-orange)', background: '#FFFAF3' }}>
@@ -195,29 +219,7 @@ export default function TableauDeBord() {
       )}
 
       <div className="esp-grille esp-deux" style={{ marginTop: '1rem' }}>
-        <div className="esp-carte">
-          <h2 className="esp-carte-titre"><span>Produits récents</span><Link to="/produits">Voir tous les produits →</Link></h2>
-          {recents.length === 0 && <p style={{ opacity: 0.65, margin: 0 }}>Aucun produit pour l'instant. <Link to="/produits" style={{ color: 'var(--loo-rouge)', fontWeight: 600 }}>Ajouter un produit</Link></p>}
-          {recents.map((p) => {
-            const st = STATUTS_PRODUIT[p.statut] || STATUTS_PRODUIT.en_attente;
-            return (
-              <div key={p.id} className="esp-liste-ligne">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', minWidth: 0 }}>
-                  {p.photo_url
-                    ? <img src={p.photo_url} alt="" style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 8, flexShrink: 0 }} />
-                    : <div style={{ width: 44, height: 44, borderRadius: 8, background: 'var(--loo-papier-ombre)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><IconeImage size={18} opacity={0.5} /></div>}
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontWeight: 600, fontSize: '0.92rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.nom}</div>
-                    <div style={{ fontSize: '0.78rem', opacity: 0.65 }}>
-                      {p.prix_gros_fcfa.toLocaleString('fr-FR')} F CFA{p.stock_disponible != null ? ` · ${p.stock_disponible} en stock` : ''}
-                    </div>
-                  </div>
-                </div>
-                <span className={`esp-puce ${st.classe}`}>{st.texte}</span>
-              </div>
-            );
-          })}
-        </div>
+        <GestionStock produits={produits} onChange={majProduit} />
 
         <div className="esp-carte">
           <h2 className="esp-carte-titre"><span>Dernières demandes</span><Link to="/conversations">Voir toutes →</Link></h2>
@@ -239,35 +241,30 @@ export default function TableauDeBord() {
       </div>
 
       <div className="esp-grille esp-deux" style={{ marginTop: '1rem' }}>
-        <div className="esp-carte">
-          <h2 className="esp-carte-titre"><span>Demandes reçues, 30 derniers jours</span><Link to="/statistiques">Détails →</Link></h2>
-          {evolution.length === 0 ? (
-            <p style={{ opacity: 0.65, margin: 0 }}>Aucune demande sur cette période.</p>
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px', height: '130px' }}>
-              {evolution.map((e) => (
-                <div key={e.jour} title={`${e.jour} : ${e.nb}`} style={{ flex: 1, background: 'var(--loo-orange)', borderRadius: '3px 3px 0 0', height: `${(e.nb / maxJour) * 100}%`, minHeight: '3px' }} />
-              ))}
-            </div>
-          )}
-        </div>
+        <CourbeOnglets ventes={ventes} contacts={evolution} />
 
-        <div className="esp-carte" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', gap: '0.5rem' }}>
-          <MessageCircle size={30} color="var(--loo-rouge)" />
-          <div style={{ fontFamily: 'var(--police-affiche)', fontWeight: 800, fontSize: '2.2rem', lineHeight: 1 }}>{totalNonLus}</div>
-          <div style={{ opacity: 0.75 }}>{totalNonLus > 1 ? 'messages non lus' : 'message non lu'}</div>
-          <Link to="/conversations" className="btn btn-primary" style={{ marginTop: '0.4rem' }}>Accéder à la messagerie</Link>
+        <div style={{ display: 'grid', gap: '1rem', alignContent: 'start' }}>
+          <div className="esp-carte" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <MessageCircle size={28} color="var(--loo-rouge)" aria-hidden="true" />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: 'var(--police-affiche)', fontWeight: 800, fontSize: '1.7rem', lineHeight: 1 }}>{totalNonLus}</div>
+              <div style={{ opacity: 0.75, fontSize: '0.9rem' }}>{totalNonLus > 1 ? 'messages non lus' : 'message non lu'}</div>
+            </div>
+            <Link to="/conversations" className="btn btn-primary">Messagerie</Link>
+          </div>
+          <BlocAbonnement abonnement={abonnement} />
         </div>
       </div>
     </>
   );
 }
 
-function Kpi({ etiquette, valeur }) {
+function Kpi({ etiquette, valeur, detail }) {
   return (
-    <div className="esp-kpi">
+    <div className="esp-kpi esp-kpi-carte">
       <div className="esp-kpi-etiquette">{etiquette}</div>
       <div className="esp-kpi-valeur">{valeur}</div>
+      {detail && <div style={{ fontSize: '0.76rem', marginTop: '0.2rem', color: detail.startsWith('+') ? '#1f7a3d' : 'var(--loo-rouge)' }}>{detail}</div>}
     </div>
   );
 }

@@ -546,3 +546,17 @@ a.carte:active { transform: translateY(-1px); }
   .loo-chargement-page::after { animation-duration: 2.4s; }
   a.carte:hover, a.carte:hover .loo-img-fondu { transform: none; }
 }
+
+
+/* ---- espace fournisseur : en-tête, indicateurs, courbe à onglets ---- */
+.entete-logo { width: 64px; height: 64px; border-radius: 14px; object-fit: cover; flex-shrink: 0; }
+.entete-initiales { display: flex; align-items: center; justify-content: center; background: var(--gradient-marque); color: #fff; font-family: var(--police-affiche); font-weight: 800; font-size: 1.4rem; }
+.entete-ligne { display: flex; align-items: center; gap: 0.35rem; font-size: 0.88rem; flex-wrap: wrap; }
+.entete-bas { display: flex; align-items: center; justify-content: space-between; gap: 1rem 1.6rem; flex-wrap: wrap; margin-top: 1.1rem; padding-top: 1rem; border-top: 1px solid var(--loo-papier-ombre); }
+.entete-completude { display: grid; gap: 0.35rem; min-width: 200px; flex: 1 1 220px; font-size: 0.9rem; }
+.entete-delai { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.9rem; }
+.esp-kpi-carte { border: 1px solid var(--loo-papier-ombre); }
+.courbe-onglets { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.courbe-onglet { border: 1px solid var(--loo-papier-ombre); background: var(--loo-blanc); color: var(--loo-encre); border-radius: 8px; padding: 0.4em 0.9em; font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: background 0.2s ease, color 0.2s ease; }
+.courbe-onglet:hover { background: var(--loo-papier); }
+.courbe-onglet-actif, .courbe-onglet-actif:hover { background: var(--loo-encre); color: var(--loo-papier); border-color: var(--loo-encre); }
