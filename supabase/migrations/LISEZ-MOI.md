@@ -53,3 +53,7 @@ Un fournisseur qui relève son minimum ou baisse son prix de base sous un palier
 Ajoute `produit.stock_maj_le` (rempli automatiquement quand le stock change), le paramètre `seuil_ventes_gratuites` (50 par défaut),
 `grossiste.abonnement_actif` et `date_debut_abonnement` (non modifiables par le fournisseur) et la fonction `mon_abonnement()`.
 Aucun prix ni facturation : le montant de l'abonnement reste à fixer avec le client.
+
+## 0019 — Accueil public
+Ajoute `chiffres_publics()` (fournisseurs, vérifiés, produits, pays : comptés, jamais saisis) et `fournisseurs_a_la_une(n)` (fournisseurs publiés
+avec au moins un produit publié, note moyenne des avis validés, prix de gros le plus bas). Rien de privé n'en sort. Testée sur le moteur de test.

@@ -560,3 +560,21 @@ a.carte:active { transform: translateY(-1px); }
 .courbe-onglet { border: 1px solid var(--loo-papier-ombre); background: var(--loo-blanc); color: var(--loo-encre); border-radius: 8px; padding: 0.4em 0.9em; font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: background 0.2s ease, color 0.2s ease; }
 .courbe-onglet:hover { background: var(--loo-papier); }
 .courbe-onglet-actif, .courbe-onglet-actif:hover { background: var(--loo-encre); color: var(--loo-papier); border-color: var(--loo-encre); }
+
+
+/* ---- accueil public : chiffres, fournisseurs à la une, « vérifié » ---- */
+.chiffres-publics { display: flex; justify-content: center; gap: 2.5rem; flex-wrap: wrap; padding: 1.1rem 1.5rem; }
+.chiffres-publics > div { display: flex; align-items: baseline; gap: 0.5rem; }
+.chiffres-publics strong { font-family: var(--police-affiche); font-weight: 800; font-size: 1.5rem; color: var(--loo-orange); }
+.chiffres-publics span { font-size: 0.85rem; opacity: 0.75; }
+.a-la-une-grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1rem; }
+.a-la-une-carte { display: flex; flex-direction: column; gap: 0.6rem; padding: 1rem; }
+.a-la-une-haut { display: flex; align-items: center; gap: 0.7rem; }
+.a-la-une-haut img, .a-la-une-initiales { width: 44px; height: 44px; border-radius: 10px; object-fit: cover; flex-shrink: 0; }
+.a-la-une-initiales { display: flex; align-items: center; justify-content: center; background: var(--loo-papier-ombre); color: var(--loo-rouge); font-weight: 700; font-size: 0.9rem; }
+.verifie-bloc { background: var(--loo-encre); color: var(--loo-papier); border-radius: 16px; padding: 1.6rem 1.5rem; }
+.verifie-bloc h2 { color: var(--loo-papier); font-size: 1.3rem; margin: 0 0 0.3rem; }
+.verifie-bloc p { margin: 0 0 1rem; opacity: 0.8; }
+.verifie-bloc ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.verifie-bloc li { display: flex; gap: 0.7rem; align-items: flex-start; padding: 0.7rem 0; border-top: 1px solid rgba(255, 248, 239, 0.15); font-size: 0.95rem; }
+.verifie-bloc li svg { flex-shrink: 0; color: var(--loo-orange); margin-top: 1px; }

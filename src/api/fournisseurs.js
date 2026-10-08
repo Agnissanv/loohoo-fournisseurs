@@ -634,3 +634,16 @@ export async function recupererMesVentes() {
   if (error) return [];
   return data;
 }
+
+// ---- Accueil public (migration 0019) : chiffres réels et fournisseurs à la une. Vides tant que la migration n'est pas exécutée.
+export async function recupererChiffresPublics() {
+  const { data, error } = await supabase.rpc('chiffres_publics');
+  if (error) return null;
+  return data?.[0] || null;
+}
+
+export async function recupererFournisseursALaUne(n = 4) {
+  const { data, error } = await supabase.rpc('fournisseurs_a_la_une', { p_limite: n });
+  if (error) return [];
+  return data || [];
+}

@@ -4,6 +4,7 @@ import { MessageSquare, Search, ShieldCheck, Truck } from 'lucide-react';
 import { rechercherProduits, recupererFiltres, capturerLead, suivreSession } from '../api/fournisseurs.js';
 import CarteProduit from '../components/CarteProduit.jsx';
 import HeroCarrousel from '../components/HeroCarrousel.jsx';
+import { ChiffresPublics, FournisseursALaUne, VerifieExplication, RejoindreReseau } from '../components/AccueilPublic.jsx';
 import CaptureSortie from '../components/CaptureSortie.jsx';
 import IconeCategorie from '../components/IconeCategorie.jsx';
 import { noterPageInterne } from '../utils/suiviVisites.js';
@@ -94,6 +95,12 @@ export default function Annuaire() {
               onChange={(e) => setSaisie(e.target.value)}
               placeholder="Que cherchez-vous ? (pagne, sac…)"
             />
+            {filtres.categories.length > 0 && (
+              <select className="champ loo-recherche-sel" style={styles.select} value={categorie} onChange={(e) => changer({ categorie: e.target.value })} aria-label="Catégorie">
+                <option value="">Toutes les catégories</option>
+                {filtres.categories.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            )}
             <select className="champ loo-recherche-sel" style={styles.select} value={ville} onChange={(e) => changer({ ville: e.target.value, commune: '' })} aria-label="Ville">
               <option value="">Toutes les villes</option>
               {filtres.villes.map((v) => <option key={v} value={v}>{v}</option>)}
@@ -108,6 +115,8 @@ export default function Annuaire() {
           </form>
         </div>
       </HeroCarrousel>
+
+      {!rechercheActive && <ChiffresPublics />}
 
       {/* Ce qui rassure l'acheteur, en trois phrases */}
       <section style={{ background: 'var(--loo-blanc)', borderBottom: '1px solid var(--loo-papier-ombre)' }}>
@@ -197,7 +206,7 @@ export default function Annuaire() {
             <div className="acc-etapes">
               {[
                 ['1', 'Cherchez un produit', 'Tapez ce que vous voulez acheter en gros, filtrez par catégorie ou par ville.'],
-                ['2', 'Demandez un devis', 'Indiquez la quantité, la ville de livraison et le délai : le fournisseur peut répondre précisément.'],
+                ['2', 'Comparez et demandez un devis', 'Badge, avis, ancienneté, prix de gros et quantité minimale sont affichés. Indiquez la quantité, la ville de livraison et le délai.'],
                 ['3', 'Discutez directement', 'Échangez dans la messagerie LOOHOO, comparez les offres, puis concluez avec le fournisseur de votre choix.'],
               ].map(([n, titre, texte]) => (
                 <div key={n} className="carte" style={{ padding: '1.2rem' }}>
@@ -209,6 +218,14 @@ export default function Annuaire() {
             </div>
           </div>
         </section>
+      )}
+
+      {!rechercheActive && (
+        <>
+          <FournisseursALaUne />
+          <VerifieExplication />
+          <RejoindreReseau />
+        </>
       )}
       <CaptureSortie recherche={q} />
     </>
