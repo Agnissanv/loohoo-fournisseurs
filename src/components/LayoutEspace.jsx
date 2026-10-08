@@ -82,7 +82,7 @@ export default function LayoutEspace() {
             {menuOuvert ? <X size={22} /> : <Menu size={22} />}
           </button>
           <Link to="/tableau-de-bord" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <img src="/logo.jpeg" alt="" width="34" height="34" />
+            <img src="/logo.webp" alt="" width="34" height="34" />
             <span className="esp-marque-nom">LOOHOO</span>
           </Link>
           <span className="esp-marque-sep" />
