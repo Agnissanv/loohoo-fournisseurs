@@ -1,12 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, BadgeCheck, Check, Clock, Copy, Factory, MapPin, MessageCircle, Search, Share2 } from 'lucide-react';
-import { recupererGrossiste, recupererDescriptionGrossiste, incrementerVueProfil } from '../api/fournisseurs.js';
+import { recupererGrossiste, recupererDescriptionGrossiste, incrementerVueProfil, recupererAvisPublics } from '../api/fournisseurs.js';
 import CarteProduit from '../components/CarteProduit.jsx';
 import CaptureSortie from '../components/CaptureSortie.jsx';
 import ModaleContact from '../components/ModaleContact.jsx';
 import IndicateursConfiance from '../components/IndicateursConfiance.jsx';
 import AvisFournisseur from '../components/AvisFournisseur.jsx';
+import { Etoiles } from '../components/Etoiles.jsx';
+import { anciennete } from '../utils/profilFournisseur.js';
+import { infosPays } from '../utils/pays.js';
 import { noterVisite } from '../utils/suiviVisites.js';
 import { useTitre } from '../utils/useTitre.js';
 
@@ -18,6 +21,7 @@ export default function ProfilGrossiste() {
   const [grossiste, setGrossiste] = useState(undefined);
   const [contactOuvert, setContactOuvert] = useState(false);
   const [description, setDescription] = useState(null);
+  const [avis, setAvis] = useState(null);
   const [recherche, setRecherche] = useState('');
   const [categorie, setCategorie] = useState('');
   const [tri, setTri] = useState('nom');
@@ -40,6 +44,7 @@ export default function ProfilGrossiste() {
       if (g) { incrementerVueProfil(id); noterVisite({ grossisteId: id }); }
     }).catch(() => { if (!annule) { setGrossiste(null); setPanne(true); } });
     recupererDescriptionGrossiste(id).then((d) => { if (!annule) setDescription(d); });
+    recupererAvisPublics(id).then((a) => { if (!annule) setAvis(a); });
     return () => { annule = true; };
   }, [id, essai]);
 
@@ -83,7 +88,8 @@ export default function ProfilGrossiste() {
   const horaires = grossiste.horaires_ouverture || {};
   // « Fermé » et « non renseigné » sont tous deux enregistrés à null : on n'affiche rien tant qu'aucun jour n'a de plage.
   const horairesAffiches = JOURS.some((j) => horaires[j]) ? JOURS.map((j) => [j, horaires[j]]) : [];
-  const membreDepuis = grossiste.date_ajout ? new Date(grossiste.date_ajout).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) : null;
+  const depuis = anciennete(grossiste.date_ajout);
+  const pays = infosPays(grossiste.pays);
   const lien = window.location.href;
 
   async function copierLien() {
@@ -108,7 +114,15 @@ export default function ProfilGrossiste() {
               <h1 style={{ fontSize: 'clamp(1.6rem, 3vw, 2.2rem)', marginBottom: '0.3rem' }}>{grossiste.nom}</h1>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.9rem', opacity: 0.75 }}>
                 <MapPin size={14} /> {grossiste.commune ? `${grossiste.commune}, ` : ''}{grossiste.ville}
+                {pays && <span title={pays.nom}> · <span aria-hidden="true">{pays.drapeau}</span> {pays.nom}</span>}
+                {depuis && <span> · sur LOOHOO depuis {depuis}</span>}
               </span>
+              {avis?.nombre > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.35rem', fontSize: '0.9rem' }}>
+                  <Etoiles note={avis.moyenne} taille={16} /><strong>{avis.moyenne.toLocaleString('fr-FR')}</strong>
+                  <a href="#titre-avis" style={{ opacity: 0.65, textDecoration: 'underline' }}>({avis.nombre} avis)</a>
+                </div>
+              )}
             </div>
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
               <button type="button" className="btn btn-primary" onClick={() => setContactOuvert(true)} style={{ justifyContent: 'center' }}>
@@ -125,7 +139,8 @@ export default function ProfilGrossiste() {
             <div><span className="etiquette-info">Catégorie</span><strong>{grossiste.categorie}</strong></div>
             <div><span className="etiquette-info">Produits</span><strong>{grossiste.produits.length}</strong></div>
             {ORIGINES[grossiste.origine] && <div><span className="etiquette-info">Type</span><strong>{ORIGINES[grossiste.origine]}</strong></div>}
-            {membreDepuis && <div><span className="etiquette-info">Sur LOOHOO depuis</span><strong style={{ textTransform: 'capitalize' }}>{membreDepuis}</strong></div>}
+            {depuis && <div><span className="etiquette-info">Sur LOOHOO depuis</span><strong>{depuis}</strong></div>}
+            {pays && <div><span className="etiquette-info">Pays</span><strong><span aria-hidden="true">{pays.drapeau}</span> {pays.nom}</strong></div>}
             <div><span className="etiquette-info">Vérification</span><strong>{grossiste.badge_verifie ? 'Contrôlé par LOOHOO' : 'En cours'}</strong></div>
           </div>
 
@@ -194,7 +209,7 @@ export default function ProfilGrossiste() {
             </>
           )}
 
-          <AvisFournisseur grossisteId={grossiste.id} />
+          <AvisFournisseur grossisteId={grossiste.id} donnees={avis} />
 
           {grossiste.photos.length > 0 && (
             <>

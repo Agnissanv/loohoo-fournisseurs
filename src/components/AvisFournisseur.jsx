@@ -3,14 +3,16 @@ import { recupererAvisPublics } from '../api/fournisseurs.js';
 import { Etoiles } from './Etoiles.jsx';
 
 // Avis laissés par des acheteurs après une affaire confirmée, validés par l'équipe. Rien ne s'affiche tant qu'il n'y en a pas.
-export default function AvisFournisseur({ grossisteId }) {
-  const [donnees, setDonnees] = useState(null);
+export default function AvisFournisseur({ grossisteId, donnees: fournies }) {
+  const [chargees, setDonnees] = useState(null);
+  const donnees = fournies !== undefined ? fournies : chargees;
 
   useEffect(() => {
+    if (fournies !== undefined) return undefined;
     let annule = false;
     recupererAvisPublics(grossisteId).then((d) => { if (!annule) setDonnees(d); });
     return () => { annule = true; };
-  }, [grossisteId]);
+  }, [grossisteId, fournies]);
 
   if (!donnees || donnees.nombre === 0) return null;
   return (
