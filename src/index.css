@@ -605,3 +605,7 @@ a.carte:active { transform: translateY(-1px); }
   .barre-devis-mobile .btn { width: 100%; justify-content: center; }
   .barre-devis-espace { display: block; height: 4.6rem; }
 }
+
+
+/* fiche fournisseur : seul le logo chevauche le bandeau, le nom et les badges restent lisibles sous la photo */
+@media (min-width: 700px) { .fiche-texte { margin-top: 56px; } }

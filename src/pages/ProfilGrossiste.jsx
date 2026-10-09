@@ -114,7 +114,7 @@ export default function ProfilGrossiste({ idForce }) {
         <div className="container">
           <div style={styles.entete}>
             {grossiste.logo_url ? <ImageOptimisee src={grossiste.logo_url} largeur={240} prioritaire style={styles.logo} /> : <div style={{ ...styles.logo, background: 'var(--loo-papier-ombre)' }} />}
-            <div style={{ flex: '1 1 260px', minWidth: 0 }}>
+            <div className="fiche-texte" style={{ flex: '1 1 260px', minWidth: 0 }}>
               <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '0.3rem', flexWrap: 'wrap' }}>
                 {grossiste.badge_verifie && <span className="badge badge-verifie"><BadgeCheck size={13} /> Vérifié</span>}
                 {grossiste.est_fabricant && <span className="badge badge-fabricant"><Factory size={13} /> Fabricant local</span>}
