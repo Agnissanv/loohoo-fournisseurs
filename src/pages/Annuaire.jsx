@@ -8,6 +8,8 @@ import { ChiffresPublics, FournisseursALaUne, VerifieExplication, RejoindreResea
 import CaptureSortie from '../components/CaptureSortie.jsx';
 import IconeCategorie from '../components/IconeCategorie.jsx';
 import { noterPageInterne } from '../utils/suiviVisites.js';
+import { usePays } from '../utils/usePays.js';
+import { drapeau } from '../utils/pays.js';
 import { useTitre } from '../utils/useTitre.js';
 
 const PAR_PAGE = 24;
@@ -23,6 +25,7 @@ export default function Annuaire() {
   const [params, setParams] = useSearchParams();
   const q = params.get('q') || '';
   const categorie = params.get('categorie') || '';
+  const pays = params.get('pays') || '';
   const ville = params.get('ville') || '';
   const commune = params.get('commune') || '';
   const tri = params.get('tri') || 'pertinence';
@@ -31,13 +34,14 @@ export default function Annuaire() {
   const moqMax = Number(params.get('moq_max')) || 0;
 
   const [saisie, setSaisie] = useState(q);
-  const [filtres, setFiltres] = useState({ categories: [], villes: [], communes: [] });
+  const [filtres, setFiltres] = useState({ categories: [], villes: [], communes: [], paysParGrossiste: {}, villesParPays: {} });
+  const { tous: listePays } = usePays();
   const [resultats, setResultats] = useState(null);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(false);
   const [affiches, setAffiches] = useState(PAR_PAGE);
 
-  const rechercheActive = !!(q || categorie || ville || commune || prixMax || moqMax);
+  const rechercheActive = !!(q || categorie || pays || ville || commune || prixMax || moqMax);
   useTitre(categorie ? `${categorie} en gros` : q ? `« ${q} » en gros` : null, categorie || q ? `Fournisseurs vérifiés et prix de gros : ${categorie || q}.` : null);
 
   const changer = (cles) => setParams((p) => {
@@ -80,13 +84,14 @@ export default function Annuaire() {
   const liste = useMemo(() => {
     if (!resultats) return [];
     let l = verifies ? resultats.filter((p) => p.badge_verifie) : resultats;
+    if (pays) l = l.filter((p) => (filtres.paysParGrossiste[p.grossiste_id] || 'CI') === pays);
     if (prixMax) l = l.filter((p) => p.prix_gros_fcfa <= prixMax);
     if (moqMax) l = l.filter((p) => (p.moq || 1) <= moqMax);
     if (tri === 'prix_asc') l = [...l].sort((a, b) => a.prix_gros_fcfa - b.prix_gros_fcfa);
     if (tri === 'prix_desc') l = [...l].sort((a, b) => b.prix_gros_fcfa - a.prix_gros_fcfa);
     if (tri === 'moq_asc') l = [...l].sort((a, b) => (a.moq || 1) - (b.moq || 1));
     return l;
-  }, [resultats, verifies, tri, prixMax, moqMax]);
+  }, [resultats, verifies, tri, prixMax, moqMax, pays, filtres.paysParGrossiste]);
 
   const nb = liste.length;
 
@@ -110,9 +115,13 @@ export default function Annuaire() {
                 {filtres.categories.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             )}
+            <select className="champ loo-recherche-sel" style={styles.select} value={pays} onChange={(e) => changer({ pays: e.target.value, ville: '', commune: '' })} aria-label="Pays">
+              <option value="">Tous les pays</option>
+              {listePays.map((p) => <option key={p.code} value={p.code} disabled={!p.actif}>{drapeau(p.code)} {p.nom}{p.actif ? '' : ' (bientôt)'}</option>)}
+            </select>
             <select className="champ loo-recherche-sel" style={styles.select} value={ville} onChange={(e) => changer({ ville: e.target.value, commune: '' })} aria-label="Ville">
               <option value="">Toutes les villes</option>
-              {filtres.villes.map((v) => <option key={v} value={v}>{v}</option>)}
+              {(pays ? filtres.villesParPays[pays] || [] : filtres.villes).map((v) => <option key={v} value={v}>{v}</option>)}
             </select>
             {filtres.communes.length > 0 && (
               <select className="champ loo-recherche-sel" style={styles.select} value={commune} onChange={(e) => changer({ commune: e.target.value })} aria-label="Commune">

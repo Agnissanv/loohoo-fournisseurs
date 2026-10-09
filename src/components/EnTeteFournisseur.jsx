@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { BadgeCheck, Check, Clock, Link2, MapPin } from 'lucide-react';
 import { Etoiles } from './Etoiles.jsx';
 import { anciennete } from '../utils/profilFournisseur.js';
+import { infosPays } from '../utils/pays.js';
 
 const STATUTS = {
   en_attente: { texte: 'En attente de vérification', classe: 'esp-puce-orange' },
@@ -40,6 +41,7 @@ export default function EnTeteFournisseur({ profil, avis, indicateurs, completud
           <h1 style={{ fontSize: 'clamp(1.35rem, 2.4vw, 1.8rem)', margin: '0 0 0.2rem' }}>Bonjour {profil.nom}</h1>
           <div className="entete-ligne">
             <MapPin size={14} aria-hidden="true" /> {profil.commune ? `${profil.commune}, ` : ''}{profil.ville}
+            {infosPays(profil.pays_code || profil.pays) && <span> · {infosPays(profil.pays_code || profil.pays).drapeau} {infosPays(profil.pays_code || profil.pays).nom}</span>}
             {depuis && <span> · sur LOOHOO depuis {depuis}</span>}
           </div>
           <div className="entete-ligne" style={{ marginTop: '0.3rem' }}>

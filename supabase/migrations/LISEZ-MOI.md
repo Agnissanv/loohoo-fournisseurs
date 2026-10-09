@@ -74,3 +74,9 @@ Testée sur le moteur de test.
 ## 0023 — Formules d'abonnement
 Seuil gratuit passé à 20 ventes confirmées (sauf s'il a déjà été modifié), prix des niveaux 1 à 3 (mensuel et annuel) dans `parametre`,
 et `formules_abonnement()` lisible par tous. Aucun paiement n'est encaissé par le site. Testée sur le moteur de test.
+
+## 0024 — Multi-pays
+Table `pays_loohoo` (Côte d'Ivoire ouverte ; Mali, Sénégal, Burkina Faso, Bénin, Togo, Niger prêts), `grossiste.pays_code`
+(choisi à l'inscription, modifiable tant que le profil est en attente, verrouillé ensuite ; la colonne `pays` suit automatiquement),
+`vendeur.pays_code`, `definir_mon_pays_acheteur()` et `admin_ouvrir_pays(code, ouvert)`.
+Ouvrir un pays depuis l'éditeur SQL : `select public.admin_ouvrir_pays('ML', true);`. Testée sur le moteur de test.

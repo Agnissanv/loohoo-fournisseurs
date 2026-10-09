@@ -2,11 +2,17 @@ import { supabase } from '../supabaseClient.js';
 
 // Valeurs des listes déroulantes, déduites des grossistes publiés
 export async function recupererFiltres() {
-  const { data, error } = await supabase.from('grossiste').select('categorie, ville, commune');
+  // pays_code (migration 0024) lu en premier, avec repli tant que la migration n'est pas exécutée
+  let { data, error } = await supabase.from('grossiste').select('id, categorie, ville, commune, pays_code');
+  if (error) ({ data, error } = await supabase.from('grossiste').select('id, categorie, ville, commune'));
   if (error) throw error;
-  const uniques = (cle) =>
-    [...new Set(data.map((ligne) => ligne[cle]).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'fr'));
-  return { categories: uniques('categorie'), villes: uniques('ville'), communes: uniques('commune') };
+  const uniques = (lignes, cle) =>
+    [...new Set(lignes.map((ligne) => ligne[cle]).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'fr'));
+  const paysParGrossiste = Object.fromEntries(data.map((l) => [l.id, l.pays_code || 'CI']));
+  const villesParPays = {};
+  data.forEach((l) => { const c = l.pays_code || 'CI'; (villesParPays[c] ||= []).push(l); });
+  Object.keys(villesParPays).forEach((c) => { villesParPays[c] = uniques(villesParPays[c], 'ville'); });
+  return { categories: uniques(data, 'categorie'), villes: uniques(data, 'ville'), communes: uniques(data, 'commune'), paysParGrossiste, villesParPays };
 }
 
 

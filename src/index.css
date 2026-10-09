@@ -618,3 +618,10 @@ a.carte:active { transform: translateY(-1px); }
 .formules-table th, .formules-table td { text-align: left; padding: 0.45rem 0.3rem; border-top: 1px solid var(--loo-papier-ombre); vertical-align: top; }
 .formules-table thead th { font-size: 0.75rem; opacity: 0.65; font-weight: 600; border-top: 0; }
 .formules-eco { display: block; font-size: 0.72rem; color: #1f7a3d; font-weight: 600; }
+
+
+/* ---- téléphone avec indicatif du pays ---- */
+.champ-telephone { display: flex; gap: 0.4rem; align-items: stretch; }
+.champ-telephone > select.champ { width: auto; flex: 0 0 auto; padding-right: 0.4em; }
+.champ-telephone-prefixe { display: inline-flex; align-items: center; padding: 0 0.8em; border: 1.5px solid var(--loo-papier-ombre); border-radius: var(--rayon-sm); background: var(--loo-papier); font-weight: 600; white-space: nowrap; }
+.champ-telephone > input.champ { flex: 1; min-width: 0; }

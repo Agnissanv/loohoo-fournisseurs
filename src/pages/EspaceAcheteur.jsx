@@ -5,6 +5,7 @@ import {
   suivreSession, recupererMonRole, recupererSessionVendeur, recupererMesConversations, recupererMesVentes, recupererMesFavoris, capturerLead,
 } from '../api/fournisseurs.js';
 import { anciennete } from '../utils/profilFournisseur.js';
+import { infosPays } from '../utils/pays.js';
 import { useTitre } from '../utils/useTitre.js';
 
 const f = (n) => Math.round(n).toLocaleString('fr-FR');
@@ -69,7 +70,11 @@ export default function EspaceAcheteur() {
             <div className="entete-logo entete-initiales" aria-hidden="true">{initiales}</div>
             <div style={{ flex: '1 1 240px' }}>
               <h1 style={{ fontSize: 'clamp(1.35rem, 2.4vw, 1.8rem)', margin: '0 0 0.2rem' }}>Bonjour {vendeur.nom}</h1>
-              <div className="entete-ligne">{vendeur.activite ? `${vendeur.activite}` : 'Acheteur'}{depuis && <span> · sur LOOHOO depuis {depuis}</span>}</div>
+              <div className="entete-ligne">
+                {vendeur.activite ? `${vendeur.activite}` : 'Acheteur'}
+                {infosPays(vendeur.pays_code) && <span> · {infosPays(vendeur.pays_code).drapeau} {infosPays(vendeur.pays_code).nom}</span>}
+                {depuis && <span> · sur LOOHOO depuis {depuis}</span>}
+              </div>
             </div>
             <span className="esp-puce esp-puce-vert"><BadgeCheck size={13} /> Acheteur LOOHOO</span>
           </div>

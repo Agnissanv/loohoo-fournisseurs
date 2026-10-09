@@ -16,7 +16,7 @@ import { noterVisite } from '../utils/suiviVisites.js';
 import { useTitre } from '../utils/useTitre.js';
 
 const JOURS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
-const ORIGINES = { local: 'Entreprise locale', grossiste_etranger_ci: "Grossiste installé en Côte d'Ivoire" };
+const ORIGINES = { local: 'Entreprise locale', grossiste_etranger_ci: 'Grossiste étranger installé' };
 
 export default function ProfilGrossiste({ idForce }) {
   const params = useParams();
@@ -147,7 +147,7 @@ export default function ProfilGrossiste({ idForce }) {
           <div className="entreprise-infos">
             <div><span className="etiquette-info">Catégorie</span><strong>{grossiste.categorie}</strong></div>
             <div><span className="etiquette-info">Produits</span><strong>{grossiste.produits.length}</strong></div>
-            {ORIGINES[grossiste.origine] && <div><span className="etiquette-info">Type</span><strong>{ORIGINES[grossiste.origine]}</strong></div>}
+            {ORIGINES[grossiste.origine] && <div><span className="etiquette-info">Type</span><strong>{ORIGINES[grossiste.origine]}{grossiste.origine === 'grossiste_etranger_ci' && pays ? ` (${pays.nom})` : ''}</strong></div>}
             {depuis && <div><span className="etiquette-info">Sur LOOHOO depuis</span><strong>{depuis}</strong></div>}
             {pays && <div><span className="etiquette-info">Pays</span><strong><span aria-hidden="true">{pays.drapeau}</span> {pays.nom}</strong></div>}
             <div><span className="etiquette-info">Vérification</span><strong>{grossiste.badge_verifie ? 'Contrôlé par LOOHOO' : 'En cours'}</strong></div>
