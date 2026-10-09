@@ -1,6 +1,7 @@
 {
   "rewrites": [
     { "source": "/sitemap.xml", "destination": "/api/sitemap" },
+    { "source": "/f/:slug", "destination": "/api/fiche?slug=:slug" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
   "crons": [{ "path": "/api/nettoyer-conversations", "schedule": "0 4 * * *" }]

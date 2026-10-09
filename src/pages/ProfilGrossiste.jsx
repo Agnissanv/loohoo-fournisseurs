@@ -230,6 +230,10 @@ export default function ProfilGrossiste({ idForce }) {
           )}
         </div>
       </section>
+      <div className="barre-devis-espace" aria-hidden="true" />
+      <div className="barre-devis-mobile">
+        <button type="button" className="btn btn-primary" onClick={() => setContactOuvert(true)}><MessageCircle size={17} /> Demander un devis à {grossiste.nom}</button>
+      </div>
       {contactOuvert && (
         <ModaleContact grossiste={grossiste} produit={null} onClose={() => setContactOuvert(false)} />
       )}
@@ -242,7 +246,7 @@ const styles = {
   banniere: { height: '220px', background: 'var(--gradient-marque)', position: 'relative', overflow: 'hidden' },
   banniereImage: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' },
   retour: { display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600, fontSize: '0.9rem', color: '#fff', background: 'rgba(23, 18, 13, 0.55)', padding: '0.4em 0.8em', borderRadius: '8px' },
-  entete: { display: 'flex', alignItems: 'flex-end', gap: '1.2rem', marginTop: '-48px', flexWrap: 'wrap' },
+  entete: { display: 'flex', alignItems: 'flex-end', gap: '1.2rem', marginTop: '-48px', flexWrap: 'wrap', position: 'relative', zIndex: 1 },
   horaires: { maxWidth: '340px', fontSize: '0.88rem' },
   horairesTitre: { display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700, marginBottom: '0.5rem', fontSize: '1.05rem' },
   horairesLigne: { display: 'flex', justifyContent: 'space-between', padding: '0.2rem 0', opacity: 0.85 },

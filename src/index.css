@@ -596,3 +596,12 @@ a.carte:active { transform: translateY(-1px); }
 /* images : fond coloré pendant le chargement, fondu à l'arrivée */
 .photos-grossiste img, .ligne-produit-image img { background: var(--loo-papier-ombre); }
 @media (prefers-reduced-motion: reduce) { .loo-img-fondu { transition: none; } }
+
+
+/* fiche fournisseur : action principale fixée en bas de l'écran sur téléphone */
+.barre-devis-mobile, .barre-devis-espace { display: none; }
+@media (max-width: 700px) {
+  .barre-devis-mobile { display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: 0.7rem 1rem calc(0.7rem + env(safe-area-inset-bottom)); background: rgba(255, 248, 239, 0.96); backdrop-filter: blur(8px); border-top: 1px solid var(--loo-papier-ombre); }
+  .barre-devis-mobile .btn { width: 100%; justify-content: center; }
+  .barre-devis-espace { display: block; height: 4.6rem; }
+}
