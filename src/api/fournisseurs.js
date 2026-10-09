@@ -17,7 +17,9 @@ export async function recupererGrossiste(id) {
   const base = `id, nom, categorie, ville, commune, pays, origine, est_fabricant, badge_verifie, statut, horaires_ouverture, grossiste_photo(url, ordre), ${produits}`;
   const requete = (colonnes) => supabase.from('grossiste').select(colonnes).eq('id', id).maybeSingle();
   // logo, bannière et date d'inscription : lus d'abord, avec repli si les droits de la base ne les exposent pas
-  let { data, error } = await requete(`${base}, logo_url, banniere_url, date_ajout`);
+  // l'adresse courte (slug, migration 0021) est lue en premier, avec repli tant que la migration n'est pas exécutée
+  let { data, error } = await requete(`${base}, logo_url, banniere_url, date_ajout, slug`);
+  if (error) ({ data, error } = await requete(`${base}, logo_url, banniere_url, date_ajout`));
   if (error) ({ data, error } = await requete(base));
   if (error) throw error;
   if (!data) return null;
@@ -665,4 +667,17 @@ export async function recupererMesFavoris() {
   const { data, error } = await supabase.rpc('mes_favoris');
   if (error) return [];
   return data || [];
+}
+
+// ---- Lien partageable (migration 0021) ----
+// Retrouve l'identifiant d'un fournisseur publié à partir de son adresse courte (looh-oo.com/f/kone-textiles). null si inconnu.
+export async function grossisteIdParSlug(slug) {
+  const { data, error } = await supabase.rpc('grossiste_id_par_slug', { p_slug: slug });
+  if (error) return null;
+  return data || null;
+}
+
+// ---- Recherches sans résultat (migration 0022) : jamais bloquant ----
+export async function signalerRechercheVide({ q, categorie, ville }) {
+  try { await supabase.rpc('signaler_recherche_vide', { p_terme: q || null, p_categorie: categorie || null, p_ville: ville || null }); } catch { /* sans importance */ }
 }

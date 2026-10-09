@@ -23,7 +23,7 @@ export default function EnTeteFournisseur({ profil, avis, indicateurs, completud
   const statut = STATUTS[profil.statut] || STATUTS.en_attente;
   const depuis = anciennete(profil.date_ajout);
   const delai = formatDelai(indicateurs?.delai_reponse_heures != null ? Number(indicateurs.delai_reponse_heures) : null);
-  const lien = `${window.location.origin}/grossiste/${profil.id}`;
+  const lien = `${window.location.origin}/${profil.slug ? `f/${profil.slug}` : `grossiste/${profil.id}`}`;
   const initiales = profil.nom.split(/\s+/).filter(Boolean).slice(0, 2).map((m) => m[0]).join('').toUpperCase();
 
   async function copier() {

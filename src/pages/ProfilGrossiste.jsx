@@ -17,8 +17,9 @@ import { useTitre } from '../utils/useTitre.js';
 const JOURS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
 const ORIGINES = { local: 'Entreprise locale', grossiste_etranger_ci: "Grossiste installé en Côte d'Ivoire" };
 
-export default function ProfilGrossiste() {
-  const { id } = useParams();
+export default function ProfilGrossiste({ idForce }) {
+  const params = useParams();
+  const id = idForce || params.id;
   const [grossiste, setGrossiste] = useState(undefined);
   const [contactOuvert, setContactOuvert] = useState(false);
   const [description, setDescription] = useState(null);
@@ -91,7 +92,8 @@ export default function ProfilGrossiste() {
   const horairesAffiches = JOURS.some((j) => horaires[j]) ? JOURS.map((j) => [j, horaires[j]]) : [];
   const depuis = anciennete(grossiste.date_ajout);
   const pays = infosPays(grossiste.pays);
-  const lien = window.location.href;
+  // Adresse courte si le fournisseur en a une, sinon l'adresse de la page
+  const lien = grossiste.slug ? `${window.location.origin}/f/${grossiste.slug}` : window.location.href;
 
   async function copierLien() {
     try { await navigator.clipboard.writeText(lien); setLienCopie(true); setTimeout(() => setLienCopie(false), 2000); } catch { /* indisponible */ }

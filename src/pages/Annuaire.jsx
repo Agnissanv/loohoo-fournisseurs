@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { MessageSquare, Search, ShieldCheck, Truck } from 'lucide-react';
-import { rechercherProduits, recupererFiltres, capturerLead, suivreSession } from '../api/fournisseurs.js';
+import { rechercherProduits, recupererFiltres, capturerLead, suivreSession, signalerRechercheVide } from '../api/fournisseurs.js';
 import CarteProduit from '../components/CarteProduit.jsx';
 import HeroCarrousel from '../components/HeroCarrousel.jsx';
 import { ChiffresPublics, FournisseursALaUne, VerifieExplication, RejoindreReseau } from '../components/AccueilPublic.jsx';
@@ -63,7 +63,16 @@ export default function Annuaire() {
     setErreur(false);
     setAffiches(PAR_PAGE);
     rechercherProduits({ q, categorie, ville, commune })
-      .then((liste) => { if (!annule) { setResultats(liste); setChargement(false); } })
+      .then((liste) => {
+        if (annule) return;
+        setResultats(liste);
+        setChargement(false);
+        if (liste.length === 0 && (q || categorie || ville || commune)) {
+          const cle = `loo-vide:${q}|${categorie}|${ville}|${commune}`;
+          try { if (sessionStorage.getItem(cle)) return; sessionStorage.setItem(cle, '1'); } catch { /* navigation privée : on signale quand même */ }
+          signalerRechercheVide({ q, categorie, ville: ville || commune });
+        }
+      })
       .catch(() => { if (!annule) { setErreur(true); setChargement(false); } });
     return () => { annule = true; };
   }, [q, categorie, ville, commune]);

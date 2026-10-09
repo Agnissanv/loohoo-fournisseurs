@@ -61,3 +61,12 @@ avec au moins un produit publié, note moyenne des avis validés, prix de gros l
 ## 0020 — Fournisseurs favoris
 Table `favori` sans accès direct, et trois fonctions réservées aux comptes acheteurs : `basculer_favori`, `est_favori`, `mes_favoris`.
 Seuls les fournisseurs publiés peuvent être suivis. Testée sur le moteur de test (un fournisseur ou un autre acheteur ne peut ni suivre ni lire).
+
+## 0021 — Lien partageable
+Ajoute `grossiste.slug` (adresse courte générée depuis le nom, unique, stable, modifiable par l'équipe seulement), le remplissage des fournisseurs
+existants et `grossiste_id_par_slug()`. Le site sert la fiche à `/f/<slug>`. Testée sur le moteur de test.
+
+## 0022 — Recherches sans résultat
+Table `recherche_sans_resultat` (terme, catégorie, ville, date : rien de personnel), `signaler_recherche_vide()` appelée par le site
+et `admin_recherches_vides(jours)` qui donne la synthèse à l'administration (à brancher dans l'écran « Demandes non couvertes »).
+Testée sur le moteur de test.
