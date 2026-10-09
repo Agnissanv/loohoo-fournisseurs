@@ -7,17 +7,16 @@ import ImageOptimisee from './ImageOptimisee.jsx';
 
 const nombre = (n) => Number(n).toLocaleString('fr-FR');
 
-// Chiffres réels du réseau, comptés dans la base. Un chiffre à zéro n'est pas affiché, et rien ne s'affiche s'il n'y a pas encore de fournisseur.
+// Chiffres réels du réseau, comptés dans la base
 export function ChiffresPublics() {
   const [c, setC] = useState(null);
   useEffect(() => { recupererChiffresPublics().then(setC); }, []);
-  if (!c || c.fournisseurs === 0) return null;
+  if (!c) return null;
   const lignes = [
     [c.verifies, c.verifies > 1 ? 'Fournisseurs vérifiés' : 'Fournisseur vérifié'],
     [c.produits, c.produits > 1 ? 'Produits publiés' : 'Produit publié'],
     [c.pays, c.pays > 1 ? 'Pays couverts' : 'Pays couvert'],
-  ].filter(([n]) => n > 0);
-  if (lignes.length === 0) return null;
+  ];
   return (
     <section style={{ background: 'var(--loo-blanc)', borderBottom: '1px solid var(--loo-papier-ombre)' }} aria-label="LOOHOO en chiffres">
       <div className="container chiffres-publics">

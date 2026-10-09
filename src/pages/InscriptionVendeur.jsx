@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { inscrireVendeur } from '../api/fournisseurs.js';
-import { normaliserTelephone } from '../utils/telephone.js';
+import { normaliserTelephone, telephoneComplet } from '../utils/telephone.js';
+import { FORMATS } from '../utils/pays.js';
+import ChampTelephone from '../components/ChampTelephone.jsx';
 import { retourSur } from '../utils/navigation.js';
 import ChampMotDePasse from '../components/ChampMotDePasse.jsx';
 import RedirigerSiConnecte from '../components/RedirigerSiConnecte.jsx';
@@ -11,7 +13,7 @@ export default function InscriptionVendeur() {
   const navigate = useNavigate();
   const { search } = useLocation();
   const retour = retourSur(new URLSearchParams(search).get('retour'));
-  const [champs, setChamps] = useState({ nom: '', telephone: '', email: '', motDePasse: '', activite: '' });
+  const [champs, setChamps] = useState({ nom: '', pays: 'CI', telephone: '', email: '', motDePasse: '', activite: '' });
   const [erreur, setErreur] = useState('');
   const [envoi, setEnvoi] = useState(false);
   const [confirmationEnvoyee, setConfirmationEnvoyee] = useState(false);
@@ -20,14 +22,14 @@ export default function InscriptionVendeur() {
 
   async function soumettre(e) {
     e.preventDefault();
-    const telephone = normaliserTelephone(champs.telephone);
-    if (telephone.length < 11) { setErreur('Numéro de téléphone incomplet. Exemple : 07 00 00 00 00.'); return; }
+    const telephone = normaliserTelephone(champs.telephone, champs.pays);
+    if (!telephoneComplet(telephone)) { setErreur(`Numéro de téléphone incomplet. Exemple : ${FORMATS[champs.pays]?.exemple || '07 00 00 00 00'}.`); return; }
     setEnvoi(true);
     setErreur('');
     try {
       const { confirmationRequise } = await inscrireVendeur({
         email: champs.email.trim(), password: champs.motDePasse,
-        nom: champs.nom.trim(), telephone, activite: champs.activite.trim(),
+        nom: champs.nom.trim(), telephone, activite: champs.activite.trim(), paysCode: champs.pays,
       });
       if (confirmationRequise) setConfirmationEnvoyee(true);
       else navigate(retour || '/');
@@ -67,7 +69,7 @@ export default function InscriptionVendeur() {
           </div>
           <div className="acces-champ-bloc">
             <label htmlFor="tel">Téléphone</label>
-            <input id="tel" className="champ" required type="tel" placeholder="07 00 00 00 00" value={champs.telephone} onChange={maj('telephone')} autoComplete="tel" />
+            <ChampTelephone id="tel" required pays={champs.pays} onPaysChange={(pays) => setChamps((c) => ({ ...c, pays }))} value={champs.telephone} onChange={maj('telephone')} />
             <p className="acces-aide">Reste privé : les fournisseurs vous répondent par la messagerie LOOHOO.</p>
           </div>
           <div className="acces-champ-bloc">

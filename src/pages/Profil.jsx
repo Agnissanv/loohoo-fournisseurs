@@ -11,7 +11,9 @@ import {
   recupererDocuments, televerserDocument, supprimerDocument, obtenirLienDocument,
 } from '../api/fournisseurs.js';
 import { televerserPhoto, supprimerPhotoStockage } from '../utils/stockagePhotos.js';
-import { normaliserTelephone, formaterTelephone, contactDuProfil } from '../utils/telephone.js';
+import { normaliserTelephone, formaterTelephone, telephoneComplet, contactDuProfil } from '../utils/telephone.js';
+import { usePays } from '../utils/usePays.js';
+import { drapeau, FORMATS, infosPays } from '../utils/pays.js';
 
 // Ces champs vivent dans la table protégée des contacts (jamais dans la table publique)
 const CHAMPS_PRIVES = ['adresse', 'site_web', 'reseaux_sociaux'];
@@ -86,8 +88,8 @@ export default function Profil() {
   }
 
   async function enregistrerTelephone() {
-    const numero = normaliserTelephone(brouillon);
-    if (numero.length < 11) { setErreur('Numéro incomplet. Exemple : 07 00 00 00 00.'); return; }
+    const numero = normaliserTelephone(brouillon, profil.pays_code || 'CI');
+    if (!telephoneComplet(numero)) { setErreur(`Numéro incomplet. Exemple : ${FORMATS[profil.pays_code || 'CI']?.exemple || '07 00 00 00 00'}.`); return; }
     setErreur('');
     try {
       await mettreAJourTelephone(profil.id, numero);
@@ -249,6 +251,9 @@ export default function Profil() {
             <h2 className="esp-carte-titre"><span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}><Building2 size={18} /> Informations de l'entreprise</span></h2>
             <Ligne ctx={ctx} cle="nom" libelle="Nom de l'entreprise" valeur={profil.nom} />
             <Ligne ctx={ctx} cle="categorie" libelle="Catégorie" valeur={profil.categorie} />
+            <Ligne ctx={ctx} cle="pays_code" libelle="Pays" valeur={profil.pays_code || 'CI'}
+              affichage={<>{drapeau(profil.pays_code || 'CI')} {infosPays(profil.pays_code || 'CI')?.nom}{profil.statut !== 'en_attente' && <span className="esp-aide" style={{ display: 'block', fontWeight: 400 }}>Verrouillé après vérification : écrivez à l'équipe LOOHOO pour le changer.</span>}</>}
+              lectureSeule={profil.statut !== 'en_attente'} />
             <Ligne ctx={ctx} cle="ville" libelle="Ville" valeur={profil.ville} />
             <Ligne ctx={ctx} cle="commune" libelle="Commune" valeur={profil.commune} />
             <Ligne ctx={ctx} cle="adresse" libelle="Adresse" valeur={contact.adresse} aide="Visible uniquement par vous et l'équipe LOOHOO, pour la vérification." />
@@ -392,6 +397,7 @@ export default function Profil() {
 // Une ligne du tableau d'informations, avec crayon de modification (composant à part pour garder le focus pendant la frappe)
 function Ligne({ ctx, cle, libelle, valeur, affichage, type = 'text', enregistrer, lectureSeule, aide }) {
   const { enEdition, setEnEdition, brouillon, setBrouillon, commencer, enregistrerChamps, erreur } = ctx;
+  const { ouverts } = usePays();
   const edite = enEdition === cle;
   return (
     <div className="esp-liste-ligne" style={{ alignItems: 'flex-start' }}>
@@ -399,7 +405,11 @@ function Ligne({ ctx, cle, libelle, valeur, affichage, type = 'text', enregistre
       {edite ? (
         <form style={{ flex: 1, display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap' }}
           onSubmit={(e) => { e.preventDefault(); (enregistrer || (() => enregistrerChamps({ [cle]: brouillon.trim() || null })))(); }}>
-          {cle === 'categorie'
+          {cle === 'pays_code' ? (
+            <select className="champ" style={{ flex: 1, minWidth: '140px', padding: '0.55em 0.8em' }} value={brouillon} onChange={(e) => setBrouillon(e.target.value)} autoFocus>
+              {ouverts.map((p) => <option key={p.code} value={p.code}>{drapeau(p.code)} {p.nom}</option>)}
+            </select>
+          ) : cle === 'categorie'
             ? <SelectCategorie value={brouillon} valeurActuelle={valeur} onChange={(e) => setBrouillon(e.target.value)} required />
             : <input className="champ" style={{ flex: 1, minWidth: '140px', padding: '0.55em 0.8em' }} type={type} value={brouillon} onChange={(e) => setBrouillon(e.target.value)} autoFocus required={['nom', 'ville', 'categorie'].includes(cle)} />}
           <button type="submit" className="esp-bouton-icone" aria-label="Enregistrer" style={{ color: '#1f7a3d' }}><Check size={18} /></button>

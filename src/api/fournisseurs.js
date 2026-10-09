@@ -56,7 +56,7 @@ async function ouvrirCompte(email, password, attente) {
   return data.session ? { confirmationRequise: false } : { confirmationRequise: true };
 }
 
-async function creerProfilFournisseur({ nom, categorie, ville, commune, telephone, estFabricant, origine, stockConfirme }) {
+async function creerProfilFournisseur({ nom, categorie, ville, commune, telephone, estFabricant, origine, stockConfirme, paysCode }) {
   const { error } = await supabase.rpc('creer_profil_fournisseur', {
     p_nom: nom, p_categorie: categorie, p_ville: ville, p_commune: commune || null,
     p_telephone: telephone, p_est_fabricant: !!estFabricant,
@@ -66,14 +66,21 @@ async function creerProfilFournisseur({ nom, categorie, ville, commune, telephon
   const { data: { session } } = await supabase.auth.getSession();
   if (session) {
     await supabase.from('grossiste')
-      .update({ origine: origine || 'local', stock_confirme: !!stockConfirme })
+      .update({ origine: origine || 'local', stock_confirme: !!stockConfirme, ...(paysCode ? { pays_code: paysCode } : {}) })
       .eq('user_id', session.user.id);
   }
 }
 
-async function creerProfilVendeur({ nom, telephone, activite }) {
+async function creerProfilVendeur({ nom, telephone, activite, paysCode }) {
   const { error } = await supabase.rpc('creer_profil_vendeur', { p_nom: nom, p_telephone: telephone, p_activite: activite || null });
   if (error) throw error;
+  await definirPaysAcheteur(paysCode);
+}
+
+// Pays de l'acheteur (migration 0024) : jamais bloquant pour l'inscription
+async function definirPaysAcheteur(paysCode) {
+  if (!paysCode) return;
+  await supabase.rpc('definir_mon_pays_acheteur', { p_code: paysCode }).then(() => {}, () => {});
 }
 
 // Renvoie { confirmationRequise }
@@ -84,8 +91,8 @@ export async function inscrireFournisseur({ email, password, ...profil }) {
 }
 
 // Compte acheteur seul (page « Créer un compte »). Renvoie { confirmationRequise }
-export async function inscrireVendeur({ email, password, nom, telephone, activite }) {
-  const resultat = await ouvrirCompte(email, password, { type: 'vendeur', profil: { nom, telephone, activite } });
+export async function inscrireVendeur({ email, password, nom, telephone, activite, paysCode }) {
+  const resultat = await ouvrirCompte(email, password, { type: 'vendeur', profil: { nom, telephone, activite, paysCode } });
   if (!resultat.confirmationRequise) await finaliserInscriptionEnAttente();
   return resultat;
 }
@@ -112,6 +119,7 @@ async function executerFinalisation() {
     if (!role) await creerProfilVendeur(attente.profil);
     if (attente.demande) {
       conversationId = await ouvrirConversation({ ...attente.demande, ...attente.profil });
+      await definirPaysAcheteur(attente.profil?.paysCode);
     }
   }
   // Fait : on retire les données de l'inscription du compte
@@ -220,19 +228,21 @@ export async function recupererSessionVendeur() {
 // ---- Démarrer ou poursuivre une conversation (remplace l'ancien lien WhatsApp) ----
 // Un acheteur connecté démarre la conversation tout de suite. Sans session, on crée son compte en rangeant la demande de devis
 // dans le compte : elle part automatiquement dès que l'e-mail est confirmé. Renvoie { conversationId } ou { confirmationRequise }.
-export async function demarrerConversation({ grossisteId, produitId, message, nom, telephone, activite, email, password }) {
+export async function demarrerConversation({ grossisteId, produitId, message, nom, telephone, activite, email, password, paysCode }) {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) {
     const resultat = await ouvrirCompte(email, password, {
       type: 'vendeur',
-      profil: { nom, telephone, activite },
+      profil: { nom, telephone, activite, paysCode },
       demande: { grossisteId, produitId: produitId || null, message },
     });
     if (resultat.confirmationRequise) return { confirmationRequise: true };
     const fini = await finaliserInscriptionEnAttente();
     return { conversationId: fini?.conversationId || null };
   }
-  return { conversationId: await ouvrirConversation({ grossisteId, produitId, message, nom, telephone, activite }) };
+  const conversationId = await ouvrirConversation({ grossisteId, produitId, message, nom, telephone, activite });
+  await definirPaysAcheteur(paysCode);
+  return { conversationId };
 }
 
 async function ouvrirConversation({ grossisteId, produitId, message, nom, telephone, activite }) {

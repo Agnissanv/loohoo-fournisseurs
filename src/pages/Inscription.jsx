@@ -1,23 +1,23 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { inscrireFournisseur } from '../api/fournisseurs.js';
-import { normaliserTelephone } from '../utils/telephone.js';
+import { normaliserTelephone, telephoneComplet } from '../utils/telephone.js';
+import { usePays } from '../utils/usePays.js';
+import { drapeau, FORMATS } from '../utils/pays.js';
+import ChampTelephone from '../components/ChampTelephone.jsx';
 import SelectCategorie from '../components/SelectCategorie.jsx';
 import ChampMotDePasse from '../components/ChampMotDePasse.jsx';
 import RedirigerSiConnecte from '../components/RedirigerSiConnecte.jsx';
 
-const ORIGINES = [
-  { valeur: 'local', texte: 'Entreprise locale' },
-  { valeur: 'grossiste_etranger_ci', texte: "Grossiste étranger installé en Côte d'Ivoire" },
-];
 
 // Compte fournisseur en deux étapes courtes : l'entreprise, puis le compte.
 // Le stock et les documents se règlent ensuite depuis le tableau de bord, avec la liste des étapes à suivre.
 export default function Inscription() {
   const navigate = useNavigate();
+  const { tous, parCode } = usePays();
   const [etape, setEtape] = useState(1);
   const [champs, setChamps] = useState({
-    nom: '', categorie: '', ville: '', commune: '', origine: 'local', estFabricant: false,
+    nom: '', categorie: '', pays: 'CI', ville: '', commune: '', origine: 'local', estFabricant: false,
     telephone: '', email: '', motDePasse: '', conditions: false,
   });
   const [erreur, setErreur] = useState('');
@@ -36,15 +36,15 @@ export default function Inscription() {
 
   async function soumettre(e) {
     e.preventDefault();
-    const telephone = normaliserTelephone(champs.telephone);
-    if (telephone.length < 11) { setErreur('Numéro de téléphone incomplet. Exemple : 07 00 00 00 00.'); return; }
+    const telephone = normaliserTelephone(champs.telephone, champs.pays);
+    if (!telephoneComplet(telephone)) { setErreur(`Numéro de téléphone incomplet. Exemple : ${FORMATS[champs.pays]?.exemple || '07 00 00 00 00'}.`); return; }
     setEnvoi(true);
     setErreur('');
     try {
       const { confirmationRequise } = await inscrireFournisseur({
         email: champs.email.trim(), password: champs.motDePasse,
         nom: champs.nom.trim(), categorie: champs.categorie, ville: champs.ville.trim(), commune: champs.commune.trim(),
-        telephone, estFabricant: champs.estFabricant, origine: champs.origine, stockConfirme: false,
+        telephone, estFabricant: champs.estFabricant, origine: champs.origine, stockConfirme: false, paysCode: champs.pays,
       });
       if (confirmationRequise) setConfirmationEnvoyee(true);
       else navigate('/tableau-de-bord');
@@ -91,20 +91,28 @@ export default function Inscription() {
               <label htmlFor="categorie">Ce que vous vendez (catégorie principale)</label>
               <SelectCategorie id="categorie" required value={champs.categorie} onChange={maj('categorie')} vide="Choisir une catégorie" />
             </div>
+            <div className="acces-champ-bloc">
+              <label htmlFor="pays">Pays</label>
+              <select id="pays" className="champ" value={champs.pays} onChange={(e) => setChamps((c) => ({ ...c, pays: e.target.value, ville: '' }))}>
+                {tous.map((p) => <option key={p.code} value={p.code} disabled={!p.actif}>{drapeau(p.code)} {p.nom}{p.actif ? '' : ' (bientôt)'}</option>)}
+              </select>
+            </div>
             <div style={{ display: 'flex', gap: '0.7rem' }}>
               <div className="acces-champ-bloc" style={{ flex: 1 }}>
                 <label htmlFor="ville">Ville</label>
-                <input id="ville" className="champ" required placeholder="Abidjan" value={champs.ville} onChange={maj('ville')} />
+                <input id="ville" className="champ" required list="villes-pays" placeholder={FORMATS[champs.pays]?.villes[0] || 'Ville'} value={champs.ville} onChange={maj('ville')} />
+                <datalist id="villes-pays">{(FORMATS[champs.pays]?.villes || []).map((v) => <option key={v} value={v} />)}</datalist>
               </div>
               <div className="acces-champ-bloc" style={{ flex: 1 }}>
-                <label htmlFor="commune">Commune <span style={{ fontWeight: 400, opacity: 0.6 }}>(facultatif)</span></label>
-                <input id="commune" className="champ" placeholder="Adjamé" value={champs.commune} onChange={maj('commune')} />
+                <label htmlFor="commune">Commune ou quartier <span style={{ fontWeight: 400, opacity: 0.6 }}>(facultatif)</span></label>
+                <input id="commune" className="champ" value={champs.commune} onChange={maj('commune')} />
               </div>
             </div>
             <div className="acces-champ-bloc">
               <label htmlFor="origine">Type d'entreprise</label>
               <select id="origine" className="champ" value={champs.origine} onChange={maj('origine')}>
-                {ORIGINES.map((o) => <option key={o.valeur} value={o.valeur}>{o.texte}</option>)}
+                <option value="local">Entreprise locale</option>
+                <option value="grossiste_etranger_ci">Grossiste étranger installé {parCode[champs.pays]?.dans || "en Côte d'Ivoire"}</option>
               </select>
             </div>
             <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
@@ -117,7 +125,7 @@ export default function Inscription() {
           <form onSubmit={soumettre} className="acces-form">
             <div className="acces-champ-bloc">
               <label htmlFor="tel">Téléphone WhatsApp</label>
-              <input id="tel" className="champ" required type="tel" placeholder="07 00 00 00 00" value={champs.telephone} onChange={maj('telephone')} autoComplete="tel" autoFocus />
+              <ChampTelephone id="tel" required autoFocus pays={champs.pays} value={champs.telephone} onChange={maj('telephone')} />
               <p className="acces-aide">Jamais affiché publiquement : les acheteurs vous écrivent via LOOHOO.</p>
             </div>
             <div className="acces-champ-bloc">

@@ -1,15 +1,36 @@
-// Garde les chiffres uniquement ; « 07 00 00 00 00 » devient 2250700000000
-export function normaliserTelephone(saisie) {
-  const chiffres = String(saisie || '').replace(/\D/g, '').replace(/^00/, '');
-  if (chiffres.length === 10) return `225${chiffres}`;
+import { FORMATS } from './pays.js';
+
+// Indicatifs des pays LOOHOO (le plus long d'abord pour la reconnaissance)
+const INDICATIFS = { CI: '225', ML: '223', SN: '221', BF: '226', BJ: '229', TG: '228', NE: '227' };
+
+// Garde les chiffres et ajoute l'indicatif du pays : « 07 00 00 00 00 » (CI) devient 2250700000000.
+// Un numéro saisi avec son indicatif (+223…, 00223…) est gardé tel quel.
+export function normaliserTelephone(saisie, codePays = 'CI') {
+  const brut = String(saisie || '').trim();
+  const chiffres = brut.replace(/\D/g, '');
+  if (brut.startsWith('+')) return chiffres;
+  if (chiffres.startsWith('00')) return chiffres.slice(2);
+  const indicatif = INDICATIFS[codePays] || '225';
+  const longueur = FORMATS[codePays]?.longueur || 10;
+  if (chiffres.length === longueur) return `${indicatif}${chiffres}`;
   return chiffres;
+}
+
+// Le numéro normalisé est-il complet (indicatif + numéro national à la bonne longueur) ?
+export function telephoneComplet(numero) {
+  const n = String(numero || '');
+  return Object.entries(INDICATIFS).some(([code, ind]) => n.startsWith(ind) && n.length === ind.length + (FORMATS[code]?.longueur || 0));
 }
 
 // 2250700000000 devient +225 07 00 00 00 00
 export function formaterTelephone(numero) {
   const n = String(numero || '').replace(/\D/g, '');
-  if (n.length === 13 && n.startsWith('225')) return `+225 ${n.slice(3).replace(/(\d{2})(?=\d)/g, '$1 ')}`;
-  return numero || '';
+  const trouve = Object.entries(INDICATIFS).find(([code, ind]) => n.startsWith(ind) && n.length === ind.length + (FORMATS[code]?.longueur || 0));
+  if (!trouve) return numero || '';
+  const national = n.slice(trouve[1].length);
+  // 9 chiffres (Sénégal) : 77 123 45 67 ; sinon par paires
+  const groupe = national.length === 9 ? national.replace(/(\d{2})(\d{3})(\d{2})(\d{2})/, '$1 $2 $3 $4') : national.replace(/(\d{2})(?=\d)/g, '$1 ');
+  return `+${trouve[1]} ${groupe}`;
 }
 
 // Téléphone enregistré d'un profil fournisseur. La base renvoie la ligne de contact soit en liste, soit en objet seul
