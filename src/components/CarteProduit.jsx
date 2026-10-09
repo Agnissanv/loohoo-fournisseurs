@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { BadgeCheck, Package } from 'lucide-react';
+import ImageOptimisee from './ImageOptimisee.jsx';
 
 export default function CarteProduit({ p }) {
-  const [prete, setPrete] = useState(false);
   return (
     <Link to={`/produit/${p.id}`} className="carte" style={styles.carte}>
       <div style={styles.imageBloc}>
         {p.photo_url ? (
-          <img src={p.photo_url} alt={p.nom} style={styles.image} loading="lazy" className={`loo-img-fondu${prete ? ' loo-img-prete' : ''}`} onLoad={() => setPrete(true)} ref={(el) => { if (el && el.complete && !prete) setPrete(true); }} />
+          <ImageOptimisee src={p.photo_url} largeur={480} alt={p.nom} style={styles.image} />
         ) : (
           <Package size={28} color="var(--loo-orange)" />
         )}

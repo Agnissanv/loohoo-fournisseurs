@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { BadgeCheck, Factory, FileCheck2, Package, Repeat, Store } from 'lucide-react';
 import { recupererChiffresPublics, recupererFournisseursALaUne } from '../api/fournisseurs.js';
 import { Etoiles } from './Etoiles.jsx';
-import { optimiserImageCloudinary } from '../utils/cloudinaryOptimize.js';
+import ImageOptimisee from './ImageOptimisee.jsx';
 
 const nombre = (n) => Number(n).toLocaleString('fr-FR');
 
@@ -45,7 +45,7 @@ export function FournisseursALaUne() {
               <Link key={f.id} to={`/grossiste/${f.id}`} className="carte a-la-une-carte">
                 <div className="a-la-une-haut">
                   {f.logo_url
-                    ? <img src={optimiserImageCloudinary(f.logo_url, 96)} alt="" loading="lazy" />
+                    ? <ImageOptimisee src={f.logo_url} largeur={120} />
                     : <span className="a-la-une-initiales" aria-hidden="true">{initiales}</span>}
                   <div style={{ minWidth: 0 }}>
                     <strong style={{ display: 'block', lineHeight: 1.25 }}>{f.nom}</strong>

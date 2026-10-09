@@ -8,6 +8,7 @@ import ModaleContact from '../components/ModaleContact.jsx';
 import IndicateursConfiance from '../components/IndicateursConfiance.jsx';
 import AvisFournisseur from '../components/AvisFournisseur.jsx';
 import BoutonFavori from '../components/BoutonFavori.jsx';
+import ImageOptimisee from '../components/ImageOptimisee.jsx';
 import { Etoiles } from '../components/Etoiles.jsx';
 import { anciennete } from '../utils/profilFournisseur.js';
 import { infosPays } from '../utils/pays.js';
@@ -101,14 +102,18 @@ export default function ProfilGrossiste({ idForce }) {
 
   return (
     <>
-      <div style={{ ...styles.banniere, backgroundImage: grossiste.banniere_url ? `url(${grossiste.banniere_url})` : 'none' }} />
+      {/* Bandeau : le dégradé de la marque reste visible tant que la photo charge (ou s'il n'y en a pas) ; le lien de retour est posé dessus */}
+      <div style={styles.banniere}>
+        {grossiste.banniere_url && <ImageOptimisee src={grossiste.banniere_url} largeur={1400} prioritaire style={styles.banniereImage} />}
+        <div className="container" style={{ position: 'relative', paddingTop: '1rem' }}>
+          <Link to="/" style={styles.retour}><ArrowLeft size={16} /> Tous les produits</Link>
+        </div>
+      </div>
 
       <section className="section" style={{ paddingTop: '0' }}>
         <div className="container">
-          <Link to="/" style={styles.retour}><ArrowLeft size={16} /> Tous les produits</Link>
-
           <div style={styles.entete}>
-            {grossiste.logo_url ? <img src={grossiste.logo_url} alt="" style={styles.logo} /> : <div style={{ ...styles.logo, background: 'var(--loo-papier-ombre)' }} />}
+            {grossiste.logo_url ? <ImageOptimisee src={grossiste.logo_url} largeur={240} prioritaire style={styles.logo} /> : <div style={{ ...styles.logo, background: 'var(--loo-papier-ombre)' }} />}
             <div style={{ flex: '1 1 260px', minWidth: 0 }}>
               <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '0.3rem', flexWrap: 'wrap' }}>
                 {grossiste.badge_verifie && <span className="badge badge-verifie"><BadgeCheck size={13} /> Vérifié</span>}
@@ -219,7 +224,7 @@ export default function ProfilGrossiste({ idForce }) {
             <>
               <h2 style={{ fontSize: '1.2rem', margin: '2.4rem 0 1rem' }}>Photos de l'entreprise</h2>
               <div className="photos-grossiste">
-                {grossiste.photos.map((url) => <img key={url} src={url} alt={`Photo de ${grossiste.nom}`} loading="lazy" />)}
+                {grossiste.photos.map((url) => <ImageOptimisee key={url} src={url} largeur={700} alt={`Photo de ${grossiste.nom}`} />)}
               </div>
             </>
           )}
@@ -234,8 +239,9 @@ export default function ProfilGrossiste({ idForce }) {
 }
 
 const styles = {
-  banniere: { height: '220px', background: 'var(--gradient-marque)', backgroundSize: 'cover', backgroundPosition: 'center' },
-  retour: { display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600, fontSize: '0.9rem', color: 'var(--loo-rouge)', margin: '1.2rem 0 1.2rem' },
+  banniere: { height: '220px', background: 'var(--gradient-marque)', position: 'relative', overflow: 'hidden' },
+  banniereImage: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' },
+  retour: { display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600, fontSize: '0.9rem', color: '#fff', background: 'rgba(23, 18, 13, 0.55)', padding: '0.4em 0.8em', borderRadius: '8px' },
   entete: { display: 'flex', alignItems: 'flex-end', gap: '1.2rem', marginTop: '-48px', flexWrap: 'wrap' },
   horaires: { maxWidth: '340px', fontSize: '0.88rem' },
   horairesTitre: { display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700, marginBottom: '0.5rem', fontSize: '1.05rem' },

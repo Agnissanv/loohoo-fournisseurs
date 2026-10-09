@@ -4,6 +4,7 @@ import { BadgeCheck, Check, ChevronRight, Copy, Factory, MapPin, MessageCircle, 
 import { recupererProduitPublic, recupererAutresProduitsFournisseur, rechercherProduits } from '../api/fournisseurs.js';
 import ModaleContact from '../components/ModaleContact.jsx';
 import IndicateursConfiance from '../components/IndicateursConfiance.jsx';
+import ImageOptimisee from '../components/ImageOptimisee.jsx';
 import { TableauPaliers } from '../components/PaliersPrix.jsx';
 import CarteProduit from '../components/CarteProduit.jsx';
 import { noterVisite } from '../utils/suiviVisites.js';
@@ -117,7 +118,7 @@ export default function ProduitDetail() {
           <div>
             <div style={styles.imagePrincipale}>
               {produit.photos[photoActive] ? (
-                <img src={produit.photos[photoActive]} alt={produit.nom} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <ImageOptimisee key={produit.photos[photoActive]} src={produit.photos[photoActive]} largeur={1000} prioritaire alt={produit.nom} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
                 <div style={{ width: '100%', height: '100%', background: 'var(--loo-papier-ombre)' }} />
               )}
@@ -126,7 +127,7 @@ export default function ProduitDetail() {
               <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.6rem', flexWrap: 'wrap' }}>
                 {produit.photos.map((url, i) => (
                   <button key={url} type="button" onClick={() => setPhotoActive(i)} aria-label={`Photo ${i + 1}`} style={{ ...styles.miniature, borderColor: i === photoActive ? 'var(--loo-rouge)' : 'var(--loo-papier-ombre)' }}>
-                    <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <ImageOptimisee src={url} largeur={200} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   </button>
                 ))}
               </div>
@@ -171,7 +172,7 @@ export default function ProduitDetail() {
             )}
 
             <Link to={`/grossiste/${g.id}`} className="carte" style={styles.carteFournisseur}>
-              {g.logo_url ? <img src={g.logo_url} alt="" style={styles.logo} /> : <div style={{ ...styles.logo, background: 'var(--loo-papier-ombre)' }} />}
+              {g.logo_url ? <ImageOptimisee src={g.logo_url} largeur={160} style={styles.logo} /> : <div style={{ ...styles.logo, background: 'var(--loo-papier-ombre)' }} />}
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: '0.74rem', opacity: 0.6 }}>Vendu par</div>
                 <div style={{ display: 'flex', gap: '0.4rem', margin: '0.15rem 0', flexWrap: 'wrap' }}>

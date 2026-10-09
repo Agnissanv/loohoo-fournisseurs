@@ -59,7 +59,7 @@ export async function televerserPhoto(grossisteId, fichier) {
 
   const { error } = await supabase.storage.from('photos').upload(chemin, blobCompresse, {
     contentType: 'image/jpeg',
-    cacheControl: '3600',
+    cacheControl: '31536000',
   });
   if (error) throw error;
 
@@ -77,7 +77,7 @@ export async function televerserMedia(grossisteId, fichier) {
   const chemin = `${grossisteId}/${nomFichierAleatoire()}`;
 
   const { error } = await supabase.storage.from('photos').upload(chemin, blobCompresse, {
-    contentType: 'image/jpeg', cacheControl: '3600',
+    contentType: 'image/jpeg', cacheControl: '31536000',
   });
   if (error) throw error;
 

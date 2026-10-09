@@ -591,3 +591,8 @@ a.carte:active { transform: translateY(-1px); }
 .calc-details dt { opacity: 0.75; }
 .calc-details dd { margin: 0; font-weight: 600; text-align: right; }
 @media (max-width: 800px) { .calc-grille { grid-template-columns: minmax(0, 1fr); } .calc-resultat { position: static; } }
+
+
+/* images : fond coloré pendant le chargement, fondu à l'arrivée */
+.photos-grossiste img, .ligne-produit-image img { background: var(--loo-papier-ombre); }
+@media (prefers-reduced-motion: reduce) { .loo-img-fondu { transition: none; } }
