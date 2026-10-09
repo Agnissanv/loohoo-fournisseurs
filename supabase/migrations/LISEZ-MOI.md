@@ -70,3 +70,7 @@ existants et `grossiste_id_par_slug()`. Le site sert la fiche à `/f/<slug>`. Te
 Table `recherche_sans_resultat` (terme, catégorie, ville, date : rien de personnel), `signaler_recherche_vide()` appelée par le site
 et `admin_recherches_vides(jours)` qui donne la synthèse à l'administration (à brancher dans l'écran « Demandes non couvertes »).
 Testée sur le moteur de test.
+
+## 0023 — Formules d'abonnement
+Seuil gratuit passé à 20 ventes confirmées (sauf s'il a déjà été modifié), prix des niveaux 1 à 3 (mensuel et annuel) dans `parametre`,
+et `formules_abonnement()` lisible par tous. Aucun paiement n'est encaissé par le site. Testée sur le moteur de test.

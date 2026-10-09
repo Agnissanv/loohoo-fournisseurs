@@ -681,3 +681,10 @@ export async function grossisteIdParSlug(slug) {
 export async function signalerRechercheVide({ q, categorie, ville }) {
   try { await supabase.rpc('signaler_recherche_vide', { p_terme: q || null, p_categorie: categorie || null, p_ville: ville || null }); } catch { /* sans importance */ }
 }
+
+// Seuil gratuit et prix des formules (migration 0023). null tant que la migration n'est pas exécutée.
+export async function recupererFormulesAbonnement() {
+  const { data, error } = await supabase.rpc('formules_abonnement');
+  if (error || !data) return null;
+  return data;
+}

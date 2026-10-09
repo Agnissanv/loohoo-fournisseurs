@@ -94,9 +94,9 @@ export default function Annuaire() {
     <>
       <HeroCarrousel>
         <div>
-          <span className="badge" style={styles.badgeMali}>Bientôt au Mali</span>
-          <h1 style={styles.titre}>Le seul endroit où trouver un fournisseur vérifié.</h1>
-          <p style={styles.sousTitre}>Recherchez directement le produit que vous voulez acheter en gros.</p>
+          <span className="badge" style={styles.badgeReseau}>🌍 Le plus grand réseau de fournisseurs vérifiés d'Afrique</span>
+          <h1 style={styles.titre}>Trouvez un fournisseur vérifié. Simple, rapide, gratuit.</h1>
+          <p style={styles.sousTitre}>La marketplace des fournisseurs en Afrique.</p>
 
           <form style={styles.recherche} onSubmit={(e) => { e.preventDefault(); changer({ q: saisie.trim() }); }} role="search">
             <input
@@ -306,7 +306,7 @@ function SqueletteGrille() {
 }
 
 const styles = {
-  badgeMali: { background: 'rgba(255,248,239,0.2)', color: 'var(--loo-papier)' },
+  badgeReseau: { background: 'rgba(255,248,239,0.2)', color: 'var(--loo-papier)', textTransform: 'none', letterSpacing: 0, fontFamily: 'inherit', fontSize: '0.82rem' },
   titre: { fontSize: 'clamp(2.2rem, 5vw, 3.8rem)', lineHeight: 1.05, fontWeight: 600, letterSpacing: '-0.025em', margin: '1rem 0 0.8rem', color: '#fff', maxWidth: '18ch' },
   sousTitre: { maxWidth: '520px', opacity: 0.92, margin: '0 0 1.8rem', fontSize: '1.05rem' },
   recherche: { display: 'flex', gap: '0.7rem', flexWrap: 'wrap' },

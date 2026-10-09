@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { recupererFormulesAbonnement } from '../api/fournisseurs.js';
 import { BadgeCheck, BarChart3, ClipboardCheck, MessageCircle, PackagePlus, ShieldCheck, UserPlus } from 'lucide-react';
 
 const ETAPES = [
@@ -45,7 +46,19 @@ const QUESTIONS = [
   },
 ];
 
+// Réponse à « Combien ça coûte ? », avec le seuil et le prix le plus bas lus dans la base (repli sur les valeurs validées)
+function reponseTarif(formules) {
+  const seuil = formules?.seuil ?? 20;
+  const niveaux = formules?.niveaux?.length ? formules.niveaux : [{ mensuel: 2900, annuel: 29000 }];
+  const moinsCher = niveaux.reduce((a, b) => (b.mensuel < a.mensuel ? b : a));
+  const f = (n) => Number(n).toLocaleString('fr-FR');
+  return `L'inscription est gratuite, et LOOHOO le reste jusqu'à vos ${seuil} premières ventes confirmées sur la plateforme. Ensuite, un abonnement à partir de ${f(moinsCher.mensuel)} F CFA par mois (ou ${f(moinsCher.annuel)} F CFA par an). Rien n'est prélevé sur vos ventes.`;
+}
+
 export default function DevenirFournisseur() {
+  const [formules, setFormules] = useState(null);
+  useEffect(() => { recupererFormulesAbonnement().then(setFormules); }, []);
+  const questions = [QUESTIONS[0], { q: 'Combien ça coûte ?', r: reponseTarif(formules) }, ...QUESTIONS.slice(1)];
   return (
     <>
       <section style={styles.hero}>
@@ -109,7 +122,7 @@ export default function DevenirFournisseur() {
       <section className="section" style={{ paddingTop: 0 }}>
         <div className="container" style={{ maxWidth: '760px' }}>
           <h2 className="section-titre">Questions fréquentes</h2>
-          {QUESTIONS.map((x) => (
+          {questions.map((x) => (
             <details key={x.q} style={styles.faq}>
               <summary style={{ fontWeight: 700, cursor: 'pointer' }}>{x.q}</summary>
               <p style={{ margin: '0.6rem 0 0', lineHeight: 1.6, opacity: 0.85 }}>{x.r}</p>

@@ -609,3 +609,12 @@ a.carte:active { transform: translateY(-1px); }
 
 /* fiche fournisseur : seul le logo chevauche le bandeau, le nom et les badges restent lisibles sous la photo */
 @media (min-width: 700px) { .fiche-texte { margin-top: 56px; } }
+
+
+/* ---- formules d'abonnement ---- */
+.formules { margin-top: 0.8rem; }
+.formules summary { cursor: pointer; font-weight: 600; font-size: 0.88rem; color: var(--loo-rouge); }
+.formules-table { width: 100%; border-collapse: collapse; margin-top: 0.6rem; font-size: 0.88rem; }
+.formules-table th, .formules-table td { text-align: left; padding: 0.45rem 0.3rem; border-top: 1px solid var(--loo-papier-ombre); vertical-align: top; }
+.formules-table thead th { font-size: 0.75rem; opacity: 0.65; font-weight: 600; border-top: 0; }
+.formules-eco { display: block; font-size: 0.72rem; color: #1f7a3d; font-weight: 600; }
