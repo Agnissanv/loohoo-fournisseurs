@@ -1,7 +1,7 @@
 import { FORMATS } from './pays.js';
 
 // Indicatifs des pays LOOHOO (le plus long d'abord pour la reconnaissance)
-const INDICATIFS = { CI: '225', ML: '223', SN: '221', BF: '226', BJ: '229', TG: '228', NE: '227' };
+const INDICATIFS = { CI: '225', ML: '223', SN: '221', BF: '226', BJ: '229', TG: '228', NE: '227', CM: '237' };
 
 // Garde les chiffres et ajoute l'indicatif du pays : « 07 00 00 00 00 » (CI) devient 2250700000000.
 // Un numéro saisi avec son indicatif (+223…, 00223…) est gardé tel quel.
@@ -28,8 +28,11 @@ export function formaterTelephone(numero) {
   const trouve = Object.entries(INDICATIFS).find(([code, ind]) => n.startsWith(ind) && n.length === ind.length + (FORMATS[code]?.longueur || 0));
   if (!trouve) return numero || '';
   const national = n.slice(trouve[1].length);
-  // 9 chiffres (Sénégal) : 77 123 45 67 ; sinon par paires
-  const groupe = national.length === 9 ? national.replace(/(\d{2})(\d{3})(\d{2})(\d{2})/, '$1 $2 $3 $4') : national.replace(/(\d{2})(?=\d)/g, '$1 ');
+  // 9 chiffres : Sénégal 77 123 45 67, Cameroun 6 70 00 00 00 ; sinon par paires
+  let groupe;
+  if (national.length === 9 && trouve[0] === 'CM') groupe = national.replace(/(\d)(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
+  else if (national.length === 9) groupe = national.replace(/(\d{2})(\d{3})(\d{2})(\d{2})/, '$1 $2 $3 $4');
+  else groupe = national.replace(/(\d{2})(?=\d)/g, '$1 ');
   return `+${trouve[1]} ${groupe}`;
 }
 

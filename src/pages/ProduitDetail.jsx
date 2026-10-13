@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { BadgeCheck, Check, ChevronRight, Copy, Factory, MapPin, MessageCircle, Share2 } from 'lucide-react';
-import { recupererProduitPublic, recupererAutresProduitsFournisseur, rechercherProduits } from '../api/fournisseurs.js';
+import { recupererProduitPublic, recupererAutresProduitsFournisseur, rechercherCatalogue } from '../api/fournisseurs.js';
 import ModaleContact from '../components/ModaleContact.jsx';
 import IndicateursConfiance from '../components/IndicateursConfiance.jsx';
 import ImageOptimisee from '../components/ImageOptimisee.jsx';
@@ -43,8 +43,8 @@ export default function ProduitDetail() {
       // Deux rangées de suggestions : du même fournisseur, puis dans la même catégorie. Elles ne bloquent jamais la fiche.
       recupererAutresProduitsFournisseur(p.grossiste.id, p.id).then((l) => { if (!annule) setMemeFournisseur(l); });
       if (p.categorie) {
-        rechercherProduits({ categorie: p.categorie }).then((l) => {
-          if (!annule) setSimilaires(l.filter((x) => x.id !== p.id).slice(0, 10));
+        rechercherCatalogue({ categorie: p.categorie, limite: 12 }).then(({ produits }) => {
+          if (!annule) setSimilaires(produits.filter((x) => x.id !== p.id).slice(0, 10));
         }).catch(() => {});
       }
     }).catch(() => { if (!annule) { setProduit(null); setPanne(true); } });

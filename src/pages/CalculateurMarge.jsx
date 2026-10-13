@@ -70,13 +70,13 @@ export default function CalculateurMarge() {
                 <span className="etiquette">Prix de vente conseillé</span>
                 <div className="calc-prix">{f(r.prix)} <small>F CFA / pièce</small></div>
                 <dl className="calc-details">
-                  <div><dt>Coût de revient d'une pièce</dt><dd>{f(r.cout)} F</dd></div>
-                  <div><dt>Bénéfice par pièce</dt><dd>{f(r.beneficeUnitaire)} F</dd></div>
+                  <div><dt>Coût de revient d'une pièce</dt><dd>{f(r.cout)} F CFA</dd></div>
+                  <div><dt>Bénéfice par pièce</dt><dd>{f(r.beneficeUnitaire)} F CFA</dd></div>
                   <div><dt>Marge sur le prix de vente</dt><dd>{r.margeSurVente.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} %</dd></div>
-                  {r.quantite > 1 && <div><dt>Bénéfice sur {r.quantite} pièces</dt><dd><strong>{f(r.beneficeTotal)} F</strong></dd></div>}
-                  {r.quantite > 1 && <div><dt>Chiffre d'affaires sur {r.quantite} pièces</dt><dd>{f(r.chiffreAffaires)} F</dd></div>}
+                  {r.quantite > 1 && <div><dt>Bénéfice sur {r.quantite} pièces</dt><dd><strong>{f(r.beneficeTotal)} F CFA</strong></dd></div>}
+                  {r.quantite > 1 && <div><dt>Chiffre d'affaires sur {r.quantite} pièces</dt><dd>{f(r.chiffreAffaires)} F CFA</dd></div>}
                 </dl>
-                <p className="esp-aide" style={{ margin: '0.8rem 0 0' }}>Prix arrondi aux 25 F supérieurs.</p>
+                <p className="esp-aide" style={{ margin: '0.8rem 0 0' }}>Prix arrondi aux 25 F CFA supérieurs.</p>
               </>
             )}
           </div>

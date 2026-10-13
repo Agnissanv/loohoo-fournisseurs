@@ -19,7 +19,7 @@ export async function recupererFiltres() {
 
 // Profil complet d'un grossiste publié (photos + catalogue). Renvoie null s'il n'existe pas ou n'est pas publié.
 export async function recupererGrossiste(id) {
-  const produits = 'produit(id, nom, description, tags, categorie, poids_grammes, prix_gros_fcfa, moq, unite, photo_url, date_ajout, statut, actif)';
+  const produits = 'produit(id, nom, description, tags, categorie, poids_grammes, prix_gros_fcfa, moq, unite, photo_url, date_ajout, statut, actif, paliers)';
   const base = `id, nom, categorie, ville, commune, pays, origine, est_fabricant, badge_verifie, statut, horaires_ouverture, grossiste_photo(url, ordre), ${produits}`;
   const requete = (colonnes) => supabase.from('grossiste').select(colonnes).eq('id', id).maybeSingle();
   // logo, bannière et date d'inscription : lus d'abord, avec repli si les droits de la base ne les exposent pas
@@ -444,7 +444,7 @@ export async function recupererProduitPublic(id) {
 export async function recupererAutresProduitsFournisseur(grossisteId, sauf) {
   const { data, error } = await supabase
     .from('produit')
-    .select('id, nom, photo_url, prix_gros_fcfa, moq, unite')
+    .select('id, nom, photo_url, prix_gros_fcfa, moq, unite, paliers, date_ajout')
     .eq('grossiste_id', grossisteId).eq('statut', 'publie').eq('actif', true)
     .neq('id', sauf).limit(10);
   if (error) return [];
@@ -703,4 +703,34 @@ export async function recupererFormulesAbonnement() {
   const { data, error } = await supabase.rpc('formules_abonnement');
   if (error || !data) return null;
   return data;
+}
+
+// Liens « Rejoignez la communauté » réglés par l'équipe (migration 0025). {} si indisponibles.
+export async function recupererLiensCommunaute() {
+  const { data, error } = await supabase.rpc('liens_communaute');
+  if (error || !data) return {};
+  return data;
+}
+
+// ---- Recherche du catalogue (migration 0026) ----
+// Renvoie { produits, total }. Les filtres vides sont ignorés.
+export async function rechercherCatalogue({ q, categorie, pays, ville, commune, prixMax, qteMax, verifies, tri = 'pertinence', limite = 24, decalage = 0 } = {}) {
+  const { data, error } = await supabase.rpc('rechercher_catalogue', {
+    p_q: q || null, p_categorie: categorie || null, p_pays: pays || null, p_ville: ville || null, p_commune: commune || null,
+    p_prix_max: prixMax || null, p_qte_max: qteMax || null, p_verifies: !!verifies, p_tri: tri, p_limite: limite, p_decalage: decalage,
+  });
+  if (error) {
+    // Migration 0026 pas encore exécutée : on se replie sur l'ancienne recherche, sans les nouveaux filtres
+    const anciens = await rechercherProduits({ q, categorie, ville, commune });
+    const debut = anciens.slice(decalage, decalage + limite);
+    return { produits: debut, total: anciens.length };
+  }
+  return { produits: data || [], total: data?.length ? Number(data[0].total) : 0 };
+}
+
+// Catégories qui ont des produits publiés, avec leur nombre (« Autre » en dernier)
+export async function recupererCategoriesCatalogue() {
+  const { data, error } = await supabase.rpc('categories_catalogue');
+  if (error) return recupererFiltres().then((f) => f.categories.map((c) => ({ categorie: c, nombre: '' }))).catch(() => []);
+  return data || [];
 }

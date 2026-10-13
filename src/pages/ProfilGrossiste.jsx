@@ -211,7 +211,7 @@ export default function ProfilGrossiste({ idForce }) {
               ) : (
                 <div className="loo-fournisseurs-grille">
                   {visibles.map((p) => (
-                    <CarteProduit key={p.id} p={{ ...p, grossiste_nom: grossiste.nom, badge_verifie: grossiste.badge_verifie }} />
+                    <CarteProduit key={p.id} p={p} sansFournisseur />
                   ))}
                 </div>
               )}

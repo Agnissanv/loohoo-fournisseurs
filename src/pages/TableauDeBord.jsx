@@ -161,7 +161,7 @@ export default function TableauDeBord() {
       <EnTeteFournisseur profil={profil} avis={avis} indicateurs={indicateurs} completude={completude} />
 
       <div className="esp-kpis" style={{ margin: '1rem 0 0' }}>
-        <Kpi etiquette="Ventes (30 j)" valeur={`${ventes30.toLocaleString('fr-FR')} F`} detail={variationVentes} />
+        <Kpi etiquette="Ventes (30 j)" valeur={`${ventes30.toLocaleString('fr-FR')} F CFA`} detail={variationVentes} />
         <Kpi etiquette="Contacts reçus (30 j)" valeur={stats?.contacts_30_jours ?? '–'} />
         <Kpi etiquette="Vues du profil" valeur={stats?.vues_profil ?? '–'} />
         <Kpi etiquette="Taux de conversion" valeur={conversion == null ? '–' : `${conversion} %`} />

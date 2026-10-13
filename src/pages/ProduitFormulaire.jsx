@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { EditeurPaliers, normaliserPaliers } from '../components/PaliersPrix.jsx';
+import ConsigneImages from '../components/ConsigneImages.jsx';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Image as IconeImage, Video, X } from 'lucide-react';
 import SelecteurPhoto from '../components/SelecteurPhoto.jsx';
@@ -280,6 +281,7 @@ export default function ProduitFormulaire() {
 
           <div className="esp-carte">
             <h2 className="esp-carte-titre"><span>Images du produit</span><span style={{ fontSize: '0.8rem', fontWeight: 500, opacity: 0.6 }}>{photos.length}/{MAX_PHOTOS}</span></h2>
+            <ConsigneImages />
             <div
               className={`esp-zone-depot${survol ? ' esp-zone-depot-survol' : ''}`} role="button" tabIndex={0}
               onClick={() => champFichier.current?.click()}

@@ -82,7 +82,7 @@ export default function EspaceAcheteur() {
 
         <div className="esp-kpis" style={{ margin: '1rem 0 0' }}>
           <Stat etiquette="Fournisseurs contactés" valeur={contactes} />
-          <Stat etiquette="Achats confirmés" valeur={`${f(montantAchats)} F`} />
+          <Stat etiquette="Achats confirmés" valeur={`${f(montantAchats)} F CFA`} />
           <Stat etiquette="Fournisseurs suivis" valeur={favoris.length} />
           <Stat etiquette="Messages non lus" valeur={nonLus} />
         </div>
@@ -107,7 +107,7 @@ export default function EspaceAcheteur() {
                   <div style={{ fontWeight: 600, fontSize: '0.92rem' }}>{g.badge_verifie && <BadgeCheck size={13} aria-label="Vérifié" />} {g.nom}</div>
                   <div style={{ fontSize: '0.78rem', opacity: 0.65 }}>{g.ville}{g.categorie ? ` · ${g.categorie}` : ''}</div>
                 </div>
-                {g.prix_min != null && <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>dès {f(g.prix_min)} F</span>}
+                {g.prix_min != null && <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>dès {f(g.prix_min)} F CFA</span>}
               </Link>
             ))}
           </div>

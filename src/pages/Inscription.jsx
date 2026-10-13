@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { inscrireFournisseur } from '../api/fournisseurs.js';
 import { normaliserTelephone, telephoneComplet } from '../utils/telephone.js';
 import { usePays } from '../utils/usePays.js';
+import { useLieux } from '../utils/useLieux.js';
 import { drapeau, FORMATS } from '../utils/pays.js';
 import ChampTelephone from '../components/ChampTelephone.jsx';
 import SelectCategorie from '../components/SelectCategorie.jsx';
@@ -15,6 +16,7 @@ import RedirigerSiConnecte from '../components/RedirigerSiConnecte.jsx';
 export default function Inscription() {
   const navigate = useNavigate();
   const { tous, parCode } = usePays();
+  const { villes, communes } = useLieux();
   const [etape, setEtape] = useState(1);
   const [champs, setChamps] = useState({
     nom: '', categorie: '', pays: 'CI', ville: '', commune: '', origine: 'local', estFabricant: false,
@@ -93,19 +95,24 @@ export default function Inscription() {
             </div>
             <div className="acces-champ-bloc">
               <label htmlFor="pays">Pays</label>
-              <select id="pays" className="champ" value={champs.pays} onChange={(e) => setChamps((c) => ({ ...c, pays: e.target.value, ville: '' }))}>
+              <select id="pays" className="champ" value={champs.pays} onChange={(e) => setChamps((c) => ({ ...c, pays: e.target.value, ville: '', commune: '' }))}>
                 {tous.map((p) => <option key={p.code} value={p.code} disabled={!p.actif}>{drapeau(p.code)} {p.nom}{p.actif ? '' : ' (bientôt)'}</option>)}
               </select>
             </div>
             <div style={{ display: 'flex', gap: '0.7rem' }}>
               <div className="acces-champ-bloc" style={{ flex: 1 }}>
                 <label htmlFor="ville">Ville</label>
-                <input id="ville" className="champ" required list="villes-pays" placeholder={FORMATS[champs.pays]?.villes[0] || 'Ville'} value={champs.ville} onChange={maj('ville')} />
-                <datalist id="villes-pays">{(FORMATS[champs.pays]?.villes || []).map((v) => <option key={v} value={v} />)}</datalist>
+                <select id="ville" className="champ" required value={champs.ville} onChange={(e) => setChamps((c) => ({ ...c, ville: e.target.value, commune: '' }))}>
+                  <option value="">Choisir</option>
+                  {villes(champs.pays).map((v) => <option key={v} value={v}>{v}</option>)}
+                </select>
               </div>
               <div className="acces-champ-bloc" style={{ flex: 1 }}>
                 <label htmlFor="commune">Commune ou quartier <span style={{ fontWeight: 400, opacity: 0.6 }}>(facultatif)</span></label>
-                <input id="commune" className="champ" value={champs.commune} onChange={maj('commune')} />
+                <select id="commune" className="champ" value={champs.commune} onChange={maj('commune')} disabled={communes(champs.pays, champs.ville).length === 0}>
+                  <option value="">{communes(champs.pays, champs.ville).length ? 'Choisir' : '—'}</option>
+                  {communes(champs.pays, champs.ville).map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
               </div>
             </div>
             <div className="acces-champ-bloc">

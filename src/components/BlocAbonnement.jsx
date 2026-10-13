@@ -43,8 +43,8 @@ export default function BlocAbonnement({ abonnement }) {
                 return (
                   <tr key={n.niveau}>
                     <th scope="row">Niveau {n.niveau}</th>
-                    <td>{f(n.mensuel)} F</td>
-                    <td>{f(n.annuel)} F{economie > 0 && <span className="formules-eco">{f(economie)} F d'économie</span>}</td>
+                    <td>{f(n.mensuel)} F CFA</td>
+                    <td>{f(n.annuel)} F CFA{economie > 0 && <span className="formules-eco">{f(economie)} F CFA d'économie</span>}</td>
                   </tr>
                 );
               })}

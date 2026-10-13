@@ -1,47 +1,53 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { MessageSquare, Search, ShieldCheck, Truck } from 'lucide-react';
-import { rechercherProduits, recupererFiltres, capturerLead, suivreSession, signalerRechercheVide } from '../api/fournisseurs.js';
+import { X } from 'lucide-react';
+import { rechercherCatalogue, recupererCategoriesCatalogue, capturerLead, suivreSession, signalerRechercheVide } from '../api/fournisseurs.js';
 import CarteProduit from '../components/CarteProduit.jsx';
-import HeroCarrousel from '../components/HeroCarrousel.jsx';
-import { ChiffresPublics, FournisseursALaUne, VerifieExplication, RejoindreReseau } from '../components/AccueilPublic.jsx';
+import RangeeProduits from '../components/RangeeProduits.jsx';
+import PanneauFiltres from '../components/PanneauFiltres.jsx';
+import { FournisseursALaUne, VerifieExplication, ChiffresEtArguments, RejoindreReseau } from '../components/AccueilPublic.jsx';
 import CaptureSortie from '../components/CaptureSortie.jsx';
 import IconeCategorie from '../components/IconeCategorie.jsx';
 import { noterPageInterne } from '../utils/suiviVisites.js';
 import { usePays } from '../utils/usePays.js';
 import { drapeau } from '../utils/pays.js';
+import { prixCFA } from '../utils/prix.js';
+import { useLangue } from '../i18n/Langue.jsx';
 import { useTitre } from '../utils/useTitre.js';
 
 const PAR_PAGE = 24;
 const TRIS = [
   ['pertinence', 'Pertinence'],
+  ['nouveautes', 'Nouveautés'],
   ['prix_asc', 'Prix croissant'],
   ['prix_desc', 'Prix décroissant'],
-  ['moq_asc', 'Plus petite quantité minimale'],
+  ['moq_asc', 'Plus petit minimum'],
 ];
 
+// Accueil public « le produit d'abord » (retours du client, 13 oct.) : accroche compacte, catégories, produits tout de suite,
+// puis fournisseurs à la une, comment ça marche, « vérifié », chiffres. Tous les filtres passent par le bouton « Filtres ».
 export default function Annuaire() {
-  // Tout est dans l'adresse (?q=pagne&categorie=…) : une recherche se partage par lien
+  const { t } = useLangue();
   const [params, setParams] = useSearchParams();
   const q = params.get('q') || '';
   const categorie = params.get('categorie') || '';
   const pays = params.get('pays') || '';
   const ville = params.get('ville') || '';
   const commune = params.get('commune') || '';
-  const tri = params.get('tri') || 'pertinence';
+  const tri = params.get('tri') || (q ? 'pertinence' : 'nouveautes');
   const verifies = params.get('verifies') === '1';
   const prixMax = Number(params.get('prix_max')) || 0;
-  const moqMax = Number(params.get('moq_max')) || 0;
+  const qteMax = Number(params.get('moq_max')) || 0;
+  const rechercheActive = !!(q || categorie || pays || ville || commune || prixMax || qteMax || verifies);
 
-  const [saisie, setSaisie] = useState(q);
-  const [filtres, setFiltres] = useState({ categories: [], villes: [], communes: [], paysParGrossiste: {}, villesParPays: {} });
-  const { tous: listePays } = usePays();
-  const [resultats, setResultats] = useState(null);
+  const { parCode } = usePays();
+  const [categories, setCategories] = useState([]);
+  const [rangees, setRangees] = useState(null);
+  const [resultats, setResultats] = useState(null); // { produits, total }
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(false);
-  const [affiches, setAffiches] = useState(PAR_PAGE);
+  const [filtresOuverts, setFiltresOuverts] = useState(false);
 
-  const rechercheActive = !!(q || categorie || pays || ville || commune || prixMax || moqMax);
   useTitre(categorie ? `${categorie} en gros` : q ? `« ${q} » en gros` : null, categorie || q ? `Fournisseurs vérifiés et prix de gros : ${categorie || q}.` : null);
 
   const changer = (cles) => setParams((p) => {
@@ -50,200 +56,202 @@ export default function Annuaire() {
     return suivant;
   }, { replace: true });
 
-  useEffect(() => { recupererFiltres().then(setFiltres).catch(() => {}); noterPageInterne(); }, []);
+  useEffect(() => { recupererCategoriesCatalogue().then(setCategories); noterPageInterne(); }, []);
 
-  // La saisie met à jour l'adresse après une courte pause (pas de requête à chaque lettre)
+  // Le bouton « Filtres » de l'en-tête arrive ici avec ?filtres=1 : on ouvre le panneau
   useEffect(() => {
-    if (saisie === q) return undefined;
-    const t = setTimeout(() => changer({ q: saisie.trim() }), 350);
-    return () => clearTimeout(t);
+    if (params.get('filtres') === '1') { setFiltresOuverts(true); changer({ filtres: '' }); }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [saisie]);
-  useEffect(() => { setSaisie(q); }, [q]);
+  }, [params]);
 
+  // Rangées de l'accueil : les nouveautés, puis une rangée par catégorie bien fournie
+  useEffect(() => {
+    if (rechercheActive) return;
+    rechercherCatalogue({ tri: 'nouveautes', limite: 48 }).then(({ produits }) => {
+      const parCategorie = {};
+      produits.forEach((p) => { if (p.categorie) (parCategorie[p.categorie] ||= []).push(p); });
+      const lignes = [{ titre: t('Nouveautés'), produits: produits.slice(0, 12) }];
+      Object.entries(parCategorie).filter(([c, l]) => l.length >= 3 && c !== 'Autre').slice(0, 3)
+        .forEach(([c, l]) => lignes.push({ titre: t(c), categorie: c, produits: l.slice(0, 12) }));
+      setRangees(produits.length >= 4 ? lignes : []);
+    }).catch(() => setRangees([]));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rechercheActive]);
+
+  // La grille complète (ou les résultats d'une recherche)
   useEffect(() => {
     let annule = false;
     setChargement(true);
     setErreur(false);
-    setAffiches(PAR_PAGE);
-    rechercherProduits({ q, categorie, ville, commune })
-      .then((liste) => {
+    rechercherCatalogue({ q, categorie, pays, ville, commune, prixMax, qteMax, verifies, tri, limite: PAR_PAGE })
+      .then((r) => {
         if (annule) return;
-        setResultats(liste);
+        setResultats(r);
         setChargement(false);
-        if (liste.length === 0 && (q || categorie || ville || commune)) {
+        if (r.total === 0 && (q || categorie || ville || commune)) {
           const cle = `loo-vide:${q}|${categorie}|${ville}|${commune}`;
-          try { if (sessionStorage.getItem(cle)) return; sessionStorage.setItem(cle, '1'); } catch { /* navigation privée : on signale quand même */ }
+          try { if (sessionStorage.getItem(cle)) return; sessionStorage.setItem(cle, '1'); } catch { /* navigation privée */ }
           signalerRechercheVide({ q, categorie, ville: ville || commune });
         }
       })
       .catch(() => { if (!annule) { setErreur(true); setChargement(false); } });
     return () => { annule = true; };
-  }, [q, categorie, ville, commune]);
+  }, [q, categorie, pays, ville, commune, prixMax, qteMax, verifies, tri]);
 
-  const liste = useMemo(() => {
-    if (!resultats) return [];
-    let l = verifies ? resultats.filter((p) => p.badge_verifie) : resultats;
-    if (pays) l = l.filter((p) => (filtres.paysParGrossiste[p.grossiste_id] || 'CI') === pays);
-    if (prixMax) l = l.filter((p) => p.prix_gros_fcfa <= prixMax);
-    if (moqMax) l = l.filter((p) => (p.moq || 1) <= moqMax);
-    if (tri === 'prix_asc') l = [...l].sort((a, b) => a.prix_gros_fcfa - b.prix_gros_fcfa);
-    if (tri === 'prix_desc') l = [...l].sort((a, b) => b.prix_gros_fcfa - a.prix_gros_fcfa);
-    if (tri === 'moq_asc') l = [...l].sort((a, b) => (a.moq || 1) - (b.moq || 1));
-    return l;
-  }, [resultats, verifies, tri, prixMax, moqMax, pays, filtres.paysParGrossiste]);
+  async function voirPlus() {
+    const suite = await rechercherCatalogue({ q, categorie, pays, ville, commune, prixMax, qteMax, verifies, tri, limite: PAR_PAGE, decalage: resultats.produits.length });
+    setResultats((r) => ({ total: suite.total || r.total, produits: [...r.produits, ...suite.produits] }));
+  }
 
-  const nb = liste.length;
+  const valeursFiltres = { pays, ville, commune, categorie, prixMax, qteMax, verifies };
+  // Les filtres actifs, en petites étiquettes qu'on retire d'un clic
+  const pastilles = useMemo(() => [
+    q && { cle: 'q', texte: `« ${q} »` },
+    categorie && { cle: 'categorie', texte: t(categorie) },
+    pays && { cle: 'pays', texte: `${drapeau(pays)} ${parCode[pays]?.nom || pays}`, aussi: { ville: '', commune: '' } },
+    ville && { cle: 'ville', texte: ville, aussi: { commune: '' } },
+    commune && { cle: 'commune', texte: commune },
+    prixMax && { cle: 'prix_max', texte: `≤ ${prixCFA(prixMax)}` },
+    qteMax && { cle: 'moq_max', texte: t('Minimum ≤ {n}', { n: qteMax }) },
+    verifies && { cle: 'verifies', texte: t('Vérifiés') },
+  ].filter(Boolean), [q, categorie, pays, ville, commune, prixMax, qteMax, verifies, parCode, t]);
+
+  const produits = resultats?.produits || [];
+  const total = resultats?.total || 0;
 
   return (
     <>
-      <HeroCarrousel>
-        <div>
-          <span className="badge" style={styles.badgeReseau}>🌍 Le plus grand réseau de fournisseurs vérifiés d'Afrique</span>
-          <h1 style={styles.titre}>Trouvez un fournisseur vérifié. Simple, rapide, gratuit.</h1>
-          <p style={styles.sousTitre}>La marketplace des fournisseurs en Afrique.</p>
-
-          <form style={styles.recherche} onSubmit={(e) => { e.preventDefault(); changer({ q: saisie.trim() }); }} role="search">
-            <input
-              className="champ" style={{ flex: '1 1 320px' }} type="search" value={saisie} aria-label="Rechercher un produit"
-              onChange={(e) => setSaisie(e.target.value)}
-              placeholder="Que cherchez-vous ? (pagne, sac…)"
-            />
-            {filtres.categories.length > 0 && (
-              <select className="champ loo-recherche-sel" style={styles.select} value={categorie} onChange={(e) => changer({ categorie: e.target.value })} aria-label="Catégorie">
-                <option value="">Toutes les catégories</option>
-                {filtres.categories.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
-            )}
-            <select className="champ loo-recherche-sel" style={styles.select} value={pays} onChange={(e) => changer({ pays: e.target.value, ville: '', commune: '' })} aria-label="Pays">
-              <option value="">Tous les pays</option>
-              {listePays.map((p) => <option key={p.code} value={p.code} disabled={!p.actif}>{drapeau(p.code)} {p.nom}{p.actif ? '' : ' (bientôt)'}</option>)}
-            </select>
-            <select className="champ loo-recherche-sel" style={styles.select} value={ville} onChange={(e) => changer({ ville: e.target.value, commune: '' })} aria-label="Ville">
-              <option value="">Toutes les villes</option>
-              {(pays ? filtres.villesParPays[pays] || [] : filtres.villes).map((v) => <option key={v} value={v}>{v}</option>)}
-            </select>
-            {filtres.communes.length > 0 && (
-              <select className="champ loo-recherche-sel" style={styles.select} value={commune} onChange={(e) => changer({ commune: e.target.value })} aria-label="Commune">
-                <option value="">Toutes les communes</option>
-                {filtres.communes.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
-            )}
-            <button type="submit" className="btn btn-clair" style={{ justifyContent: 'center' }}><Search size={17} /> Rechercher</button>
-          </form>
-        </div>
-      </HeroCarrousel>
-
-      {!rechercheActive && <ChiffresPublics />}
-
-      {/* Ce qui rassure l'acheteur, en trois phrases */}
-      <section style={{ background: 'var(--loo-blanc)', borderBottom: '1px solid var(--loo-papier-ombre)' }}>
-        <div className="container acc-confiance" style={{ padding: '1.2rem 1.5rem' }}>
-          <div><ShieldCheck size={20} /><span><strong>Fournisseurs contrôlés.</strong> Notre équipe vérifie chaque profil avant publication.</span></div>
-          <div><MessageSquare size={20} /><span><strong>Devis en un message.</strong> Dites la quantité et la ville, le fournisseur vous répond.</span></div>
-          <div><Truck size={20} /><span><strong>Prix de gros affichés.</strong> Avec la quantité minimale, avant même de contacter.</span></div>
-        </div>
-      </section>
-
-      {/* Parcourir par catégorie (uniquement celles où il existe des fournisseurs) */}
-      {filtres.categories.length > 0 && (
-        <section className="section" style={{ paddingTop: '2.2rem', paddingBottom: '0.5rem' }}>
+      {!rechercheActive && (
+        <section className="accroche">
           <div className="container">
-            <h2 style={{ fontSize: '1.3rem', marginBottom: '1rem' }}>Parcourir par catégorie</h2>
-            <div className="acc-categories">
-              {filtres.categories.map((c) => (
-                <button key={c} type="button" className={`acc-categorie${c === categorie ? ' acc-categorie-active' : ''}`} onClick={() => changer({ categorie: c === categorie ? '' : c })} aria-pressed={c === categorie}>
-                  <span className="pastille-icone"><IconeCategorie nom={c} /></span>{c}
-                </button>
-              ))}
-            </div>
+            <span className="accroche-badge">🌍 {t('Construisons ensemble le plus grand réseau de fournisseurs fiables en Afrique')}</span>
+            <h1>{t('Trouvez un fournisseur vérifié. Simple, rapide, gratuit.')}</h1>
+            <p className="accroche-confiance">{t('Fournisseurs vérifiés')} · {t('Prix de gros affichés')}</p>
           </div>
         </section>
       )}
 
-      <section className="section" style={{ paddingTop: '2rem' }}>
-        <div className="container">
-          {erreur && (
-            <div className="carte" style={{ padding: '1.4rem', textAlign: 'center' }}>
-              <p style={{ margin: '0 0 0.8rem' }}>Impossible de charger les produits pour le moment.</p>
-              <button type="button" className="btn btn-primary" onClick={() => changer({})}>Réessayer</button>
-            </div>
-          )}
-          {!erreur && resultats === null && <SqueletteGrille />}
-          {!erreur && resultats !== null && (
-            <>
-              <div className="acc-barre-outils">
-                <p className="etiquette" style={{ margin: 0 }}>
-                  {nb} produit{nb > 1 ? 's' : ''}
-                  {categorie ? ` · ${categorie}` : ''}{q ? ` · « ${q} »` : ''}
-                </p>
-                <div style={{ display: 'flex', gap: '0.9rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.88rem' }}>
-                    <input type="checkbox" checked={verifies} onChange={(e) => changer({ verifies: e.target.checked ? '1' : '' })} /> Fournisseurs vérifiés seulement
-                  </label>
-                  <label className="acc-filtre-nombre">Prix max
-                    <input className="champ" type="number" inputMode="numeric" min="0" step="500" placeholder="F CFA" value={prixMax || ''} onChange={(e) => changer({ prix_max: e.target.value })} />
-                  </label>
-                  <label className="acc-filtre-nombre">Quantité min. max
-                    <input className="champ" type="number" inputMode="numeric" min="0" placeholder="unités" value={moqMax || ''} onChange={(e) => changer({ moq_max: e.target.value })} />
-                  </label>
-                  <select className="champ" style={{ width: 'auto', padding: '0.5em 0.8em', fontSize: '0.88rem' }} value={tri} onChange={(e) => changer({ tri: e.target.value === 'pertinence' ? '' : e.target.value })} aria-label="Trier par">
-                    {TRIS.map(([v, t]) => <option key={v} value={v}>{t}</option>)}
-                  </select>
-                  {rechercheActive && (
-                    <button type="button" className="btn btn-outline" style={{ padding: '0.4em 0.9em', fontSize: '0.82rem' }} onClick={() => setParams({}, { replace: true })}>Effacer la recherche</button>
-                  )}
-                </div>
-              </div>
+      {categories.length > 0 && (
+        <nav className="puces-categories" aria-label={t('Catégories')}>
+          <div className="container puces-piste">
+            <button type="button" className={`puce${!categorie ? ' puce-active' : ''}`} onClick={() => changer({ categorie: '' })} aria-pressed={!categorie}>{t('Tout')}</button>
+            {categories.map((c) => (
+              <button key={c.categorie} type="button" className={`puce${c.categorie === categorie ? ' puce-active' : ''}`}
+                onClick={() => changer({ categorie: c.categorie === categorie ? '' : c.categorie })} aria-pressed={c.categorie === categorie}>
+                <IconeCategorie nom={c.categorie} size={16} /> {t(c.categorie)}
+              </button>
+            ))}
+          </div>
+        </nav>
+      )}
 
-              {nb === 0 ? (
-                <AucunResultat recherche={q || categorie} catalogueVide={!rechercheActive && !verifies} />
+      {!rechercheActive && rangees?.length > 0 && (
+        <div className="container" style={{ paddingTop: '1.2rem' }}>
+          {rangees.map((r) => (
+            <RangeeProduits key={r.titre} titre={r.titre} produits={r.produits}
+              action={r.categorie ? <button type="button" className="rangee-tout" onClick={() => changer({ categorie: r.categorie })}>{t('Tout voir')}</button> : null} />
+          ))}
+        </div>
+      )}
+
+      <section className="section resultats" style={{ paddingTop: '1.4rem' }}>
+        <div className={`container${rechercheActive ? ' resultats-avec-colonne' : ''}`}>
+          {rechercheActive && (
+            <aside className="colonne-filtres" aria-label={t('Filtres')}>
+              <h2>{t('Filtres')}</h2>
+              <PanneauFiltres valeurs={valeursFiltres} changer={changer} categories={categories} />
+            </aside>
+          )}
+
+          <div style={{ minWidth: 0 }}>
+            <div className="acc-barre-outils">
+              <h2 className="accueil-titre" style={{ margin: 0 }}>
+                {rechercheActive ? t('{n} produits', { n: total }) : t('Tous les produits')}
+              </h2>
+              <select className="champ tri" value={tri} onChange={(e) => changer({ tri: e.target.value })} aria-label={t('Trier par')}>
+                {TRIS.map(([v, libelle]) => <option key={v} value={v}>{t(libelle)}</option>)}
+              </select>
+            </div>
+
+            {pastilles.length > 0 && (
+              <div className="pastilles-filtres">
+                {pastilles.map((f) => (
+                  <button key={f.cle} type="button" className="pastille-filtre" onClick={() => changer({ [f.cle]: '', ...(f.aussi || {}) })} aria-label={t('Retirer le filtre {f}', { f: f.texte })}>
+                    {f.texte} <X size={13} aria-hidden="true" />
+                  </button>
+                ))}
+                <button type="button" className="pastille-effacer" onClick={() => setParams({}, { replace: true })}>{t('Tout effacer')}</button>
+              </div>
+            )}
+
+            {erreur && (
+              <div className="carte" style={{ padding: '1.4rem', textAlign: 'center' }}>
+                <p style={{ margin: '0 0 0.8rem' }}>{t('Impossible de charger les produits pour le moment.')}</p>
+                <button type="button" className="btn btn-primary" onClick={() => changer({})}>{t('Réessayer')}</button>
+              </div>
+            )}
+            {!erreur && resultats === null && <SqueletteGrille />}
+            {!erreur && resultats !== null && (
+              total === 0 ? (
+                <AucunResultat recherche={q || categorie} catalogueVide={!rechercheActive} />
               ) : (
                 <>
                   <div className="loo-fournisseurs-grille" style={{ opacity: chargement ? 0.55 : 1 }}>
-                    {liste.slice(0, affiches).map((p) => <CarteProduit key={p.id} p={p} />)}
+                    {produits.map((p) => <CarteProduit key={p.id} p={p} />)}
                   </div>
-                  {nb > affiches && (
+                  {total > produits.length && (
                     <div style={{ textAlign: 'center', marginTop: '1.6rem' }}>
-                      <button type="button" className="btn btn-outline" onClick={() => setAffiches((n) => n + PAR_PAGE)}>
-                        Voir plus de produits ({nb - affiches} restants)
-                      </button>
+                      <button type="button" className="btn btn-outline" onClick={voirPlus}>{t('Voir plus de produits ({n} restants)', { n: total - produits.length })}</button>
                     </div>
                   )}
                 </>
-              )}
-            </>
-          )}
+              )
+            )}
+          </div>
         </div>
       </section>
-
-      {!rechercheActive && (
-        <section className="section" style={{ paddingTop: 0 }}>
-          <div className="container">
-            <h2 style={{ fontSize: '1.3rem', marginBottom: '1rem' }}>Comment ça marche</h2>
-            <div className="acc-etapes">
-              {[
-                ['1', 'Cherchez un produit', 'Tapez ce que vous voulez acheter en gros, filtrez par catégorie ou par ville.'],
-                ['2', 'Comparez et demandez un devis', 'Badge, avis, ancienneté, prix de gros et quantité minimale sont affichés. Indiquez la quantité, la ville de livraison et le délai.'],
-                ['3', 'Discutez directement', 'Échangez dans la messagerie LOOHOO, comparez les offres, puis concluez avec le fournisseur de votre choix.'],
-              ].map(([n, titre, texte]) => (
-                <div key={n} className="carte" style={{ padding: '1.2rem' }}>
-                  <span className="etiquette">Étape {n}</span>
-                  <h3 style={{ fontSize: '1.05rem', margin: '0.4rem 0' }}>{titre}</h3>
-                  <p style={{ margin: 0, fontSize: '0.9rem', opacity: 0.8, lineHeight: 1.55 }}>{texte}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
 
       {!rechercheActive && (
         <>
           <FournisseursALaUne />
+          <section className="section" style={{ paddingTop: '1rem' }}>
+            <div className="container">
+              <h2 className="accueil-titre">{t('Comment ça marche')}</h2>
+              <div className="acc-etapes">
+                {[
+                  ['1', 'Cherchez un produit', 'Tapez ce que vous voulez acheter en gros, ou choisissez une catégorie.'],
+                  ['2', 'Comparez et demandez un devis', 'Badge, avis, ancienneté, prix de gros et quantité minimale sont affichés. Indiquez la quantité, la ville de livraison et le délai.'],
+                  ['3', 'Discutez dans la messagerie', 'Échangez dans la messagerie LOOHOO, comparez les offres, puis concluez avec le fournisseur de votre choix.'],
+                ].map(([n, titre, texte]) => (
+                  <div key={n} className="carte" style={{ padding: '1.2rem' }}>
+                    <span className="etiquette">{t('Étape {n}', { n })}</span>
+                    <h3 style={{ fontSize: '1.05rem', margin: '0.4rem 0' }}>{t(titre)}</h3>
+                    <p style={{ margin: 0, fontSize: '0.9rem', opacity: 0.8, lineHeight: 1.55 }}>{t(texte)}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
           <VerifieExplication />
+          <ChiffresEtArguments />
           <RejoindreReseau />
         </>
+      )}
+
+      {filtresOuverts && (
+        <div className="modale-fond" onClick={() => setFiltresOuverts(false)}>
+          <div className="modale modale-filtres" role="dialog" aria-modal="true" aria-label={t('Filtres')} onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="modale-fermer" onClick={() => setFiltresOuverts(false)} aria-label={t('Fermer')}><X size={20} /></button>
+            <h2 style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>{t('Filtres')}</h2>
+            <PanneauFiltres valeurs={valeursFiltres} changer={changer} categories={categories} />
+            <div style={{ display: 'flex', gap: '0.6rem', marginTop: '1.2rem' }}>
+              <button type="button" className="btn btn-outline" onClick={() => setParams(q ? { q } : {}, { replace: true })}>{t('Effacer')}</button>
+              <button type="button" className="btn btn-primary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setFiltresOuverts(false)}>
+                {chargement ? t('Voir les produits') : t('Voir les {n} produits', { n: total })}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
       <CaptureSortie recherche={q} />
     </>
@@ -314,10 +322,3 @@ function SqueletteGrille() {
   );
 }
 
-const styles = {
-  badgeReseau: { background: 'rgba(255,248,239,0.2)', color: 'var(--loo-papier)', textTransform: 'none', letterSpacing: 0, fontFamily: 'inherit', fontSize: '0.82rem' },
-  titre: { fontSize: 'clamp(2.2rem, 5vw, 3.8rem)', lineHeight: 1.05, fontWeight: 600, letterSpacing: '-0.025em', margin: '1rem 0 0.8rem', color: '#fff', maxWidth: '18ch' },
-  sousTitre: { maxWidth: '520px', opacity: 0.92, margin: '0 0 1.8rem', fontSize: '1.05rem' },
-  recherche: { display: 'flex', gap: '0.7rem', flexWrap: 'wrap' },
-  select: { flex: '0 1 180px', minWidth: 0 },
-};

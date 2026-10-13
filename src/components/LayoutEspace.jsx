@@ -6,6 +6,7 @@ import {
   Menu, MessageCircle, Package, Settings, X,
 } from 'lucide-react';
 import Header from './Header.jsx';
+import { ChoixLangue } from '../i18n/Langue.jsx';
 import Footer from './Footer.jsx';
 import {
   suivreSession, recupererIdentiteFournisseur, deconnecterFournisseur,
@@ -89,6 +90,7 @@ export default function LayoutEspace() {
           <span className="esp-marque-titre">Espace Fournisseur</span>
         </div>
         <div className="esp-haut-droite">
+          <ChoixLangue />
           <Cloche nonLus={nonLus} />
           <MenuUtilisateur identite={identite} onDeconnexion={async () => { await deconnecterFournisseur(); navigate('/'); }} />
         </div>

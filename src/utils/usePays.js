@@ -9,9 +9,11 @@ let promesse = null;
 export function chargerPays() {
   if (cache) return Promise.resolve(cache);
   if (!promesse) {
-    promesse = supabase.from('pays_loohoo').select('code, nom, dans, indicatif, devise, actif, ordre').order('ordre')
+    // visible (migration 0025) lu en premier, avec repli tant que la migration n'est pas exécutée
+    promesse = supabase.from('pays_loohoo').select('code, nom, dans, indicatif, devise, actif, visible, ordre').order('ordre')
+      .then((r) => (r.error ? supabase.from('pays_loohoo').select('code, nom, dans, indicatif, devise, actif, ordre').order('ordre') : r))
       .then(({ data, error }) => {
-        cache = !error && data?.length ? data : PAYS_PAR_DEFAUT;
+        cache = !error && data?.length ? data.filter((p) => p.visible !== false) : PAYS_PAR_DEFAUT;
         return cache;
       })
       .catch(() => { cache = PAYS_PAR_DEFAUT; return cache; });

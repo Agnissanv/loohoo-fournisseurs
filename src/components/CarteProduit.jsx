@@ -2,41 +2,31 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { BadgeCheck, Package } from 'lucide-react';
 import ImageOptimisee from './ImageOptimisee.jsx';
+import { estNouveau, fourchettePrix, quantite } from '../utils/prix.js';
+import { useLangue } from '../i18n/Langue.jsx';
 
-export default function CarteProduit({ p }) {
+// Carte d'un produit : photo, nom, fournisseur, fourchette de prix des paliers et minimum de commande.
+// sansFournisseur : sur la page d'un fournisseur, on n'a pas besoin de répéter son nom.
+export default function CarteProduit({ p, sansFournisseur = false }) {
+  const { t } = useLangue();
   return (
-    <Link to={`/produit/${p.id}`} className="carte" style={styles.carte}>
-      <div style={styles.imageBloc}>
-        {p.photo_url ? (
-          <ImageOptimisee src={p.photo_url} largeur={480} alt={p.nom} style={styles.image} />
-        ) : (
-          <Package size={28} color="var(--loo-orange)" />
-        )}
+    <Link to={`/produit/${p.id}`} className="carte carte-produit">
+      <div className="carte-produit-image">
+        {p.photo_url ? <ImageOptimisee src={p.photo_url} largeur={480} alt={p.nom} /> : <Package size={28} color="var(--loo-orange)" />}
+        {estNouveau(p.date_ajout) && <span className="badge-nouveau">{t('Nouveau')}</span>}
       </div>
-      <h3 style={styles.nom}>{p.nom}</h3>
-      <div style={styles.fournisseur}>
-        {p.badge_verifie && <BadgeCheck size={13} color="var(--loo-encre)" />}
-        <span>{p.grossiste_nom}</span>
+      <h3 className="carte-produit-nom">{p.nom}</h3>
+      {!sansFournisseur && p.grossiste_nom && (
+        <div className="carte-produit-fournisseur">
+          {p.badge_verifie && <BadgeCheck size={13} color="var(--loo-vert)" aria-label={t('Vérifié')} />}
+          <span>{p.grossiste_nom}</span>
+        </div>
+      )}
+      <div className="carte-produit-prix">
+        {fourchettePrix(p)}
+        {p.unite && <span className="carte-produit-unite"> / {p.unite}</span>}
       </div>
-      <div style={styles.prixLigne}>
-        <span style={styles.prix}>{p.prix_gros_fcfa.toLocaleString('fr-FR')} F CFA</span>
-        {p.unite && <span style={{ opacity: 0.6 }}>/ {p.unite}</span>}
-      </div>
-      <span style={styles.moq}>Minimum : {p.moq}</span>
+      <span className="carte-produit-moq">{t('Minimum')} : {quantite(p.moq || 1, p.unite)}</span>
     </Link>
   );
 }
-
-const styles = {
-  carte: { display: 'flex', flexDirection: 'column', gap: '0.4rem', padding: '0.9rem' },
-  imageBloc: {
-    height: '140px', background: 'var(--loo-papier-ombre)', borderRadius: '4px 14px 4px 14px',
-    display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
-  },
-  image: { width: '100%', height: '100%', objectFit: 'cover' },
-  nom: { fontSize: '0.98rem', lineHeight: 1.25, margin: 0 },
-  fournisseur: { display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem', opacity: 0.7 },
-  prixLigne: { display: 'flex', alignItems: 'baseline', gap: '0.4rem', marginTop: '0.2rem' },
-  prix: { fontFamily: 'var(--police-etiquette)', fontWeight: 600, color: 'var(--loo-rouge)', fontSize: '0.95rem' },
-  moq: { fontSize: '0.78rem', opacity: 0.6 },
-};

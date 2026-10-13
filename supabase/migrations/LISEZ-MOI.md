@@ -80,3 +80,18 @@ Table `pays_loohoo` (Côte d'Ivoire ouverte ; Mali, Sénégal, Burkina Faso, Bé
 (choisi à l'inscription, modifiable tant que le profil est en attente, verrouillé ensuite ; la colonne `pays` suit automatiquement),
 `vendeur.pays_code`, `definir_mon_pays_acheteur()` et `admin_ouvrir_pays(code, ouvert)`.
 Ouvrir un pays depuis l'éditeur SQL : `select public.admin_ouvrir_pays('ML', true);`. Testée sur le moteur de test.
+
+## 0025 — Statut test, pays affichés, communauté
+- `est_test` sur fournisseurs et produits : visibles seulement par leur propriétaire et l'équipe, exclus des chiffres et de « à la une ».
+  Exemple : `update public.grossiste set est_test = true where nom = 'THE ULCERE';`
+- Pays : Côte d'Ivoire ouverte, Sénégal et Cameroun « bientôt », les autres masqués. `select public.admin_statut_pays('SN', 'actif');`
+- Liens de la communauté : `select public.admin_definir_lien_communaute('youtube', 'https://www.youtube.com/@…');`
+Testée sur le moteur de test.
+
+## 0026 — Recherche, villes et communes, date de vérification
+- `lieu` : villes (et communes d'Abidjan) en listes fermées pour la Côte d'Ivoire, le Sénégal et le Cameroun ; les villes et communes
+  déjà saisies à la main sont remises à la forme officielle (« abidjan » → « Abidjan », « ADJAME » → « Adjamé »).
+- `grossiste.verifie_le` : date d'attribution du badge « vérifié ».
+- `rechercher_catalogue()` et `categories_catalogue()` : la recherche de l'accueil (filtres, tris, pagination, prix des paliers, données de test exclues).
+- `fournisseurs_a_la_une()` renvoie aussi la date d'inscription, la date de vérification et l'adresse courte.
+À exécuter après 0024 et 0025. Testée sur le moteur de test.

@@ -14,6 +14,7 @@ export const FORMATS = {
   BJ: { longueur: 10, exemple: '01 97 00 00 00', villes: ['Cotonou', 'Porto-Novo', 'Abomey-Calavi', 'Parakou', 'Bohicon', 'Djougou', 'Natitingou'] },
   TG: { longueur: 8, exemple: '90 00 00 00', villes: ['Lomé', 'Sokodé', 'Kara', 'Atakpamé', 'Kpalimé', 'Tsévié'] },
   NE: { longueur: 8, exemple: '90 00 00 00', villes: ['Niamey', 'Zinder', 'Maradi', 'Tahoua', 'Agadez', 'Dosso'] },
+  CM: { longueur: 9, exemple: '6 70 00 00 00', villes: ['Douala', 'Yaoundé', 'Garoua', 'Bamenda', 'Bafoussam', 'Maroua', 'Ngaoundéré', 'Kribi'] },
 };
 
 const NOMS = {

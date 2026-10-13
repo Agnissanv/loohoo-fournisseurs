@@ -5,6 +5,7 @@ import {
   Pencil, Share2, Trash2, Upload, X,
 } from 'lucide-react';
 import SelectCategorie from '../components/SelectCategorie.jsx';
+import ConsigneImages from '../components/ConsigneImages.jsx';
 import {
   suivreSession, recupererMonProfil, mettreAJourProfilComplet, mettreAJourContactPrive, mettreAJourTelephone,
   ajouterPhotoProfil, supprimerPhotoProfil, recupererMesStats,
@@ -13,6 +14,7 @@ import {
 import { televerserPhoto, supprimerPhotoStockage } from '../utils/stockagePhotos.js';
 import { normaliserTelephone, formaterTelephone, telephoneComplet, contactDuProfil } from '../utils/telephone.js';
 import { usePays } from '../utils/usePays.js';
+import { useLieux } from '../utils/useLieux.js';
 import { drapeau, FORMATS, infosPays } from '../utils/pays.js';
 
 // Ces champs vivent dans la table protégée des contacts (jamais dans la table publique)
@@ -254,8 +256,8 @@ export default function Profil() {
             <Ligne ctx={ctx} cle="pays_code" libelle="Pays" valeur={profil.pays_code || 'CI'}
               affichage={<>{drapeau(profil.pays_code || 'CI')} {infosPays(profil.pays_code || 'CI')?.nom}{profil.statut !== 'en_attente' && <span className="esp-aide" style={{ display: 'block', fontWeight: 400 }}>Verrouillé après vérification : écrivez à l'équipe LOOHOO pour le changer.</span>}</>}
               lectureSeule={profil.statut !== 'en_attente'} />
-            <Ligne ctx={ctx} cle="ville" libelle="Ville" valeur={profil.ville} />
-            <Ligne ctx={ctx} cle="commune" libelle="Commune" valeur={profil.commune} />
+            <Ligne ctx={ctx} cle="ville" libelle="Ville" valeur={profil.ville} pays={profil.pays_code || 'CI'} />
+            <Ligne ctx={ctx} cle="commune" libelle="Commune" valeur={profil.commune} pays={profil.pays_code || 'CI'} ville={profil.ville} />
             <Ligne ctx={ctx} cle="adresse" libelle="Adresse" valeur={contact.adresse} aide="Visible uniquement par vous et l'équipe LOOHOO, pour la vérification." />
             <Ligne ctx={ctx} cle="telephone" libelle="Téléphone" valeur={telephone} affichage={telephone ? formaterTelephone(telephone) : undefined} type="tel" enregistrer={enregistrerTelephone} aide="Jamais affiché publiquement. Les acheteurs vous écrivent via la messagerie." />
             <Ligne ctx={ctx} cle="email" libelle="E-mail" valeur={session.user.email} lectureSeule />
@@ -366,6 +368,7 @@ export default function Profil() {
           <div className="esp-carte">
             <h2 className="esp-carte-titre"><span>Photos de l'entreprise ({photosProfil.length}/3)</span></h2>
             <p className="esp-aide" style={{ marginBottom: '0.7rem' }}>Au moins une photo réelle est nécessaire pour être publié. Elles servent aussi à la vérification.</p>
+            <ConsigneImages />
             <div style={{ display: 'flex', gap: '0.7rem', flexWrap: 'wrap' }}>
               {photosProfil.map((p) => (
                 <div key={p.id} className="esp-vignette"><img src={p.url} alt="" />
@@ -381,6 +384,7 @@ export default function Profil() {
             </div>
             <div style={{ marginTop: '1.1rem', paddingTop: '1rem', borderTop: '1px solid var(--loo-papier-ombre)' }}>
               <div style={{ fontWeight: 600, fontSize: '0.86rem', marginBottom: '0.5rem' }}>Bannière de votre page publique</div>
+              <p className="esp-aide" style={{ margin: '0 0 0.5rem' }}>Format large (environ 6 fois plus large que haut), sujet au centre : les bords sont coupés selon l'écran.</p>
               <div style={{ height: 84, borderRadius: 10, background: profil.banniere_url ? `url(${profil.banniere_url}) center/cover` : 'var(--loo-papier-ombre)', marginBottom: '0.5rem' }} />
               <label className="btn btn-outline" style={{ fontSize: '0.78rem', padding: '0.35em 0.8em', cursor: 'pointer' }}>
                 <IconeImage size={13} /> {envoi === 'banniere_url' ? 'Envoi…' : 'Changer la bannière'}
@@ -395,9 +399,11 @@ export default function Profil() {
 }
 
 // Une ligne du tableau d'informations, avec crayon de modification (composant à part pour garder le focus pendant la frappe)
-function Ligne({ ctx, cle, libelle, valeur, affichage, type = 'text', enregistrer, lectureSeule, aide }) {
+function Ligne({ ctx, cle, libelle, valeur, affichage, type = 'text', enregistrer, lectureSeule, aide, pays, ville }) {
   const { enEdition, setEnEdition, brouillon, setBrouillon, commencer, enregistrerChamps, erreur } = ctx;
   const { ouverts } = usePays();
+  const { villes, communes } = useLieux();
+  const choix = cle === 'ville' ? villes(pays) : cle === 'commune' ? communes(pays, ville) : null;
   const edite = enEdition === cle;
   return (
     <div className="esp-liste-ligne" style={{ alignItems: 'flex-start' }}>
@@ -405,7 +411,13 @@ function Ligne({ ctx, cle, libelle, valeur, affichage, type = 'text', enregistre
       {edite ? (
         <form style={{ flex: 1, display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap' }}
           onSubmit={(e) => { e.preventDefault(); (enregistrer || (() => enregistrerChamps({ [cle]: brouillon.trim() || null })))(); }}>
-          {cle === 'pays_code' ? (
+          {choix && choix.length > 0 ? (
+            <select className="champ" style={{ flex: 1, minWidth: '140px', padding: '0.55em 0.8em' }} value={brouillon} onChange={(e) => setBrouillon(e.target.value)} autoFocus>
+              {cle === 'commune' && <option value="">—</option>}
+              {brouillon && !choix.includes(brouillon) && <option value={brouillon}>{brouillon}</option>}
+              {choix.map((v) => <option key={v} value={v}>{v}</option>)}
+            </select>
+          ) : cle === 'pays_code' ? (
             <select className="champ" style={{ flex: 1, minWidth: '140px', padding: '0.55em 0.8em' }} value={brouillon} onChange={(e) => setBrouillon(e.target.value)} autoFocus>
               {ouverts.map((p) => <option key={p.code} value={p.code}>{drapeau(p.code)} {p.nom}</option>)}
             </select>
