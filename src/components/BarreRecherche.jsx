@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Search, SlidersHorizontal, X } from 'lucide-react';
 import { useLangue } from '../i18n/Langue.jsx';
 
-const CLES_FILTRES = ['pays', 'ville', 'commune', 'prix_max', 'moq_max', 'verifies'];
+const CLES_FILTRES = ['pays', 'ville', 'commune', 'prix_max', 'moq_max', 'verifies', 'origine'];
 
 // Le champ de recherche unique de l'en-tête, avec le bouton « Filtres ». Depuis n'importe quelle page, il mène aux résultats.
 export default function BarreRecherche() {

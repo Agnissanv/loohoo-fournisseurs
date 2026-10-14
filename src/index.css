@@ -583,7 +583,7 @@ a.carte:active { transform: translateY(-1px); }
 /* fiche fournisseur : action principale fixée en bas de l'écran sur téléphone */
 .barre-devis-mobile, .barre-devis-espace { display: none; }
 @media (max-width: 700px) {
-  .barre-devis-mobile { display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: 0.7rem 1rem calc(0.7rem + env(safe-area-inset-bottom)); background: rgba(255, 248, 239, 0.96); backdrop-filter: blur(8px); border-top: 1px solid var(--loo-papier-ombre); }
+  .barre-devis-mobile { display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: 0.7rem 1rem calc(0.7rem + env(safe-area-inset-bottom)); background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(8px); border-top: 1px solid var(--loo-papier-ombre); }
   .barre-devis-mobile .btn { width: 100%; justify-content: center; }
   .barre-devis-espace { display: block; height: 4.6rem; }
 }
@@ -881,3 +881,93 @@ a.carte:active { transform: translateY(-1px); }
 .certifs-ajout { border-top: 1px solid var(--loo-papier-ombre); padding-top: 0.8rem; }
 .esp-details { border-top: 1px solid var(--loo-papier-ombre); padding-top: 0.6rem; }
 .esp-details > summary { cursor: pointer; font-weight: 600; font-size: 0.88rem; color: var(--loo-rouge); padding: 0.3rem 0; }
+
+/* ---------- Profil public du fournisseur (lot 4) ---------- */
+.pf-banniere { height: 220px; background: var(--gradient-marque); position: relative; overflow: hidden; }
+.pf-banniere-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.pf-banniere-haut { position: relative; padding-top: 1rem; }
+.pf-retour { display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 600; font-size: 0.9rem; color: var(--loo-encre); background: rgba(255, 255, 255, 0.92); padding: 0.4em 0.85em; border-radius: 999px; box-shadow: 0 4px 12px rgba(23, 18, 13, 0.12); }
+.pf-page { padding-top: 0; }
+.pf-entete { display: flex; align-items: flex-end; gap: 1.2rem; margin-top: -52px; flex-wrap: wrap; position: relative; z-index: 1; }
+.pf-logo { width: 104px; height: 104px; border-radius: 18px; object-fit: cover; border: 4px solid #fff; background: #fff; box-shadow: 0 8px 20px rgba(23, 18, 13, 0.12); flex-shrink: 0; }
+.pf-logo-initiales { display: inline-flex; align-items: center; justify-content: center; background: var(--loo-orange); color: var(--loo-encre); font-family: var(--police-affiche); font-weight: 800; font-size: 2.1rem; }
+.pf-identite { flex: 1 1 260px; min-width: 0; padding-bottom: 0.2rem; }
+.pf-badges { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.35rem; }
+.pf-identite h1 { font-size: clamp(1.6rem, 3vw, 2.3rem); line-height: 1.1; margin: 0; overflow-wrap: anywhere; }
+.pf-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.pf-whatsapp svg { color: #1FA855; }
+
+.pf-cadre { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); margin: 1.5rem 0 0; background: #fff; border: 1px solid var(--loo-papier-ombre); border-radius: 18px; overflow: hidden; }
+.pf-cadre > div { padding: 0.9rem 1.1rem; border-right: 1px solid var(--loo-papier-ombre); border-bottom: 1px solid var(--loo-papier-ombre); margin-right: -1px; margin-bottom: -1px; }
+.pf-cadre dt { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.55; margin-bottom: 0.3rem; }
+.pf-cadre dd { margin: 0; font-weight: 600; line-height: 1.35; }
+.pf-cadre-sous { display: block; font-weight: 400; font-size: 0.84rem; opacity: 0.7; margin-top: 0.1rem; }
+.pf-cadre-verifie { background: var(--loo-vert-clair); }
+.pf-cadre-verifie dd { color: var(--loo-vert); }
+.pf-note { display: inline-flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; }
+.pf-note .pf-cadre-sous { display: inline; margin: 0; }
+
+.pf-section { margin-top: 2.6rem; }
+.pf-section > h2 { font-size: 1.35rem; margin: 0 0 1rem; display: flex; align-items: baseline; gap: 0.6rem; }
+.pf-compte { font-family: var(--police-texte); font-size: 0.9rem; font-weight: 600; opacity: 0.55; }
+.pf-vide { opacity: 0.7; margin: 0; }
+.pf-recherche { position: relative; flex: 1 1 240px; max-width: 360px; }
+.pf-recherche svg { position: absolute; left: 0.8rem; top: 50%; transform: translateY(-50%); opacity: 0.5; }
+.pf-recherche .champ { padding-left: 2.3rem; }
+.pf-section .puces-piste { padding-top: 0; margin-bottom: 1rem; }
+
+.pf-vitrine { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 2rem; align-items: start; }
+.pf-vitrine:has(> :only-child) { grid-template-columns: minmax(0, 1fr); }
+.pf-vitrine-texte { display: grid; gap: 1.2rem; }
+.pf-vitrine h3, .pf-faq h3 { font-size: 1.05rem; margin: 0 0 0.6rem; }
+.pf-description { margin: 0; white-space: pre-line; line-height: 1.7; max-width: 72ch; }
+.pf-video { width: 100%; border-radius: 14px; background: #000; max-height: 420px; }
+.pf-vitrine-fiche { background: #fff; border: 1px solid var(--loo-papier-ombre); border-radius: 18px; padding: 1.1rem 1.2rem; display: grid; gap: 1.1rem; }
+.pf-fiche { margin: 0; display: grid; gap: 0.75rem; }
+.pf-fiche dt { font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.55; }
+.pf-fiche dd { margin: 0.15rem 0 0; line-height: 1.5; white-space: pre-line; }
+.pf-horaires h3 { font-size: 0.95rem; }
+.pf-horaires > div { display: flex; justify-content: space-between; gap: 1rem; padding: 0.22rem 0; font-size: 0.9rem; }
+.pf-horaires > div span:first-child { text-transform: capitalize; opacity: 0.75; }
+.pf-faq { margin-top: 1.6rem; }
+.pf-faq details { border-bottom: 1px solid var(--loo-papier-ombre); padding: 0.9rem 0; }
+.pf-faq summary { font-weight: 600; cursor: pointer; display: flex; justify-content: space-between; gap: 1rem; list-style: none; }
+.pf-faq summary::-webkit-details-marker { display: none; }
+.pf-faq summary::after { content: '+'; color: var(--loo-rouge); font-weight: 700; flex-shrink: 0; }
+.pf-faq details[open] summary::after { content: '–'; }
+.pf-faq p { margin: 0.6rem 0 0; opacity: 0.85; white-space: pre-line; }
+@media (max-width: 860px) { .pf-vitrine { grid-template-columns: minmax(0, 1fr); } }
+
+.pf-sous-titre { display: flex; align-items: center; gap: 0.45rem; font-size: 1rem; margin: 1.2rem 0 0.7rem; }
+.pf-sous-titre svg { color: var(--loo-vert); }
+.pf-photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: 0.9rem; }
+.pf-photos figure { margin: 0; }
+.pf-photos img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 14px; background: var(--loo-papier-ombre); }
+.pf-photos figcaption { display: flex; align-items: center; gap: 0.3rem; margin-top: 0.4rem; font-size: 0.8rem; font-weight: 600; color: var(--loo-vert); }
+.pf-documents { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.pf-documents li { display: inline-flex; align-items: center; gap: 0.4rem; background: var(--loo-vert-clair); color: var(--loo-vert); font-weight: 600; font-size: 0.88rem; padding: 0.45em 0.9em; border-radius: 999px; }
+.pf-confiance { margin-top: 2.6rem; }
+@media (max-width: 640px) {
+  .pf-banniere { height: 160px; }
+  .pf-entete { margin-top: -40px; gap: 0.8rem; }
+  .pf-logo { width: 84px; height: 84px; }
+  .pf-actions { width: 100%; }
+  .pf-actions .btn-primary { flex: 1 1 100%; justify-content: center; }
+  .pf-actions .btn:not(.btn-primary) { flex: 1 1 0; justify-content: center; padding-left: 0.6em; padding-right: 0.6em; }
+  .pf-actions .btn.pf-copier { flex: 0 0 auto; }
+  .pf-cadre { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Espace fournisseur : formulaire de la vitrine */
+.vitrine-form { display: grid; gap: 1rem; }
+.vitrine-groupe { border: 0; padding: 0; margin: 0; display: grid; gap: 0.8rem; }
+.vitrine-groupe > legend { font-family: var(--police-affiche); font-weight: 700; font-size: 1rem; margin-bottom: 0.4rem; }
+.choix-puces { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+.choix-puce { display: inline-flex; align-items: center; gap: 0.35rem; border: 1.5px solid var(--loo-papier-ombre); background: #fff; border-radius: 999px; padding: 0.35em 0.85em; font-size: 0.86rem; font-weight: 600; cursor: pointer; }
+.choix-puce:has(input:checked) { border-color: var(--loo-orange); background: var(--loo-orange-clair); }
+.choix-puce input { accent-color: var(--loo-orange); }
+.faq-ligne { display: grid; gap: 0.4rem; padding: 0.8rem; border: 1px solid var(--loo-papier-ombre); border-radius: 12px; background: #fff; }
+.faq-ligne-tete { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; font-size: 0.82rem; font-weight: 700; opacity: 0.7; }
+.faq-suggestions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.faq-suggestion { border: 1.5px dashed var(--loo-orange); background: #fff; color: var(--loo-rouge); border-radius: 999px; padding: 0.3em 0.8em; font: inherit; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
+.faq-suggestion:hover { background: var(--loo-orange-clair); }

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { X } from 'lucide-react';
-import { rechercherCatalogue, recupererCategoriesCatalogue, capturerLead, suivreSession, signalerRechercheVide } from '../api/fournisseurs.js';
+import { rechercherCatalogue, recupererCategoriesCatalogue, recupererOrigines, capturerLead, suivreSession, signalerRechercheVide } from '../api/fournisseurs.js';
 import CarteProduit from '../components/CarteProduit.jsx';
 import RangeeProduits from '../components/RangeeProduits.jsx';
 import PanneauFiltres from '../components/PanneauFiltres.jsx';
@@ -10,7 +10,7 @@ import CaptureSortie from '../components/CaptureSortie.jsx';
 import IconeCategorie from '../components/IconeCategorie.jsx';
 import { noterPageInterne } from '../utils/suiviVisites.js';
 import { usePays } from '../utils/usePays.js';
-import { drapeau } from '../utils/pays.js';
+import { drapeau, infosPays } from '../utils/pays.js';
 import { prixCFA } from '../utils/prix.js';
 import { useLangue } from '../i18n/Langue.jsx';
 import { useTitre } from '../utils/useTitre.js';
@@ -38,10 +38,12 @@ export default function Annuaire() {
   const verifies = params.get('verifies') === '1';
   const prixMax = Number(params.get('prix_max')) || 0;
   const qteMax = Number(params.get('moq_max')) || 0;
-  const rechercheActive = !!(q || categorie || pays || ville || commune || prixMax || qteMax || verifies);
+  const origine = params.get('origine') || '';
+  const rechercheActive = !!(q || categorie || pays || ville || commune || prixMax || qteMax || verifies || origine);
 
   const { parCode } = usePays();
   const [categories, setCategories] = useState([]);
+  const [origines, setOrigines] = useState([]);
   const [rangees, setRangees] = useState(null);
   const [resultats, setResultats] = useState(null); // { produits, total }
   const [chargement, setChargement] = useState(true);
@@ -56,7 +58,7 @@ export default function Annuaire() {
     return suivant;
   }, { replace: true });
 
-  useEffect(() => { recupererCategoriesCatalogue().then(setCategories); noterPageInterne(); }, []);
+  useEffect(() => { recupererCategoriesCatalogue().then(setCategories); recupererOrigines().then(setOrigines); noterPageInterne(); }, []);
 
   // Le bouton « Filtres » de l'en-tête arrive ici avec ?filtres=1 : on ouvre le panneau
   useEffect(() => {
@@ -83,7 +85,7 @@ export default function Annuaire() {
     let annule = false;
     setChargement(true);
     setErreur(false);
-    rechercherCatalogue({ q, categorie, pays, ville, commune, prixMax, qteMax, verifies, tri, limite: PAR_PAGE })
+    rechercherCatalogue({ q, categorie, pays, ville, commune, prixMax, qteMax, verifies, origine, tri, limite: PAR_PAGE })
       .then((r) => {
         if (annule) return;
         setResultats(r);
@@ -96,14 +98,14 @@ export default function Annuaire() {
       })
       .catch(() => { if (!annule) { setErreur(true); setChargement(false); } });
     return () => { annule = true; };
-  }, [q, categorie, pays, ville, commune, prixMax, qteMax, verifies, tri]);
+  }, [q, categorie, pays, ville, commune, prixMax, qteMax, verifies, origine, tri]);
 
   async function voirPlus() {
-    const suite = await rechercherCatalogue({ q, categorie, pays, ville, commune, prixMax, qteMax, verifies, tri, limite: PAR_PAGE, decalage: resultats.produits.length });
+    const suite = await rechercherCatalogue({ q, categorie, pays, ville, commune, prixMax, qteMax, verifies, origine, tri, limite: PAR_PAGE, decalage: resultats.produits.length });
     setResultats((r) => ({ total: suite.total || r.total, produits: [...r.produits, ...suite.produits] }));
   }
 
-  const valeursFiltres = { pays, ville, commune, categorie, prixMax, qteMax, verifies };
+  const valeursFiltres = { pays, ville, commune, categorie, prixMax, qteMax, verifies, origine };
   // Les filtres actifs, en petites étiquettes qu'on retire d'un clic
   const pastilles = useMemo(() => [
     q && { cle: 'q', texte: `« ${q} »` },
@@ -114,7 +116,8 @@ export default function Annuaire() {
     prixMax && { cle: 'prix_max', texte: `≤ ${prixCFA(prixMax)}` },
     qteMax && { cle: 'moq_max', texte: t('Minimum ≤ {n}', { n: qteMax }) },
     verifies && { cle: 'verifies', texte: t('Vérifiés') },
-  ].filter(Boolean), [q, categorie, pays, ville, commune, prixMax, qteMax, verifies, parCode, t]);
+    origine && { cle: 'origine', texte: t('Origine : {pays}', { pays: `${drapeau(origine)} ${infosPays(origine)?.nom || origine}` }) },
+  ].filter(Boolean), [q, categorie, pays, ville, commune, prixMax, qteMax, verifies, origine, parCode, t]);
 
   const produits = resultats?.produits || [];
   const total = resultats?.total || 0;
@@ -159,7 +162,7 @@ export default function Annuaire() {
           {rechercheActive && (
             <aside className="colonne-filtres" aria-label={t('Filtres')}>
               <h2>{t('Filtres')}</h2>
-              <PanneauFiltres valeurs={valeursFiltres} changer={changer} categories={categories} />
+              <PanneauFiltres valeurs={valeursFiltres} changer={changer} categories={categories} origines={origines} />
             </aside>
           )}
 
@@ -243,7 +246,7 @@ export default function Annuaire() {
           <div className="modale modale-filtres" role="dialog" aria-modal="true" aria-label={t('Filtres')} onClick={(e) => e.stopPropagation()}>
             <button type="button" className="modale-fermer" onClick={() => setFiltresOuverts(false)} aria-label={t('Fermer')}><X size={20} /></button>
             <h2 style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>{t('Filtres')}</h2>
-            <PanneauFiltres valeurs={valeursFiltres} changer={changer} categories={categories} />
+            <PanneauFiltres valeurs={valeursFiltres} changer={changer} categories={categories} origines={origines} />
             <div style={{ display: 'flex', gap: '0.6rem', marginTop: '1.2rem' }}>
               <button type="button" className="btn btn-outline" onClick={() => setParams(q ? { q } : {}, { replace: true })}>{t('Effacer')}</button>
               <button type="button" className="btn btn-primary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setFiltresOuverts(false)}>

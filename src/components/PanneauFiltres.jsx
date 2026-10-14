@@ -1,12 +1,13 @@
 import React from 'react';
 import { usePays } from '../utils/usePays.js';
 import { useLieux } from '../utils/useLieux.js';
-import { drapeau } from '../utils/pays.js';
+import { drapeau, infosPays } from '../utils/pays.js';
 import { useLangue } from '../i18n/Langue.jsx';
 
 // Tous les filtres de la recherche, au même endroit : dans une fenêtre (téléphone, bouton « Filtres ») ou dans une colonne (ordinateur).
-// valeurs : { pays, ville, commune, categorie, prixMax, qteMax, verifies } ; changer({ cle: valeur }) met à jour l'adresse.
-export default function PanneauFiltres({ valeurs, changer, categories = [] }) {
+// valeurs : { pays, ville, commune, categorie, prixMax, qteMax, verifies, origine } ; changer({ cle: valeur }) met à jour l'adresse.
+// origines : pays d'origine que des fournisseurs choisissent d'afficher (le filtre n'apparaît que s'il y en a).
+export default function PanneauFiltres({ valeurs, changer, categories = [], origines = [] }) {
   const { t } = useLangue();
   const { tous: listePays } = usePays();
   const { villes, communes } = useLieux();
@@ -65,6 +66,16 @@ export default function PanneauFiltres({ valeurs, changer, categories = [] }) {
         </span>
         <small>{t('Pour ne voir que les produits dont le minimum de commande vous convient.')}</small>
       </label>
+
+      {origines.length > 0 && (
+        <label className="filtre-bloc">
+          <span>{t('Origine du fournisseur')}</span>
+          <select className="champ" value={valeurs.origine || ''} onChange={(e) => changer({ origine: e.target.value })}>
+            <option value="">{t('Toutes les origines')}</option>
+            {origines.map((o) => <option key={o.pays_origine} value={o.pays_origine}>{drapeau(o.pays_origine)} {infosPays(o.pays_origine)?.nom || o.pays_origine} ({o.nombre})</option>)}
+          </select>
+        </label>
+      )}
 
       <label className="filtre-case">
         <input type="checkbox" checked={valeurs.verifies} onChange={(e) => changer({ verifies: e.target.checked ? '1' : '' })} />

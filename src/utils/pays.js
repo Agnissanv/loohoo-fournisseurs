@@ -21,7 +21,15 @@ const NOMS = {
   CI: "Côte d'Ivoire", ML: 'Mali', SN: 'Sénégal', BF: 'Burkina Faso', BJ: 'Bénin', TG: 'Togo', NE: 'Niger',
   GN: 'Guinée', GH: 'Ghana', NG: 'Nigeria', CM: 'Cameroun', GA: 'Gabon', CG: 'Congo', CD: 'RD Congo', MA: 'Maroc',
   TN: 'Tunisie', DZ: 'Algérie', MR: 'Mauritanie', LR: 'Liberia', SL: 'Sierra Leone', TD: 'Tchad', CN: 'Chine', FR: 'France',
+  // Pays d'origine fréquents des fournisseurs installés en Afrique de l'Ouest
+  LB: 'Liban', TR: 'Turquie', IN: 'Inde', AE: 'Émirats arabes unis', PK: 'Pakistan', BD: 'Bangladesh', TH: 'Thaïlande', VN: 'Viêt Nam',
+  ID: 'Indonésie', MY: 'Malaisie', KR: 'Corée du Sud', JP: 'Japon', EG: 'Égypte', SA: 'Arabie saoudite', IR: 'Iran', SY: 'Syrie',
+  BE: 'Belgique', DE: 'Allemagne', IT: 'Italie', ES: 'Espagne', PT: 'Portugal', GB: 'Royaume-Uni', NL: 'Pays-Bas', CH: 'Suisse',
+  US: 'États-Unis', CA: 'Canada', BR: 'Brésil', ZA: 'Afrique du Sud', KE: 'Kenya', ET: 'Éthiopie', RW: 'Rwanda', GM: 'Gambie', GW: 'Guinée-Bissau', CV: 'Cap-Vert',
 };
+
+// Liste triée des pays connus, pour choisir un pays d'origine : [{ code, nom }]
+export const LISTE_PAYS = Object.entries(NOMS).map(([code, nom]) => ({ code, nom })).sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
 
 const sansAccent = (t) => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase().replace(/’/g, "'");
 

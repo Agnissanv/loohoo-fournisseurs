@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import SelectCategorie from '../components/SelectCategorie.jsx';
 import ConsigneImages from '../components/ConsigneImages.jsx';
+import VitrineEntreprise from '../components/VitrineEntreprise.jsx';
+import { TYPES_ENTREPRISE } from '../utils/profilFournisseur.js';
 import {
   suivreSession, recupererMonProfil, mettreAJourProfilComplet, mettreAJourContactPrive, mettreAJourTelephone,
   ajouterPhotoProfil, supprimerPhotoProfil, recupererMesStats,
@@ -70,6 +72,15 @@ export default function Profil() {
   const initiales = (profil.nom || '').split(/\s+/).filter(Boolean).slice(0, 2).map((m) => m[0]).join('').toUpperCase();
 
   const annonce = (msg) => { setSucces(msg); setTimeout(() => setSucces(''), 2500); };
+  const vitrineDisponible = profil.type_entreprise !== undefined;
+
+  // Vitrine : enregistrée d'un bloc ; une erreur (coordonnée, promesse) remonte dans le formulaire lui-même
+  async function enregistrerVitrine(champs) {
+    await mettreAJourProfilComplet(profil.id, champs);
+    setProfil((p) => ({ ...p, ...champs }));
+    rafraichirIdentite?.();
+    annonce('Présentation publiée sur votre page.');
+  }
 
   // Enregistre un ou plusieurs champs du profil, avec message d'erreur lisible
   async function enregistrerChamps(champs, apres) {
@@ -192,7 +203,7 @@ export default function Profil() {
       {profil.drapeau_coordonnees && (
         <p role="alert" className="esp-carte" style={{ borderColor: 'var(--loo-orange)', background: '#FFF6E9', margin: '0 0 1rem', fontSize: '0.9rem', lineHeight: 1.5 }}>
           <strong>Coordonnées détectées dans votre profil.</strong> Retirez tout numéro de téléphone, e-mail ou lien de votre nom et de votre présentation :
-          les échanges avec les acheteurs passent par LOOHOO. Votre profil reste en vérification tant qu'ils y figurent.
+          les échanges avec les acheteurs passent par LOOHOO.
         </p>
       )}
 
@@ -214,7 +225,9 @@ export default function Profil() {
             {profil.badge_verifie
               ? <span className="badge badge-verifie"><BadgeCheck size={13} /> Vérifié</span>
               : <span className="esp-puce esp-puce-orange">Non vérifié</span>}
-            {profil.est_fabricant && <span className="badge badge-fabricant">Fabricant local</span>}
+            {(TYPES_ENTREPRISE[profil.type_entreprise] || profil.est_fabricant) && (
+              <span className="badge badge-fabricant">{TYPES_ENTREPRISE[profil.type_entreprise] || 'Fabricant local'}</span>
+            )}
           </div>
           <div style={{ display: 'flex', gap: '0.9rem', flexWrap: 'wrap', fontSize: '0.9rem', opacity: 0.8, marginBottom: '0.6rem' }}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}><MapPin size={14} /> {profil.commune ? `${profil.commune}, ` : ''}{profil.ville}</span>
@@ -230,14 +243,15 @@ export default function Profil() {
               </div>
             </form>
           ) : (
-            <p style={{ margin: 0, fontSize: '0.92rem', lineHeight: 1.6, opacity: profil.description ? 0.85 : 0.55 }}>
+            <p style={{ margin: 0, fontSize: '0.92rem', lineHeight: 1.6, opacity: profil.description ? 0.85 : 0.55, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
               {profil.description || "Ajoutez une présentation : c'est ce qui rassure un acheteur avant de vous écrire."}
             </p>
           )}
         </div>
 
         <div style={{ display: 'grid', gap: '0.6rem', flex: '0 0 auto', minWidth: '210px' }}>
-          <button type="button" className="btn btn-primary" style={{ justifyContent: 'center' }} onClick={() => commencer('description', profil.description)}>
+          <button type="button" className="btn btn-primary" style={{ justifyContent: 'center' }}
+            onClick={() => (vitrineDisponible ? document.getElementById('vitrine')?.scrollIntoView({ behavior: 'smooth' }) : commencer('description', profil.description))}>
             <Pencil size={16} /> {profil.description ? 'Modifier la présentation' : 'Ajouter une présentation'}
           </button>
           <Link to={`/grossiste/${profil.id}`} target="_blank" className="btn btn-outline" style={{ justifyContent: 'center' }}>
@@ -245,6 +259,8 @@ export default function Profil() {
           </Link>
         </div>
       </div>
+
+      {vitrineDisponible && <div style={{ marginTop: '1rem' }}><VitrineEntreprise profil={profil} enregistrer={enregistrerVitrine} /></div>}
 
       <div className="esp-grille esp-deux" style={{ marginTop: '1rem', alignItems: 'start' }}>
         {/* Colonne gauche */}
@@ -254,8 +270,8 @@ export default function Profil() {
             <Ligne ctx={ctx} cle="nom" libelle="Nom de l'entreprise" valeur={profil.nom} />
             <Ligne ctx={ctx} cle="categorie" libelle="Catégorie" valeur={profil.categorie} />
             <Ligne ctx={ctx} cle="pays_code" libelle="Pays" valeur={profil.pays_code || 'CI'}
-              affichage={<>{drapeau(profil.pays_code || 'CI')} {infosPays(profil.pays_code || 'CI')?.nom}{profil.statut !== 'en_attente' && <span className="esp-aide" style={{ display: 'block', fontWeight: 400 }}>Verrouillé après vérification : écrivez à l'équipe LOOHOO pour le changer.</span>}</>}
-              lectureSeule={profil.statut !== 'en_attente'} />
+              affichage={<>{drapeau(profil.pays_code || 'CI')} {infosPays(profil.pays_code || 'CI')?.nom}{profil.badge_verifie && <span className="esp-aide" style={{ display: 'block', fontWeight: 400 }}>Verrouillé après la vérification : écrivez à l'équipe LOOHOO pour le changer.</span>}</>}
+              lectureSeule={!!profil.badge_verifie} />
             <Ligne ctx={ctx} cle="ville" libelle="Ville" valeur={profil.ville} pays={profil.pays_code || 'CI'} />
             <Ligne ctx={ctx} cle="commune" libelle="Commune" valeur={profil.commune} pays={profil.pays_code || 'CI'} ville={profil.ville} />
             <Ligne ctx={ctx} cle="adresse" libelle="Adresse" valeur={contact.adresse} aide="Visible uniquement par vous et l'équipe LOOHOO, pour la vérification." />
@@ -384,8 +400,10 @@ export default function Profil() {
           </div>
 
           <div className="esp-carte">
-            <h2 className="esp-carte-titre"><span>Photos de l'entreprise ({photosProfil.length}/3)</span></h2>
-            <p className="esp-aide" style={{ marginBottom: '0.7rem' }}>Au moins une photo réelle est nécessaire pour être publié. Elles servent aussi à la vérification.</p>
+            <h2 className="esp-carte-titre"><span>Vos photos de l'entreprise ({photosProfil.length}/3)</span></h2>
+            <p className="esp-aide" style={{ marginBottom: '0.7rem' }}>
+              Affichées sur votre page comme « ajoutées par le fournisseur ». Les photos prises par LOOHOO lors de la visite s'affichent à part, avec la date du contrôle.
+            </p>
             <ConsigneImages />
             <div style={{ display: 'flex', gap: '0.7rem', flexWrap: 'wrap' }}>
               {photosProfil.map((p) => (

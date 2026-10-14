@@ -121,3 +121,15 @@ Les produits déjà en ligne ne sont pas modifiés. Pour repérer ceux qui conti
 - « Le marché en direct » : `marche_en_direct()` renvoie l'activité réelle des 30 derniers jours (fournisseur vérifié, nouveau produit,
   fournisseur qui ajoute des produits), sans les données de test. Le bandeau reste caché sous 3 événements.
 À exécuter après 0027. Testée sur le moteur de test.
+
+## 0029 — Profil public du fournisseur (lot 4)
+- Publication immédiate : un fournisseur qui s'inscrit est en ligne tout de suite ; les profils en attente sont publiés une fois
+  (sauf ceux qui contiennent une coordonnée). Seul le badge « vérifié » reste humain. Le pays se verrouille au badge.
+- Contrôle à l'envoi : nom, présentation, vitrine et FAQ refusés s'ils contiennent un numéro, un e-mail, un lien ou une promesse
+  de santé, de résultat ou de livraison (comme les produits).
+- Types neutres (`type_entreprise` : fabricant, grossiste, importateur, producteur ; `est_fabricant` suit automatiquement),
+  origine de l'entreprise (`pays_origine` + `afficher_origine`), langues parlées, et la vitrine : année de création, spécialités,
+  emplacement, zones d'expédition, moyens de paiement, vidéo, champs selon le type, FAQ (12 questions). Présentation : 5 000 caractères.
+- `documents_verifies()` (types seulement, jamais le numéro ni le fichier), `origines_fournisseurs()` et le filtre `p_origine`
+  de `rechercher_catalogue()`.
+À exécuter après 0028. Testée sur le moteur de test.

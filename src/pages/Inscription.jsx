@@ -15,11 +15,11 @@ import RedirigerSiConnecte from '../components/RedirigerSiConnecte.jsx';
 // Le stock et les documents se règlent ensuite depuis le tableau de bord, avec la liste des étapes à suivre.
 export default function Inscription() {
   const navigate = useNavigate();
-  const { tous, parCode } = usePays();
+  const { tous } = usePays();
   const { villes, communes } = useLieux();
   const [etape, setEtape] = useState(1);
   const [champs, setChamps] = useState({
-    nom: '', categorie: '', pays: 'CI', ville: '', commune: '', origine: 'local', estFabricant: false,
+    nom: '', categorie: '', pays: 'CI', ville: '', commune: '', typeEntreprise: '',
     telephone: '', email: '', motDePasse: '', conditions: false,
   });
   const [erreur, setErreur] = useState('');
@@ -46,7 +46,8 @@ export default function Inscription() {
       const { confirmationRequise } = await inscrireFournisseur({
         email: champs.email.trim(), password: champs.motDePasse,
         nom: champs.nom.trim(), categorie: champs.categorie, ville: champs.ville.trim(), commune: champs.commune.trim(),
-        telephone, estFabricant: champs.estFabricant, origine: champs.origine, stockConfirme: false, paysCode: champs.pays,
+        telephone, estFabricant: champs.typeEntreprise === 'fabricant', origine: 'local', typeEntreprise: champs.typeEntreprise,
+        stockConfirme: false, paysCode: champs.pays,
       });
       if (confirmationRequise) setConfirmationEnvoyee(true);
       else navigate('/tableau-de-bord');
@@ -80,7 +81,7 @@ export default function Inscription() {
         <h1 className="acces-titre">Créer mon compte fournisseur</h1>
         <p className="acces-sous">
           Étape {etape} sur 2 · {etape === 1 ? 'Votre entreprise' : 'Votre compte'}.
-          {etape === 1 && ' Notre équipe vérifie votre profil avant de le publier.'}
+          {etape === 1 && ' Votre profil est en ligne dès sa création. Notre équipe vous rend ensuite visite pour le badge « Vérifié ».'}
         </p>
 
         {etape === 1 ? (
@@ -116,16 +117,15 @@ export default function Inscription() {
               </div>
             </div>
             <div className="acces-champ-bloc">
-              <label htmlFor="origine">Type d'entreprise</label>
-              <select id="origine" className="champ" value={champs.origine} onChange={maj('origine')}>
-                <option value="local">Entreprise locale</option>
-                <option value="grossiste_etranger_ci">Grossiste étranger installé {parCode[champs.pays]?.dans || "en Côte d'Ivoire"}</option>
+              <label htmlFor="type">Type d'entreprise</label>
+              <select id="type" className="champ" required value={champs.typeEntreprise} onChange={maj('typeEntreprise')}>
+                <option value="">Choisir</option>
+                <option value="fabricant">Fabricant : je fabrique ou transforme mes produits</option>
+                <option value="grossiste">Grossiste : j'achète et revends en gros</option>
+                <option value="importateur">Importateur : je fais venir la marchandise de l'étranger</option>
+                <option value="producteur">Producteur : agriculture, élevage, pêche…</option>
               </select>
             </div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
-              <input type="checkbox" checked={champs.estFabricant} onChange={maj('estFabricant')} />
-              Je fabrique ou transforme moi-même mes produits
-            </label>
             <button type="submit" className="btn btn-primary" style={{ justifyContent: 'center' }}>Continuer</button>
           </form>
         ) : (

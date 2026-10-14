@@ -59,3 +59,40 @@ export function trenteDerniersJours() {
     return cleJour(d);
   });
 }
+
+// ---- Profil public (lot 4) ----
+// Types neutres demandés par le client : on ne parle plus de « grossiste étranger »
+export const TYPES_ENTREPRISE = {
+  fabricant: 'Fabricant local',
+  grossiste: 'Grossiste',
+  importateur: 'Importateur',
+  producteur: 'Producteur',
+};
+
+export const LANGUES = {
+  fr: 'Français', en: 'Anglais', zh: 'Chinois', ar: 'Arabe', tr: 'Turc', hi: 'Hindi', pt: 'Portugais', es: 'Espagnol',
+  dioula: 'Dioula', baoule: 'Baoulé', wolof: 'Wolof', ha: 'Haoussa', yo: 'Yoruba', bm: 'Bambara',
+};
+
+export const MOYENS_PAIEMENT = {
+  mobile_money: 'Mobile Money', especes: 'Espèces', virement: 'Virement bancaire', carte: 'Carte bancaire', cheque: 'Chèque',
+};
+
+// Documents affichés publiquement (jamais le numéro ni le fichier)
+export const DOCUMENTS_PUBLICS = {
+  rccm: 'Registre de commerce vérifié',
+  piece_identite: "Pièce d'identité du responsable vérifiée",
+  attestation_residence: 'Adresse vérifiée',
+  certificat_conformite: 'Certificat de conformité vérifié',
+};
+
+// Questions proposées pour démarrer la FAQ du fournisseur
+export const QUESTIONS_SUGGEREES = [
+  "Quel est votre délai de préparation d'une commande ?",
+  'Proposez-vous des échantillons ?',
+  'Quels moyens de paiement acceptez-vous ?',
+  "Expédiez-vous vers d'autres pays ?",
+];
+
+// Le fournisseur fabrique (ou produit) lui-même : on montre l'atelier ; sinon, d'où vient la marchandise
+export const estProducteur = (type) => type === 'fabricant' || type === 'producteur';

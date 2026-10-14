@@ -24,7 +24,9 @@ export async function recupererGrossiste(id) {
   const requete = (colonnes) => supabase.from('grossiste').select(colonnes).eq('id', id).maybeSingle();
   // logo, bannière et date d'inscription : lus d'abord, avec repli si les droits de la base ne les exposent pas
   // l'adresse courte (slug, migration 0021) est lue en premier, avec repli tant que la migration n'est pas exécutée
-  let { data, error } = await requete(`${base}, logo_url, banniere_url, date_ajout, slug`);
+  const vitrine = ', type_entreprise, pays_origine, afficher_origine, langues, annee_creation, specialites, emplacement, zones_expedition, moyens_paiement, video_presentation_url, atelier, nb_employes, capacite_production, sur_mesure, pose_logo, pays_provenance, marques, frequence_arrivages, faq, verifie_le, pays_code';
+  let { data, error } = await requete(`${base}, logo_url, banniere_url, date_ajout, slug${vitrine}`);
+  if (error) ({ data, error } = await requete(`${base}, logo_url, banniere_url, date_ajout, slug`));
   if (error) ({ data, error } = await requete(`${base}, logo_url, banniere_url, date_ajout`));
   if (error) ({ data, error } = await requete(base));
   if (error) throw error;
@@ -34,8 +36,27 @@ export async function recupererGrossiste(id) {
   return {
     ...data,
     photos: [...data.grossiste_photo].sort((a, b) => a.ordre - b.ordre).map((p) => p.url),
-    produits: visibles.sort((a, b) => a.nom.localeCompare(b.nom, 'fr')),
+    // Les plus récents d'abord (tri par défaut demandé par le client)
+    produits: visibles.sort((a, b) => new Date(b.date_ajout || 0) - new Date(a.date_ajout || 0)),
   };
+}
+
+// Documents de l'entreprise vérifiés par l'équipe (types seulement : jamais le numéro ni le fichier). [] si indisponible.
+export async function recupererDocumentsVerifies(grossisteId) {
+  const { data, error } = await supabase.rpc('documents_verifies', { p_grossiste_id: grossisteId });
+  return error || !Array.isArray(data) ? [] : data.map((d) => d.type);
+}
+
+// Photos prises par l'équipe LOOHOO lors de la visite (migration 0028). [] si indisponible.
+export async function recupererPhotosTerrain(grossisteId) {
+  const { data, error } = await supabase.rpc('photos_terrain', { p_grossiste_id: grossisteId });
+  return error || !Array.isArray(data) ? [] : data;
+}
+
+// Pays d'origine que les fournisseurs choisissent d'afficher (filtre « origine »). [] si indisponible.
+export async function recupererOrigines() {
+  const { data, error } = await supabase.rpc('origines_fournisseurs');
+  return error || !Array.isArray(data) ? [] : data;
 }
 
 // ---- Compte fournisseur ----
@@ -62,7 +83,7 @@ async function ouvrirCompte(email, password, attente) {
   return data.session ? { confirmationRequise: false } : { confirmationRequise: true };
 }
 
-async function creerProfilFournisseur({ nom, categorie, ville, commune, telephone, estFabricant, origine, stockConfirme, paysCode }) {
+async function creerProfilFournisseur({ nom, categorie, ville, commune, telephone, estFabricant, origine, stockConfirme, paysCode, typeEntreprise }) {
   const { error } = await supabase.rpc('creer_profil_fournisseur', {
     p_nom: nom, p_categorie: categorie, p_ville: ville, p_commune: commune || null,
     p_telephone: telephone, p_est_fabricant: !!estFabricant,
@@ -74,6 +95,8 @@ async function creerProfilFournisseur({ nom, categorie, ville, commune, telephon
     await supabase.from('grossiste')
       .update({ origine: origine || 'local', stock_confirme: !!stockConfirme, ...(paysCode ? { pays_code: paysCode } : {}) })
       .eq('user_id', session.user.id);
+    // Type d'entreprise (migration 0029) : à part, pour ne rien bloquer si la migration n'est pas encore exécutée
+    if (typeEntreprise) await supabase.from('grossiste').update({ type_entreprise: typeEntreprise }).eq('user_id', session.user.id).then(() => {}, () => {});
   }
 }
 
@@ -373,7 +396,8 @@ export async function capturerLead(email, recherche) {
 }
 
 export async function incrementerVueProfil(id) {
-  await supabase.rpc('incrementer_vue_profil', { p_id: id }).catch(() => {}); // jamais bloquant
+  // La requête Supabase n'a pas de .catch : on passe par .then pour ne jamais bloquer (et pour qu'elle parte vraiment)
+  await supabase.rpc('incrementer_vue_profil', { p_id: id }).then(() => {}, () => {});
 }
 
 export async function recupererMesStats() {
@@ -730,10 +754,11 @@ export async function recupererLiensCommunaute() {
 
 // ---- Recherche du catalogue (migration 0026) ----
 // Renvoie { produits, total }. Les filtres vides sont ignorés.
-export async function rechercherCatalogue({ q, categorie, pays, ville, commune, prixMax, qteMax, verifies, tri = 'pertinence', limite = 24, decalage = 0 } = {}) {
+export async function rechercherCatalogue({ q, categorie, pays, ville, commune, prixMax, qteMax, verifies, origine, tri = 'pertinence', limite = 24, decalage = 0 } = {}) {
   const { data, error } = await supabase.rpc('rechercher_catalogue', {
     p_q: q || null, p_categorie: categorie || null, p_pays: pays || null, p_ville: ville || null, p_commune: commune || null,
     p_prix_max: prixMax || null, p_qte_max: qteMax || null, p_verifies: !!verifies, p_tri: tri, p_limite: limite, p_decalage: decalage,
+    ...(origine ? { p_origine: origine } : {}),
   });
   if (error) {
     // Migration 0026 pas encore exécutée : on se replie sur l'ancienne recherche, sans les nouveaux filtres
