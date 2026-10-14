@@ -304,6 +304,24 @@ export default function Profil() {
             <div className="esp-liste-ligne"><span>Membre depuis</span><strong style={{ textTransform: 'capitalize' }}>{membreDepuis}</strong></div>
           </div>
 
+          {/* Accord pour le site officiel (migration 0028) : la carte n'apparaît qu'une fois la colonne créée */}
+          {profil.afficher_site_officiel !== undefined && (
+            <div className="esp-carte">
+              <h2 className="esp-carte-titre">Site officiel LOOHOO</h2>
+              <label className="esp-interrupteur">
+                <span>
+                  <strong style={{ display: 'block', fontSize: '0.92rem' }}>Apparaître parmi « Nos premiers fournisseurs vérifiés »</strong>
+                  <span className="esp-aide">
+                    Sur looh-oo.com : votre nom, votre spécialité, votre commune et la photo prise par LOOHOO lors de la visite.
+                    Réservé aux fournisseurs vérifiés. Vous pouvez retirer votre accord à tout moment.
+                  </span>
+                </span>
+                <input type="checkbox" checked={!!profil.afficher_site_officiel} onChange={(e) => enregistrerChamps({ afficher_site_officiel: e.target.checked })} />
+                <span className="esp-interrupteur-piste" aria-hidden="true" />
+              </label>
+            </div>
+          )}
+
           <div className="esp-carte">
             <h2 className="esp-carte-titre">
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}><Clock size={18} /> Horaires d'ouverture</span>

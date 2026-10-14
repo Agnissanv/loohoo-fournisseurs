@@ -124,7 +124,7 @@ export default function Mediatheque() {
                   <img src={m.url} alt={m.nom} style={{ width: '100%', aspectRatio: '4 / 3', objectFit: 'cover' }} />
                   <span className="badge" style={{
                     position: 'absolute', top: '0.5rem', left: '0.5rem',
-                    background: utilisees.has(m.url) ? '#2f8f4e' : 'var(--loo-orange)', color: '#fff',
+                    background: utilisees.has(m.url) ? '#2f8f4e' : 'var(--loo-orange)', color: utilisees.has(m.url) ? '#fff' : 'var(--loo-encre)',
                   }}>
                     {utilisees.has(m.url) ? 'Utilisée' : 'Non utilisée'}
                   </span>

@@ -111,3 +111,13 @@ Testée sur le moteur de test.
 À exécuter après 0026. Testée sur le moteur de test.
 Les produits déjà en ligne ne sont pas modifiés. Pour repérer ceux qui contiennent une promesse interdite (à corriger ou retirer) :
 `select id, nom from public.produit where cardinality(public.promesses_interdites(nom || ' ' || coalesce(description, ''))) > 0;`
+
+## 0028 — Site officiel (looh-oo.com)
+- « Nos premiers fournisseurs vérifiés » : `grossiste.afficher_site_officiel` (le fournisseur donne son accord dans son profil, carte
+  « Site officiel LOOHOO ») + table `photo_terrain` (photos prises par l'équipe lors de la visite, réutilisées par le profil public).
+  La section apparaît sur le site officiel à partir de 4 fournisseurs vérifiés, d'accord et avec une photo terrain.
+  Ajouter une photo terrain depuis l'éditeur SQL (après l'avoir envoyée dans Storage > photos > dossier `terrain/`) :
+  `select public.admin_ajouter_photo_terrain('<id du fournisseur>', '<adresse publique de la photo>');`
+- « Le marché en direct » : `marche_en_direct()` renvoie l'activité réelle des 30 derniers jours (fournisseur vérifié, nouveau produit,
+  fournisseur qui ajoute des produits), sans les données de test. Le bandeau reste caché sous 3 événements.
+À exécuter après 0027. Testée sur le moteur de test.
