@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
-import { prixCFA, quantite } from '../utils/prix.js';
+import { prixCFA, quantite, uniteAccordee } from '../utils/prix.js';
 import { useLangue } from '../i18n/Langue.jsx';
 
 const prixFr = (n) => Number(n).toLocaleString('fr-FR');
@@ -27,6 +27,8 @@ export function PaliersProduit({ moq, prix, paliers, unite }) {
 
   return (
     <div className="paliers-produit">
+      {/* Un seul prix : pas besoin d'étiquettes, le calcul du total suffit */}
+      {niveaux.length > 1 && (
       <div className="paliers-cases" role="list" aria-label={t('Prix selon la quantité')}>
         {niveaux.map((niv, i) => {
           const suivant = niveaux[i + 1];
@@ -40,12 +42,13 @@ export function PaliersProduit({ moq, prix, paliers, unite }) {
           );
         })}
       </div>
+      )}
 
       <div className="calcul-total">
         <label htmlFor="quantite-voulue">{t('Votre quantité')}</label>
         <div className="calcul-ligne">
           <input id="quantite-voulue" className="champ" type="number" inputMode="numeric" min={niveaux[0].min} placeholder={String(niveaux[0].min)} value={qte} onChange={(e) => setQte(e.target.value)} />
-          <span>{unite || t('pièces')}</span>
+          <span>{t(uniteAccordee(qte === '' ? niveaux[0].min : n, unite))}</span>
         </div>
         {qte !== '' && (unitaire == null
           ? <p className="calcul-alerte">{t('Le minimum de commande est de {q}.', { q: quantite(niveaux[0].min, unite) })}</p>

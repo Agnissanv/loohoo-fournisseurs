@@ -327,7 +327,7 @@ security definer
 set search_path = public
 as $$
 begin
-  if not public.is_admin() then
+  if auth.uid() is not null and not public.is_admin() then -- éditeur SQL de Supabase (sans utilisateur) : autorisé
     raise exception 'Réservé à l''administrateur' using errcode = '42501';
   end if;
   if p_statut not in ('fourni', 'verifie', 'rejete') then
@@ -350,7 +350,7 @@ security definer
 set search_path = public
 as $$
 begin
-  if not public.is_admin() then
+  if auth.uid() is not null and not public.is_admin() then -- éditeur SQL de Supabase (sans utilisateur) : autorisé
     raise exception 'Réservé à l''administrateur' using errcode = '42501';
   end if;
   return query
@@ -410,7 +410,7 @@ security definer
 set search_path = public
 as $$
 begin
-  if not public.is_admin() then
+  if auth.uid() is not null and not public.is_admin() then -- éditeur SQL de Supabase (sans utilisateur) : autorisé
     raise exception 'Réservé à l''administrateur' using errcode = '42501';
   end if;
   return query

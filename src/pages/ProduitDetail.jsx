@@ -306,7 +306,7 @@ export default function ProduitDetail() {
                 {g.est_fabricant && <span className="badge badge-fabricant"><Factory size={12} /> {t('Fabricant local')}</span>}
               </div>
               <p className="fp-fournisseur-infos">
-                <span><MapPin size={13} aria-hidden="true" /> {g.commune ? `${g.commune}, ` : ''}{g.ville}{pays ? ` · ${pays.drapeau} ${pays.nom}` : ''}</span>
+                <span><MapPin size={13} aria-hidden="true" /> {g.commune ? `${g.commune}, ` : ''}{g.ville}{pays ? ` · ${pays.nom}` : ''}</span>
                 {depuis && <span>{t('Membre depuis {duree}', { duree: depuis })}</span>}
                 {avis?.nombre > 0 && (
                   <span><Star size={13} fill="var(--loo-orange)" color="var(--loo-orange)" aria-hidden="true" /> {avis.moyenne.toLocaleString(locale)} ({t('{n} avis', { n: avis.nombre })})</span>

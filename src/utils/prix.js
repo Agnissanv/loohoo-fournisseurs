@@ -18,12 +18,17 @@ export function fourchettePrix(p) {
 
 const INVARIABLES = ['kg', 'g', 'l', 'ml', 'm'];
 
+// « pièce » ou « pièces » selon le nombre (kg, l, m restent invariables)
+export function uniteAccordee(n, unite = 'pièce') {
+  const u = unite || 'pièce';
+  if (Number(n) <= 1 || INVARIABLES.includes(u.toLowerCase()) || /[sx]$/.test(u)) return u;
+  return /(eau|eu)$/.test(u) ? `${u}x` : `${u}s`;
+}
+
 // « 1 pièce », « 13 pièces », « 5 kg »
 export function quantite(n, unite = 'pièce') {
-  const u = unite || 'pièce';
   const nombre = Number(n) || 0;
-  const accord = nombre > 1 && !INVARIABLES.includes(u.toLowerCase()) && !/s$|x$/.test(u) ? `${u}s` : u;
-  return `${nombre.toLocaleString('fr-FR')} ${accord}`;
+  return `${nombre.toLocaleString('fr-FR')} ${uniteAccordee(nombre, unite)}`;
 }
 
 // Produit ajouté il y a moins de 30 jours

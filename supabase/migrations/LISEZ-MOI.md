@@ -95,3 +95,19 @@ Testée sur le moteur de test.
 - `rechercher_catalogue()` et `categories_catalogue()` : la recherche de l'accueil (filtres, tris, pagination, prix des paliers, données de test exclues).
 - `fournisseurs_a_la_une()` renvoie aussi la date d'inscription, la date de vérification et l'adresse courte.
 À exécuter après 0024 et 0025. Testée sur le moteur de test.
+
+## 0027 — Fiche produit (lot 3)
+- Publication immédiate : un produit ajouté par le fournisseur est en ligne tout de suite. L'équipe le retire après coup (statut
+  « rejeté » + motif) ; un produit rejeté puis corrigé repasse « en vérification ». Les anciens produits en attente sont publiés une fois
+  (sauf ceux qui contiennent une coordonnée).
+- Contrôle à l'envoi : nom, description, mots-clés, usage et référence sont refusés s'ils contiennent un numéro, un e-mail, un lien,
+  ou une promesse de santé, de résultat ou de livraison. Le fournisseur voit la raison.
+- Caractéristiques : usage, pièces et poids du carton, origine, délai de préparation, matière, marque, modèle, variantes,
+  capacité mensuelle, personnalisation, échantillon (et son prix).
+- Paliers : trois prix au maximum (le prix de base + deux paliers dégressifs).
+- Favoris produits (`basculer_favori_produit`, `mes_produits_favoris`), certificats (`ajouter_certificat`, `certificats_produit`,
+  `admin_certificats`, `admin_verifier_certificat(id, 'verifie' | 'rejete')`), signalements (`signaler_produit`, `admin_signalements_produits`).
+  Vérifier un certificat depuis l'éditeur SQL : `select * from public.admin_certificats();` puis le fichier est dans Storage > documents.
+À exécuter après 0026. Testée sur le moteur de test.
+Les produits déjà en ligne ne sont pas modifiés. Pour repérer ceux qui contiennent une promesse interdite (à corriger ou retirer) :
+`select id, nom from public.produit where cardinality(public.promesses_interdites(nom || ' ' || coalesce(description, ''))) > 0;`

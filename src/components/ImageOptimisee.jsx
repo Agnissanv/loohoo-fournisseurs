@@ -28,7 +28,7 @@ export default function ImageOptimisee({ src, largeur = 600, alt = '', className
       className={`loo-img-fondu${affichee ? ' loo-img-prete' : ''} ${className}`.trim()}
       loading={prioritaire ? 'eager' : 'lazy'}
       decoding="async"
-      fetchPriority={prioritaire ? 'high' : undefined}
+      {...(prioritaire ? { fetchpriority: 'high' } : {})} // en minuscules : React 18 ne connaît pas encore fetchPriority
       onLoad={() => setPrete(src)}
       onError={() => { if (!enEchec) setEchec(src); else setPrete(src); }}
       ref={(el) => { if (el && el.complete && el.naturalWidth > 0) setPrete(src); }}
