@@ -1,32 +1,52 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { BadgeCheck, Check, ChevronRight, Copy, Factory, MapPin, MessageCircle, Share2 } from 'lucide-react';
-import { recupererProduitPublic, recupererAutresProduitsFournisseur, rechercherCatalogue } from '../api/fournisseurs.js';
+import { BadgeCheck, Check, ChevronRight, Copy, Factory, FileCheck2, Flag, MapPin, MessageCircle, Package, ShieldCheck, Star } from 'lucide-react';
+import {
+  recupererProduitPublic, recupererAutresProduitsFournisseur, rechercherCatalogue, recupererCertificats, recupererResumeAvis,
+} from '../api/fournisseurs.js';
 import ModaleContact from '../components/ModaleContact.jsx';
+import ModaleSignalement from '../components/ModaleSignalement.jsx';
 import IndicateursConfiance from '../components/IndicateursConfiance.jsx';
 import ImageOptimisee from '../components/ImageOptimisee.jsx';
-import { TableauPaliers } from '../components/PaliersPrix.jsx';
-import CarteProduit from '../components/CarteProduit.jsx';
+import BoutonFavoriProduit from '../components/BoutonFavoriProduit.jsx';
+import RangeeProduits from '../components/RangeeProduits.jsx';
+import { PaliersProduit } from '../components/PaliersPrix.jsx';
+import { IconeWhatsApp } from '../components/IconesReseaux.jsx';
+import { estNouveau, fourchettePrix, prixCFA, quantite } from '../utils/prix.js';
+import { infosPays } from '../utils/pays.js';
+import { anciennete } from '../utils/profilFournisseur.js';
+import { initiales } from '../utils/messagerie.js';
 import { noterVisite } from '../utils/suiviVisites.js';
 import { useTitre } from '../utils/useTitre.js';
+import { useLangue } from '../i18n/Langue.jsx';
 
-const formatPrix = (n) => Number(n).toLocaleString('fr-FR');
-const formatPoids = (g) => (g >= 1000 ? `${(g / 1000).toLocaleString('fr-FR')} kg` : `${g} g`);
+const nombre = (n) => Number(n).toLocaleString('fr-FR');
+const poids = (kg) => (kg < 1 ? `${nombre(Math.round(kg * 1000))} g` : `${nombre(kg)} kg`);
+
+// La date la plus récente où le fournisseur (ou l'équipe) a confirmé le prix et le stock
+function dateVerification(p) {
+  const dates = [p.stock_maj_le, p.stock_verifie_le, p.date_ajout].filter(Boolean).map((d) => new Date(d)).filter((d) => !Number.isNaN(d.getTime()));
+  return dates.length ? new Date(Math.max(...dates)) : null;
+}
 
 export default function ProduitDetail() {
   const { id } = useParams();
+  const { t, langue } = useLangue();
   const [produit, setProduit] = useState(undefined);
   const [panne, setPanne] = useState(false);
   const [essai, setEssai] = useState(0);
   const [photoActive, setPhotoActive] = useState(0);
   const [contactOuvert, setContactOuvert] = useState(false);
+  const [signalementOuvert, setSignalementOuvert] = useState(false);
   const [memeFournisseur, setMemeFournisseur] = useState([]);
   const [similaires, setSimilaires] = useState([]);
+  const [certificats, setCertificats] = useState([]);
+  const [avis, setAvis] = useState(null);
   const [lienCopie, setLienCopie] = useState(false);
 
   useTitre(
     produit ? `${produit.nom} en gros` : null,
-    produit ? `${produit.nom} : ${formatPrix(produit.prix_gros_fcfa)} F CFA, minimum ${produit.moq}. Demandez un devis à ${produit.grossiste?.nom}.` : null,
+    produit ? `${produit.nom} : ${fourchettePrix(produit)}, minimum ${quantite(produit.moq || 1, produit.unite)}. Vendu par ${produit.grossiste?.nom}. Demandez un devis sur LOOHOO.` : null,
   );
 
   useEffect(() => {
@@ -34,17 +54,25 @@ export default function ProduitDetail() {
     setProduit(undefined);
     setPanne(false);
     setPhotoActive(0);
+    setMemeFournisseur([]);
+    setSimilaires([]);
+    setCertificats([]);
+    setAvis(null);
     window.scrollTo({ top: 0 });
     recupererProduitPublic(id).then((p) => {
       if (annule) return;
       setProduit(p);
       if (!p) return;
-      if (p.grossiste) noterVisite({ grossisteId: p.grossiste.id, produitId: p.id });
-      // Deux rangées de suggestions : du même fournisseur, puis dans la même catégorie. Elles ne bloquent jamais la fiche.
-      recupererAutresProduitsFournisseur(p.grossiste.id, p.id).then((l) => { if (!annule) setMemeFournisseur(l); });
+      noterVisite({ grossisteId: p.grossiste.id, produitId: p.id });
+      // Tout le reste se charge à côté : rien de tout ça ne bloque l'affichage de la fiche
+      recupererCertificats(p.id).then((l) => { if (!annule) setCertificats(l); });
+      recupererResumeAvis(p.grossiste.id).then((a) => { if (!annule) setAvis(a); });
+      recupererAutresProduitsFournisseur(p.grossiste.id, p.id).then((l) => {
+        if (!annule) setMemeFournisseur(l.map((x) => ({ ...x, grossiste_nom: p.grossiste.nom, badge_verifie: p.grossiste.badge_verifie })));
+      });
       if (p.categorie) {
-        rechercherCatalogue({ categorie: p.categorie, limite: 12 }).then(({ produits }) => {
-          if (!annule) setSimilaires(produits.filter((x) => x.id !== p.id).slice(0, 10));
+        rechercherCatalogue({ categorie: p.categorie, limite: 14 }).then(({ produits }) => {
+          if (!annule) setSimilaires(produits.filter((x) => x.id !== p.id && x.grossiste_id !== p.grossiste.id).slice(0, 12));
         }).catch(() => {});
       }
     }).catch(() => { if (!annule) { setProduit(null); setPanne(true); } });
@@ -52,15 +80,24 @@ export default function ProduitDetail() {
   }, [id, essai]);
 
   if (produit === undefined) {
-    return <section className="section"><div className="container"><div className="loo-squelette" style={{ height: '400px' }} /></div></section>;
+    return (
+      <section className="section fp-page" aria-busy="true">
+        <div className="container">
+          <div className="fp-grille">
+            <div className="fp-medias"><div className="loo-squelette fp-squelette-photo" /></div>
+            <div className="fp-panneau"><div className="loo-squelette" style={{ height: '340px', borderRadius: '16px' }} /></div>
+          </div>
+        </div>
+      </section>
+    );
   }
   if (!produit && panne) {
     return (
       <section className="section">
         <div className="container">
-          <h1 className="section-titre">Chargement impossible.</h1>
-          <p className="section-intro">La connexion semble coupée. Vérifiez votre réseau, puis réessayez.</p>
-          <button type="button" className="btn btn-primary" style={{ marginTop: '1.2rem' }} onClick={() => setEssai((n) => n + 1)}>Réessayer</button>
+          <h1 className="section-titre">{t('Chargement impossible.')}</h1>
+          <p className="section-intro">{t('La connexion semble coupée. Vérifiez votre réseau, puis réessayez.')}</p>
+          <button type="button" className="btn btn-primary" style={{ marginTop: '1.2rem' }} onClick={() => setEssai((n) => n + 1)}>{t('Réessayer')}</button>
         </div>
       </section>
     );
@@ -69,30 +106,66 @@ export default function ProduitDetail() {
     return (
       <section className="section">
         <div className="container">
-          <h1 className="section-titre">Produit introuvable.</h1>
-          <p className="section-intro">Il n'est plus disponible ou a été retiré par le fournisseur.</p>
-          <Link to="/" className="btn btn-primary" style={{ marginTop: '1.2rem' }}>Voir les autres produits</Link>
+          <h1 className="section-titre">{t('Produit introuvable.')}</h1>
+          <p className="section-intro">{t("Il n'est plus disponible ou a été retiré par le fournisseur.")}</p>
+          <Link to="/" className="btn btn-primary" style={{ marginTop: '1.2rem' }}>{t('Voir les autres produits')}</Link>
         </div>
       </section>
     );
   }
 
   const g = produit.grossiste;
-  const lien = typeof window !== 'undefined' ? window.location.href : '';
-  const dimensions = [produit.longueur_cm, produit.largeur_cm, produit.hauteur_cm].every((v) => v != null)
-    ? `${produit.longueur_cm} × ${produit.largeur_cm} × ${produit.hauteur_cm} cm` : null;
+  const p = produit;
+  const unite = p.unite || 'pièce';
+  const locale = langue === 'en' ? 'en-GB' : 'fr-FR';
+  const dateFr = (d) => new Date(d).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
+  const lien = typeof window !== 'undefined' ? `${window.location.origin}/produit/${p.id}` : '';
+  const pays = infosPays(g.pays_code || 'CI');
+  const verifieLe = dateVerification(p);
+  const certifVerifie = certificats.some((c) => c.statut === 'verifie');
+  const lienProfil = `/grossiste/${g.id}`;
+  const depuis = anciennete(g.date_ajout);
 
-  // Caractéristiques : on n'affiche que ce que le fournisseur a renseigné
+  // Caractéristiques : seulement ce que le fournisseur a renseigné. La référence reste à part, les mots-clés ne s'affichent pas.
+  const dimensions = [p.longueur_cm, p.largeur_cm, p.hauteur_cm].every((v) => v != null)
+    ? `${nombre(p.longueur_cm)} × ${nombre(p.largeur_cm)} × ${nombre(p.hauteur_cm)} cm` : null;
+  const origine = p.origine_produit
+    ? `${p.origine_produit} · ${p.origine_produit === pays?.nom ? t('fabrication locale') : t('importé')}` : null;
+  const delai = p.delai_preparation_jours == null ? null
+    : Number(p.delai_preparation_jours) === 0 ? t('Prêt tout de suite')
+      : t(Number(p.delai_preparation_jours) > 1 ? '{n} jours' : '{n} jour', { n: p.delai_preparation_jours });
+  const conditionnement = p.pieces_par_carton
+    ? `${t('{q} par carton', { q: quantite(p.pieces_par_carton, unite === 'carton' ? 'pièce' : unite) })}${p.poids_carton_kg ? ` · ${t('{p} le carton', { p: poids(Number(p.poids_carton_kg)) })}` : ''}` : null;
+  const echantillon = p.echantillon_disponible
+    ? (p.prix_echantillon == null ? t('Disponible') : Number(p.prix_echantillon) === 0 ? t('Disponible, gratuit') : t('Disponible : {prix}', { prix: prixCFA(p.prix_echantillon) }))
+    : null;
   const specs = [
-    ['Quantité minimale', `${produit.moq}${produit.unite ? ` ${produit.unite}${produit.moq > 1 && produit.unite !== 'kg' ? 's' : ''}` : ''}`],
-    produit.prix_unitaire_fcfa != null && ['Prix à l’unité', `${formatPrix(produit.prix_unitaire_fcfa)} F CFA`],
-    produit.stock_disponible != null && ['Stock disponible', `${formatPrix(produit.stock_disponible)}${produit.unite ? ` ${produit.unite}` : ''}${produit.stock_verifie_le ? ` · vérifié par LOOHOO le ${new Date(produit.stock_verifie_le).toLocaleDateString('fr-FR')}` : ''}`],
-    produit.categorie && ['Catégorie', produit.categorie],
-    produit.sous_categorie && ['Sous-catégorie', produit.sous_categorie],
-    produit.poids_grammes != null && ['Poids d’une unité', formatPoids(produit.poids_grammes)],
-    dimensions && ['Dimensions', dimensions],
-    produit.sku && ['Référence', produit.sku],
+    p.usage && [t('Usage'), p.usage],
+    origine && [t('Origine'), origine],
+    delai && [t('Délai de préparation'), delai],
+    [t('Minimum de commande'), quantite(p.moq || 1, p.unite)],
+    p.prix_unitaire_fcfa != null && [t("Prix à l'unité"), prixCFA(p.prix_unitaire_fcfa)],
+    p.stock_disponible != null && [t('Stock disponible'), quantite(p.stock_disponible, p.unite)],
+    conditionnement && [t('Conditionnement'), conditionnement],
+    p.poids_grammes != null && [t("Poids d'une unité"), poids(p.poids_grammes / 1000)],
+    dimensions && [t("Dimensions d'une unité"), dimensions],
+    p.matiere && [t('Matière'), p.matiere],
+    p.marque && [t('Marque'), p.marque],
+    p.modele && [t('Modèle'), p.modele],
+    p.variantes && [t('Couleurs et tailles'), p.variantes],
+    p.capacite_mensuelle && [t('Capacité de production'), t('{q} par mois', { q: quantite(p.capacite_mensuelle, p.unite) })],
+    p.personnalisable && [t('Personnalisation'), t('Possible (logo, couleur, emballage)')],
+    echantillon && [t('Échantillon'), echantillon],
+    p.categorie && [t('Catégorie'), p.sous_categorie ? `${t(p.categorie)} › ${p.sous_categorie}` : t(p.categorie)],
   ].filter(Boolean);
+
+  const messageWhatsApp = [
+    t('Regarde ce produit sur LOOHOO :'),
+    `*${p.nom}*`,
+    t('{prix} par {unite}, minimum {q}', { prix: fourchettePrix(p), unite, q: quantite(p.moq || 1, p.unite) }),
+    t('Vendu par {nom}{verifie}', { nom: g.nom, verifie: g.badge_verifie ? ` (${t('fournisseur vérifié')})` : '' }),
+    lien,
+  ].join('\n');
 
   async function copierLien() {
     try {
@@ -102,141 +175,184 @@ export default function ProduitDetail() {
     } catch { /* presse-papiers indisponible */ }
   }
 
-  const texteWhatsApp = encodeURIComponent(`${produit.nom} à ${formatPrix(produit.prix_gros_fcfa)} F CFA (minimum ${produit.moq}) sur LOOHOO : ${lien}`);
-  const marqueFournisseur = { grossiste_nom: g.nom, badge_verifie: g.badge_verifie };
-
   return (
-    <section className="section fiche-avec-cta" style={{ paddingTop: '1.6rem' }}>
+    <section className="section fp-page fiche-avec-cta">
       <div className="container">
-        <nav aria-label="Fil d'Ariane" style={styles.fil}>
-          <Link to="/">Accueil</Link>
-          {produit.categorie && <><ChevronRight size={14} /><Link to={`/?categorie=${encodeURIComponent(produit.categorie)}`}>{produit.categorie}</Link></>}
-          <ChevronRight size={14} /><span aria-current="page">{produit.nom}</span>
+        <nav aria-label={t("Fil d'Ariane")} className="fp-fil">
+          <Link to="/">{t('Accueil')}</Link>
+          {p.categorie && <><ChevronRight size={14} aria-hidden="true" /><Link to={`/?categorie=${encodeURIComponent(p.categorie)}`}>{t(p.categorie)}</Link></>}
+          <ChevronRight size={14} aria-hidden="true" /><span aria-current="page">{p.nom}</span>
         </nav>
 
-        <div className="loo-fiche-produit">
-          <div>
-            <div style={styles.imagePrincipale}>
-              {produit.photos[photoActive] ? (
-                <ImageOptimisee key={produit.photos[photoActive]} src={produit.photos[photoActive]} largeur={1000} prioritaire alt={produit.nom} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <div className="fp-grille">
+          <div className="fp-medias">
+            <div className="fp-photo">
+              {p.photos[photoActive] ? (
+                <ImageOptimisee key={p.photos[photoActive]} src={p.photos[photoActive]} largeur={1000} prioritaire alt={p.nom} />
               ) : (
-                <div style={{ width: '100%', height: '100%', background: 'var(--loo-papier-ombre)' }} />
+                <Package size={48} color="var(--loo-orange)" aria-hidden="true" />
               )}
+              {estNouveau(p.date_ajout) && <span className="badge-nouveau">{t('Nouveau')}</span>}
             </div>
-            {produit.photos.length > 1 && (
-              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.6rem', flexWrap: 'wrap' }}>
-                {produit.photos.map((url, i) => (
-                  <button key={url} type="button" onClick={() => setPhotoActive(i)} aria-label={`Photo ${i + 1}`} style={{ ...styles.miniature, borderColor: i === photoActive ? 'var(--loo-rouge)' : 'var(--loo-papier-ombre)' }}>
-                    <ImageOptimisee src={url} largeur={200} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            {p.photos.length > 1 && (
+              <div className="fp-miniatures">
+                {p.photos.map((url, i) => (
+                  <button key={url} type="button" onClick={() => setPhotoActive(i)} aria-label={t('Photo {n}', { n: i + 1 })} aria-pressed={i === photoActive}
+                    className={`fp-miniature${i === photoActive ? ' fp-miniature-active' : ''}`}>
+                    <ImageOptimisee src={url} largeur={200} alt="" />
                   </button>
                 ))}
               </div>
             )}
-            {produit.video_url && (
-              <video src={produit.video_url} controls preload="metadata" style={{ width: '100%', borderRadius: 'var(--rayon-sm)', marginTop: '1rem' }} />
-            )}
           </div>
 
-          <div>
-            <h1 style={{ fontSize: 'clamp(1.6rem, 3vw, 2.1rem)', marginBottom: '0.5rem' }}>{produit.nom}</h1>
-            <div style={styles.prixLigne}>
-              <span style={styles.prix}>{formatPrix(produit.prix_gros_fcfa)} F CFA{produit.unite ? ` / ${produit.unite}` : ''}</span>
-              <span style={styles.puce}>Minimum : {produit.moq}</span>
-            </div>
-            <TableauPaliers moq={produit.moq} prix={produit.prix_gros_fcfa} paliers={produit.paliers} unite={produit.unite} />
-            <p style={{ margin: '0.2rem 0 0', fontSize: '0.8rem', opacity: 0.6 }}>Prix de gros indicatif. Le fournisseur confirme son devis selon la quantité.</p>
+          <aside className="fp-panneau" aria-label={t('Prix et commande')}>
+            {certificats.length > 0 && (
+              <a href="#certificats" className={`fp-certif${certifVerifie ? ' fp-certif-verifie' : ''}`}>
+                {certifVerifie ? <ShieldCheck size={15} aria-hidden="true" /> : <FileCheck2 size={15} aria-hidden="true" />}
+                {certifVerifie ? t('Certificat vérifié par LOOHOO') : t('Document fourni par le fournisseur')}
+              </a>
+            )}
+            <h1 className="fp-titre">{p.nom}</h1>
+            <p className="fp-vendu">
+              {t('Vendu par')} <Link to={lienProfil}>{g.nom}</Link>
+              {g.badge_verifie && <span className="fp-vendu-verifie"><BadgeCheck size={15} aria-hidden="true" /> {t('Vérifié')}</span>}
+              <span className="fp-vendu-lieu"><MapPin size={13} aria-hidden="true" /> {g.commune ? `${g.commune}, ${g.ville}` : g.ville}</span>
+            </p>
 
-            <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', margin: '1.2rem 0' }}>
-              <button type="button" className="btn btn-primary" onClick={() => setContactOuvert(true)} style={{ flex: '1 1 220px', justifyContent: 'center' }}>
-                <MessageCircle size={17} /> Demander un devis
+            <div className="fp-prix">
+              <strong>{fourchettePrix(p)}</strong> <span>/ {t(unite)}</span>
+            </div>
+            <p className="fp-minimum">{t('Minimum de commande : {q}', { q: quantite(p.moq || 1, p.unite) })}</p>
+
+            <PaliersProduit moq={p.moq} prix={p.prix_gros_fcfa} paliers={p.paliers} unite={p.unite} />
+
+            <p className="fp-ferme">{t('Prix fermes selon la quantité. Seuls la livraison et les demandes particulières (emballage, personnalisation) se discutent avec le fournisseur.')}</p>
+            {verifieLe && (
+              <p className="fp-verifie-le"><Check size={14} aria-hidden="true" /> {t('Prix et stock vérifiés le {date}', { date: dateFr(verifieLe) })}</p>
+            )}
+
+            <div className="fp-actions">
+              <button type="button" className="btn btn-primary fp-devis" onClick={() => setContactOuvert(true)}>
+                <MessageCircle size={17} aria-hidden="true" /> {t('Demander un devis')}
               </button>
-              <a className="btn btn-outline" href={`https://wa.me/?text=${texteWhatsApp}`} target="_blank" rel="noreferrer" aria-label="Partager sur WhatsApp"><Share2 size={16} /> Partager</a>
-              <button type="button" className="btn btn-outline" onClick={copierLien} aria-label="Copier le lien">
-                {lienCopie ? <><Check size={16} /> Copié</> : <Copy size={16} />}
-              </button>
+              <div className="fp-actions-secondaires">
+                <a className="btn btn-outline fp-whatsapp" href={`https://wa.me/?text=${encodeURIComponent(messageWhatsApp)}`} target="_blank" rel="noreferrer">
+                  <IconeWhatsApp size={17} /> {t('Partager sur WhatsApp')}
+                </a>
+                <BoutonFavoriProduit produitId={p.id} />
+                <button type="button" className="btn btn-outline fp-copier" onClick={copierLien} aria-label={t('Copier le lien')} title={t('Copier le lien')}>
+                  {lienCopie ? <Check size={16} /> : <Copy size={16} />}
+                </button>
+              </div>
             </div>
+          </aside>
 
-            {produit.description && <p style={{ opacity: 0.85, lineHeight: 1.65, margin: '0 0 1.2rem', whiteSpace: 'pre-line' }}>{produit.description}</p>}
-
-            <h2 style={{ fontSize: '1rem', margin: '0 0 0.6rem' }}>Caractéristiques</h2>
-            <div className="fiche-specs">
-              {specs.map(([k, v]) => <React.Fragment key={k}><div>{k}</div><div>{v}</div></React.Fragment>)}
-            </div>
-
-            {produit.tags?.length > 0 && (
-              <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginTop: '1rem' }}>
-                {produit.tags.map((t) => (
-                  <Link key={t} to={`/?q=${encodeURIComponent(t)}`} className="badge badge-fabricant" style={{ textTransform: 'none', letterSpacing: 0, fontFamily: 'inherit', fontSize: '0.78rem' }}>{t}</Link>
-                ))}
+          <div className="fp-details">
+            {p.description && (
+              <div className="fp-bloc">
+                <h2>{t('Description')}</h2>
+                <p className="fp-description">{p.description}</p>
               </div>
             )}
 
-            <Link to={`/grossiste/${g.id}`} className="carte" style={styles.carteFournisseur}>
-              {g.logo_url ? <ImageOptimisee src={g.logo_url} largeur={160} style={styles.logo} /> : <div style={{ ...styles.logo, background: 'var(--loo-papier-ombre)' }} />}
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: '0.74rem', opacity: 0.6 }}>Vendu par</div>
-                <div style={{ display: 'flex', gap: '0.4rem', margin: '0.15rem 0', flexWrap: 'wrap' }}>
-                  {g.badge_verifie && <span className="badge badge-verifie"><BadgeCheck size={12} /> Vérifié</span>}
-                  {g.est_fabricant && <span className="badge badge-fabricant"><Factory size={12} /> Fabricant</span>}
-                </div>
-                <strong style={{ fontSize: '0.98rem' }}>{g.nom}</strong>
-                <div style={{ fontSize: '0.82rem', opacity: 0.7, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                  <MapPin size={13} /> {g.commune ? `${g.commune}, ${g.ville}` : g.ville}
-                </div>
+            <div className="fp-bloc">
+              <h2>{t('Caractéristiques')}</h2>
+              <dl className="fp-specs">
+                {specs.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
+              </dl>
+              {p.sku && <p className="fp-reference">{t('Référence : {ref}', { ref: p.sku })}</p>}
+            </div>
+
+            {certificats.length > 0 && (
+              <div className="fp-bloc" id="certificats">
+                <h2>{t('Certificats')}</h2>
+                <ul className="fp-certifs">
+                  {certificats.map((c) => (
+                    <li key={c.id}>
+                      {c.statut === 'verifie' ? <ShieldCheck size={20} color="var(--loo-vert)" aria-hidden="true" /> : <FileCheck2 size={20} color="var(--loo-orange)" aria-hidden="true" />}
+                      <div>
+                        <strong>{c.type_certificat}</strong>
+                        <span>{t('Délivré par {organisme}', { organisme: c.organisme })}{c.date_expiration ? ` · ${t("valable jusqu'au {date}", { date: dateFr(c.date_expiration) })}` : ''}</span>
+                        <em className={c.statut === 'verifie' ? 'fp-certif-etat-ok' : ''}>
+                          {c.statut === 'verifie' ? t('Certificat vérifié par LOOHOO') : t('Document fourni par le fournisseur')}
+                        </em>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <ChevronRight size={18} style={{ marginLeft: 'auto', opacity: 0.5, flexShrink: 0 }} />
-            </Link>
-            <IndicateursConfiance grossisteId={g.id} verifie={false} compact />
+            )}
+
+            {p.video_url && (
+              <div className="fp-bloc">
+                <h2>{t('Vidéo')}</h2>
+                <video src={p.video_url} controls preload="metadata" className="fp-video" />
+              </div>
+            )}
           </div>
         </div>
 
-        {memeFournisseur.length > 0 && (
-          <Rangee titre={`Autres produits de ${g.nom}`} lien={`/grossiste/${g.id}`} libelleLien="Voir tout le catalogue">
-            {memeFournisseur.map((p) => <CarteProduit key={p.id} p={{ ...p, ...marqueFournisseur }} />)}
-          </Rangee>
-        )}
-        {similaires.filter((p) => !memeFournisseur.some((m) => m.id === p.id)).length > 0 && (
-          <Rangee titre="Produits similaires" lien={`/?categorie=${encodeURIComponent(produit.categorie)}`} libelleLien={`Tout voir en ${produit.categorie}`}>
-            {similaires.filter((p) => !memeFournisseur.some((m) => m.id === p.id)).map((p) => <CarteProduit key={p.id} p={p} />)}
-          </Rangee>
-        )}
+        <section className="fp-fournisseur" aria-labelledby="titre-fournisseur">
+          <div className="fp-fournisseur-tete">
+            {g.logo_url
+              ? <ImageOptimisee src={g.logo_url} largeur={160} alt="" className="fp-logo" />
+              : <span className="fp-logo fp-logo-initiales" aria-hidden="true">{initiales(g.nom)}</span>}
+            <div style={{ minWidth: 0 }}>
+              <span className="fp-surtitre">{t('Le fournisseur')}</span>
+              <h2 id="titre-fournisseur"><Link to={lienProfil}>{g.nom}</Link></h2>
+              <div className="fp-fournisseur-badges">
+                {g.badge_verifie && <span className="badge badge-verifie"><BadgeCheck size={12} /> {t('Vérifié')}</span>}
+                {g.est_fabricant && <span className="badge badge-fabricant"><Factory size={12} /> {t('Fabricant local')}</span>}
+              </div>
+              <p className="fp-fournisseur-infos">
+                <span><MapPin size={13} aria-hidden="true" /> {g.commune ? `${g.commune}, ` : ''}{g.ville}{pays ? ` · ${pays.drapeau} ${pays.nom}` : ''}</span>
+                {depuis && <span>{t('Membre depuis {duree}', { duree: depuis })}</span>}
+                {avis?.nombre > 0 && (
+                  <span><Star size={13} fill="var(--loo-orange)" color="var(--loo-orange)" aria-hidden="true" /> {avis.moyenne.toLocaleString(locale)} ({t('{n} avis', { n: avis.nombre })})</span>
+                )}
+              </p>
+            </div>
+          </div>
+          <IndicateursConfiance grossisteId={g.id} verifie={false} compact />
+          <div className="fp-fournisseur-actions">
+            <Link to={lienProfil} className="btn btn-outline">{t('Voir le profil et le catalogue')}</Link>
+            <button type="button" className="btn btn-primary" onClick={() => setContactOuvert(true)}><MessageCircle size={16} aria-hidden="true" /> {t('Demander un devis')}</button>
+          </div>
+        </section>
+
+        <p className="fp-confiance">
+          <ShieldCheck size={18} aria-hidden="true" />
+          <span>{t('Demandez vos devis et discutez dans la messagerie LOOHOO : vos coordonnées restent privées. Un souci avec un produit ? Signalez-le à notre équipe.')}</span>
+        </p>
+
+        <div className="fp-rangees">
+          <RangeeProduits titre={t('Autres produits de {nom}', { nom: g.nom })} produits={memeFournisseur}
+            action={<Link to={lienProfil} className="rangee-tout">{t('Tout voir')}</Link>} />
+          <RangeeProduits titre={t('Produits similaires')} produits={similaires}
+            action={p.categorie ? <Link to={`/?categorie=${encodeURIComponent(p.categorie)}`} className="rangee-tout">{t('Tout voir')}</Link> : null} />
+        </div>
+
+        <p style={{ textAlign: 'center', margin: '0.5rem 0 0' }}>
+          <button type="button" className="fp-signaler" onClick={() => setSignalementOuvert(true)}>
+            <Flag size={14} aria-hidden="true" /> {t('Signaler ce produit')}
+          </button>
+        </p>
       </div>
 
       {/* Sur téléphone, le bouton principal reste toujours sous le pouce */}
       <div className="fiche-cta-mobile">
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: 'var(--police-etiquette)', fontWeight: 700, color: 'var(--loo-rouge)' }}>{formatPrix(produit.prix_gros_fcfa)} F CFA{produit.unite ? ` / ${produit.unite}` : ''}</div>
-          <div style={{ fontSize: '0.74rem', opacity: 0.65 }}>Minimum : {produit.moq}</div>
+          <div className="fp-cta-prix">{fourchettePrix(p)}</div>
+          <div style={{ fontSize: '0.74rem', opacity: 0.65 }}>{t('Minimum')} : {quantite(p.moq || 1, p.unite)}</div>
         </div>
-        <button type="button" className="btn btn-primary" onClick={() => setContactOuvert(true)}><MessageCircle size={16} /> Demander un devis</button>
+        <button type="button" className="btn btn-primary" onClick={() => setContactOuvert(true)}><MessageCircle size={16} aria-hidden="true" /> {t('Demander un devis')}</button>
       </div>
 
       {contactOuvert && (
-        <ModaleContact grossiste={g} produit={{ id: produit.id, nom: produit.nom, unite: produit.unite, moq: produit.moq }} onClose={() => setContactOuvert(false)} />
+        <ModaleContact grossiste={g} produit={{ id: p.id, nom: p.nom, unite: p.unite, moq: p.moq }} onClose={() => setContactOuvert(false)} />
       )}
+      {signalementOuvert && <ModaleSignalement produit={p} onClose={() => setSignalementOuvert(false)} />}
     </section>
   );
 }
-
-function Rangee({ titre, lien, libelleLien, children }) {
-  return (
-    <div style={{ marginTop: '2.6rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '1rem', marginBottom: '0.8rem', flexWrap: 'wrap' }}>
-        <h2 style={{ fontSize: '1.25rem' }}>{titre}</h2>
-        <Link to={lien} style={{ fontWeight: 600, fontSize: '0.88rem', color: 'var(--loo-rouge)' }}>{libelleLien} →</Link>
-      </div>
-      <div className="etal-rangee">{children}</div>
-    </div>
-  );
-}
-
-const styles = {
-  fil: { display: 'flex', alignItems: 'center', gap: '0.3rem', flexWrap: 'wrap', fontSize: '0.84rem', marginBottom: '1.2rem', opacity: 0.8 },
-  imagePrincipale: { height: '360px', borderRadius: '4px 20px 4px 20px', overflow: 'hidden', background: 'var(--loo-papier-ombre)' },
-  miniature: { width: '60px', height: '60px', borderRadius: '6px', overflow: 'hidden', border: '2px solid', padding: 0, cursor: 'pointer', background: 'none' },
-  prixLigne: { display: 'flex', alignItems: 'baseline', gap: '0.8rem', flexWrap: 'wrap' },
-  prix: { fontFamily: 'var(--police-etiquette)', fontWeight: 700, color: 'var(--loo-rouge)', fontSize: '1.4rem' },
-  puce: { fontFamily: 'var(--police-etiquette)', fontSize: '0.85rem', opacity: 0.7 },
-  carteFournisseur: { display: 'flex', alignItems: 'center', gap: '0.8rem', padding: '0.9rem', marginTop: '1.4rem' },
-  logo: { width: '52px', height: '52px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 },
-};

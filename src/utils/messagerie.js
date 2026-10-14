@@ -88,6 +88,17 @@ export function contientCoordonnees(texte = '') {
     || /(https?:\/\/|www\.)\S+/i.test(texte);
 }
 
+// Promesses interdites dans une fiche produit (même liste que la base, migration 0027) : renvoie ce qui a été trouvé
+const PROMESSES = [
+  ['une promesse de santé', /(guerit|guerir|guerison|soigne |soigner|remede|miracle|maigrir|minceur|perdre du poids|perte de poids|ventre plat|diminuer le ventre|reduire le ventre|bruler les graisses|brule[- ]graisse|anti[- ]?cancer|contre le cancer|contre le diabete|traite l.hypertension)/],
+  ['une promesse de résultat', /(resultats? garantis?|efficacite garantie|100 ?% garanti|satisfait ou rembourse|resultat en [0-9]+ (jours|semaines|heures)|en [0-9]+ jours seulement)/],
+  ['une promesse de livraison', /(livraison (gratuite|offerte|garantie|express|rapide garantie|partout)|livre(e|es|s)? en [0-9]+ ?h|livre(e|es|s)? partout)/],
+];
+export function promessesInterdites(texte = '') {
+  const t = String(texte).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  return PROMESSES.filter(([, motif]) => motif.test(t)).map(([nom]) => nom);
+}
+
 // ---- Premiers messages prêts à envoyer (fenêtre de contact) ----
 // Pour l'acheteur qui ne sait pas quoi écrire : un clic envoie le message. Aucun n'a de partie à compléter.
 export const PREMIERS_MESSAGES_PRODUIT = [

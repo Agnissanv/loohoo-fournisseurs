@@ -192,13 +192,19 @@ export async function mettreAJourProfil(id, champs) {
 // Renvoie l'id du produit créé (pour y rattacher ses photos)
 export async function ajouterProduit(grossisteId, produit) {
   const { data, error } = await supabase.from('produit').insert({ grossiste_id: grossisteId, ...produit }).select('id').single();
-  if (error) throw error;
+  if (error) throw erreurProduit(error);
   return data.id;
 }
 
 export async function modifierProduit(id, champs) {
   const { error } = await supabase.from('produit').update(champs).eq('id', id);
-  if (error) throw error;
+  if (error) throw erreurProduit(error);
+}
+
+// Colonne inconnue = la base n'a pas encore reçu la migration des caractéristiques (0027)
+function erreurProduit(error) {
+  if (error?.code === 'PGRST204') return new Error("La base de données n'est pas à jour (migration 0027 à exécuter).");
+  return error;
 }
 
 export async function supprimerProduit(id) {
@@ -424,14 +430,17 @@ export async function rechercherProduits({ q = '', categorie = '', ville = '', c
 export async function recupererProduitPublic(id) {
   const base = `id, nom, description, tags, categorie, sous_categorie, video_url,
       prix_gros_fcfa, prix_unitaire_fcfa, moq, unite, poids_grammes,
-      produit_photo(url, ordre),
-      grossiste(id, nom, badge_verifie, est_fabricant, ville, commune, statut, logo_url)`;
+      produit_photo(url, ordre)`;
+  // Le pays du fournisseur (migration 0024) est lu avec les colonnes récentes ; sans lui, on retombe sur l'ancienne liste
+  const fournisseur = (recent) => `, grossiste(id, nom, badge_verifie, est_fabricant, ville, commune, statut, logo_url, date_ajout${recent ? ', slug, pays_code' : ''})`;
   const requete = (colonnes) => supabase.from('produit').select(colonnes)
     .eq('id', id).eq('statut', 'publie').eq('actif', true).maybeSingle();
   // Stock, dimensions et référence : lus d'abord, avec repli si les droits de la base ne les exposent pas
   let data = null;
   let error = null;
-  for (const extra of [', paliers, stock_disponible, longueur_cm, largeur_cm, hauteur_cm, sku, stock_verifie_le', ', stock_disponible, longueur_cm, largeur_cm, hauteur_cm, sku, stock_verifie_le', ', stock_disponible, longueur_cm, largeur_cm, hauteur_cm, sku', '']) {
+  // Caractéristiques détaillées (migration 0027) lues d'abord, avec repli tant que la migration n'est pas exécutée
+  const caracteristiques = ', usage, pieces_par_carton, poids_carton_kg, origine_produit, delai_preparation_jours, matiere, marque, modele, variantes, capacite_mensuelle, personnalisable, echantillon_disponible, prix_echantillon';
+  for (const extra of [`, paliers, date_ajout, stock_maj_le, stock_disponible, longueur_cm, largeur_cm, hauteur_cm, sku, stock_verifie_le${caracteristiques}${fournisseur(true)}`, `, paliers, stock_disponible, longueur_cm, largeur_cm, hauteur_cm, sku, stock_verifie_le${fournisseur(false)}`, `, stock_disponible, longueur_cm, largeur_cm, hauteur_cm, sku, stock_verifie_le${fournisseur(false)}`, `, stock_disponible, longueur_cm, largeur_cm, hauteur_cm, sku${fournisseur(false)}`, fournisseur(false)]) {
     ({ data, error } = await requete(`${base}${extra}`));
     if (!error) break;
   }
@@ -630,6 +639,13 @@ export async function recupererMesAvis(affaireIds) {
   return data;
 }
 
+// Note moyenne et nombre d'avis seulement (fiche produit) ; null si la migration 0016 n'est pas exécutée
+export async function recupererResumeAvis(grossisteId) {
+  const { data, error } = await supabase.rpc('resume_avis', { p_grossiste_id: grossisteId });
+  if (error) return null;
+  return { nombre: Number(data?.[0]?.nombre) || 0, moyenne: Number(data?.[0]?.moyenne) || 0 };
+}
+
 export async function recupererAvisPublics(grossisteId) {
   const [liste, resume] = await Promise.all([
     supabase.rpc('avis_publics', { p_grossiste_id: grossisteId, p_limite: 20 }),
@@ -733,4 +749,54 @@ export async function recupererCategoriesCatalogue() {
   const { data, error } = await supabase.rpc('categories_catalogue');
   if (error) return recupererFiltres().then((f) => f.categories.map((c) => ({ categorie: c, nombre: '' }))).catch(() => []);
   return data || [];
+}
+
+// ---- Fiche produit (migration 0027) : favoris produits, certificats, signalements ----
+export async function estFavoriProduit(produitId) {
+  const { data, error } = await supabase.rpc('est_favori_produit', { p_produit_id: produitId });
+  return !error && data === true;
+}
+
+export async function basculerFavoriProduit(produitId) {
+  const { data, error } = await supabase.rpc('basculer_favori_produit', { p_produit_id: produitId });
+  if (error) throw error;
+  return data === true;
+}
+
+export async function recupererMesProduitsFavoris() {
+  const { data, error } = await supabase.rpc('mes_produits_favoris');
+  if (error) return [];
+  return data || [];
+}
+
+export async function recupererCertificats(produitId) {
+  const { data, error } = await supabase.rpc('certificats_produit', { p_produit_id: produitId });
+  if (error) return [];
+  return data || [];
+}
+
+// Envoie le document (PDF ou image) dans l'espace privé du fournisseur, puis enregistre le certificat
+export async function ajouterCertificat(grossisteId, produitId, { type, organisme, dateExpiration, fichier }) {
+  let chemin = null;
+  if (fichier) {
+    if (!['image/jpeg', 'image/png', 'application/pdf'].includes(fichier.type)) throw new Error('Formats acceptés : JPG, PNG, PDF');
+    if (fichier.size > 10 * 1024 * 1024) throw new Error('Fichier trop volumineux (10 Mo max)');
+    chemin = `${grossisteId}/certificats/${Date.now().toString(36)}-${fichier.name.replace(/[^\w.-]+/g, '_')}`;
+    const { error: erreurEnvoi } = await supabase.storage.from('documents').upload(chemin, fichier);
+    if (erreurEnvoi) throw erreurEnvoi;
+  }
+  const { error } = await supabase.rpc('ajouter_certificat', {
+    p_produit_id: produitId, p_type: type, p_organisme: organisme, p_date_expiration: dateExpiration || null, p_chemin: chemin,
+  });
+  if (error) throw error;
+}
+
+export async function supprimerCertificat(id) {
+  const { error } = await supabase.rpc('supprimer_certificat', { p_id: id });
+  if (error) throw error;
+}
+
+export async function signalerProduit(produitId, motif, details) {
+  const { error } = await supabase.rpc('signaler_produit', { p_produit_id: produitId, p_motif: motif, p_details: details || null });
+  if (error) throw error;
 }
