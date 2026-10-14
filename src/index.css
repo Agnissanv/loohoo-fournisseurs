@@ -786,7 +786,7 @@ a.carte:active { transform: translateY(-1px); }
 .fp-squelette-photo { aspect-ratio: 4 / 3; border-radius: var(--coupe); }
 @media (max-width: 640px) { .fp-photo, .fp-squelette-photo { aspect-ratio: 1 / 1; } .fp-miniature { width: 56px; height: 56px; } }
 
-.fp-certif { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.78rem; font-weight: 600; color: #8A4A00; background: var(--loo-orange-clair); padding: 0.3em 0.75em; border-radius: 999px; margin-bottom: 0.7rem; }
+.fp-certif { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.76rem; font-weight: 600; color: #8A4A00; background: var(--loo-orange-clair); padding: 0.2em 0.65em; border-radius: 999px; }
 .fp-certif-verifie { color: var(--loo-vert); background: var(--loo-vert-clair); }
 .fp-titre { font-size: clamp(1.4rem, 2.6vw, 1.85rem); line-height: 1.15; margin: 0 0 0.45rem; }
 .fp-vendu { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.55rem; font-size: 0.9rem; margin: 0 0 1rem; line-height: 1.4; }
@@ -863,8 +863,9 @@ a.carte:active { transform: translateY(-1px); }
 .fp-fournisseur-infos { display: flex; flex-wrap: wrap; gap: 0.2rem 1rem; margin: 0.45rem 0 0; font-size: 0.85rem; opacity: 0.8; line-height: 1.4; }
 .fp-fournisseur-infos span { display: inline-flex; align-items: center; gap: 0.25rem; }
 .fp-fournisseur-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.3rem; }
-.fp-confiance { display: flex; gap: 0.6rem; align-items: flex-start; margin: 1rem 0 2.2rem; padding: 0.85rem 1rem; border-radius: 12px; background: var(--loo-vert-clair); color: #135E47; font-size: 0.88rem; line-height: 1.5; }
-.fp-confiance svg { flex-shrink: 0; margin-top: 0.1rem; }
+.fp-confiance { list-style: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem 1.6rem; margin: 1rem 0 2.2rem; padding: 0.85rem 1rem; border-radius: 12px; background: var(--loo-orange-clair); font-size: 0.9rem; font-weight: 600; }
+.fp-confiance li { display: inline-flex; align-items: center; gap: 0.4rem; }
+.fp-confiance svg { color: var(--loo-orange); flex-shrink: 0; }
 .fp-signaler { background: none; border: 0; font: inherit; font-size: 0.84rem; color: var(--loo-encre); opacity: 0.6; text-decoration: underline; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem; }
 .fp-signaler:hover { opacity: 1; color: var(--loo-rouge); }
 .fp-cta-prix { font-family: var(--police-etiquette); font-weight: 700; color: var(--loo-rouge); font-size: 0.95rem; }

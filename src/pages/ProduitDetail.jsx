@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { BadgeCheck, Check, ChevronRight, Copy, Factory, FileCheck2, Flag, MapPin, MessageCircle, Package, ShieldCheck, Star } from 'lucide-react';
+import { BadgeCheck, Check, ChevronRight, Copy, Factory, FileCheck2, Flag, MapPin, MessageCircle, Package, ShieldCheck, Star, Tag } from 'lucide-react';
 import {
   recupererProduitPublic, recupererAutresProduitsFournisseur, rechercherCatalogue, recupererCertificats, recupererResumeAvis,
 } from '../api/fournisseurs.js';
@@ -207,16 +207,16 @@ export default function ProduitDetail() {
           </div>
 
           <aside className="fp-panneau" aria-label={t('Prix et commande')}>
-            {certificats.length > 0 && (
-              <a href="#certificats" className={`fp-certif${certifVerifie ? ' fp-certif-verifie' : ''}`}>
-                {certifVerifie ? <ShieldCheck size={15} aria-hidden="true" /> : <FileCheck2 size={15} aria-hidden="true" />}
-                {certifVerifie ? t('Certificat vérifié par LOOHOO') : t('Document fourni par le fournisseur')}
-              </a>
-            )}
             <h1 className="fp-titre">{p.nom}</h1>
             <p className="fp-vendu">
               {t('Vendu par')} <Link to={lienProfil}>{g.nom}</Link>
               {g.badge_verifie && <span className="fp-vendu-verifie"><BadgeCheck size={15} aria-hidden="true" /> {t('Vérifié')}</span>}
+              {certificats.length > 0 && (
+                <a href="#certificats" className={`fp-certif${certifVerifie ? ' fp-certif-verifie' : ''}`}>
+                  {certifVerifie ? <ShieldCheck size={14} aria-hidden="true" /> : <FileCheck2 size={14} aria-hidden="true" />}
+                  {certifVerifie ? t('Certificat vérifié par LOOHOO') : t('Document fourni par le fournisseur')}
+                </a>
+              )}
               <span className="fp-vendu-lieu"><MapPin size={13} aria-hidden="true" /> {g.commune ? `${g.commune}, ${g.ville}` : g.ville}</span>
             </p>
 
@@ -321,10 +321,11 @@ export default function ProduitDetail() {
           </div>
         </section>
 
-        <p className="fp-confiance">
-          <ShieldCheck size={18} aria-hidden="true" />
-          <span>{t('Demandez vos devis et discutez dans la messagerie LOOHOO : vos coordonnées restent privées. Un souci avec un produit ? Signalez-le à notre équipe.')}</span>
-        </p>
+        <ul className="fp-confiance" aria-label={t('Pourquoi LOOHOO')}>
+          <li><ShieldCheck size={17} aria-hidden="true" /> {t('Fournisseur contrôlé')}</li>
+          <li><MessageCircle size={17} aria-hidden="true" /> {t('Devis en un message')}</li>
+          <li><Tag size={17} aria-hidden="true" /> {t('Prix de gros affichés')}</li>
+        </ul>
 
         <div className="fp-rangees">
           <RangeeProduits titre={t('Autres produits de {nom}', { nom: g.nom })} produits={memeFournisseur}

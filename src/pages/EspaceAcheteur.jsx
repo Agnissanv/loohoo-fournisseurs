@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { BadgeCheck, Bookmark, Calculator, Heart, MessageCircle, Rocket } from 'lucide-react';
+import { BadgeCheck, Calculator, Heart, MessageCircle, Rocket } from 'lucide-react';
 import CarteProduit from '../components/CarteProduit.jsx';
 import {
   suivreSession, recupererMonRole, recupererSessionVendeur, recupererMesConversations, recupererMesVentes, recupererMesFavoris, recupererMesProduitsFavoris, capturerLead,
@@ -131,9 +131,9 @@ export default function EspaceAcheteur() {
         </div>
 
         <div className="esp-carte" style={{ marginTop: '1.4rem' }}>
-          <h2 className="esp-carte-titre"><span><Bookmark size={16} aria-hidden="true" /> Produits enregistrés</span>{produitsEnregistres.length > 0 && <span style={{ fontSize: '0.8rem', fontWeight: 500, opacity: 0.6 }}>{produitsEnregistres.length}</span>}</h2>
+          <h2 className="esp-carte-titre"><span><Heart size={16} aria-hidden="true" /> Produits favoris</span>{produitsEnregistres.length > 0 && <span style={{ fontSize: '0.8rem', fontWeight: 500, opacity: 0.6 }}>{produitsEnregistres.length}</span>}</h2>
           {produitsEnregistres.length === 0
-            ? <p className="esp-aide" style={{ margin: 0 }}>Aucun produit enregistré. Sur la fiche d'un produit, appuyez sur « Enregistrer » pour le retrouver ici et comparer avant de commander.</p>
+            ? <p className="esp-aide" style={{ margin: 0 }}>Aucun produit en favori. Sur la fiche d'un produit, appuyez sur « Ajouter aux favoris » pour le retrouver ici et comparer avant de commander.</p>
             : <div className="loo-fournisseurs-grille">{produitsEnregistres.map((p) => <CarteProduit key={p.id} p={p} />)}</div>}
         </div>
 

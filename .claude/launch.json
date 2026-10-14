@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--", "--port", "5174", "--strictPort"],
       "port": 5174
+    },
+    {
+      "name": "site-officiel",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "../loohoo", "run", "dev", "--", "--port", "5201", "--strictPort"],
+      "port": 5201
     }
   ]
 }
