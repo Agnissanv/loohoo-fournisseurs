@@ -34,8 +34,8 @@ export function PaliersProduit({ moq, prix, paliers, unite }) {
           return (
             <div key={niv.min} role="listitem" className={`palier-case${actif ? ' palier-case-actif' : ''}`}>
               <span className="palier-qte">{suivant ? `${prixFr(niv.min)} – ${prixFr(suivant.min - 1)}` : t('{n} et plus', { n: prixFr(niv.min) })}</span>
-              <strong>{prixCFA(niv.prix)}</strong>
-              <span className="palier-unite">{t('par {unite}', { unite: unite || t('pièce') })}</span>
+              <strong>{prixFr(niv.prix)}</strong>
+              <span className="palier-unite">{t('F CFA / {unite}', { unite: t(unite || 'pièce') })}</span>
             </div>
           );
         })}
