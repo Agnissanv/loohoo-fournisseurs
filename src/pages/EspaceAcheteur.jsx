@@ -103,7 +103,7 @@ export default function EspaceAcheteur() {
         <div className="esp-grille esp-deux" style={{ marginTop: '1.4rem' }}>
           <div className="esp-carte">
             <h2 className="esp-carte-titre"><span><Heart size={16} aria-hidden="true" /> Fournisseurs suivis</span></h2>
-            {favoris.length === 0 && <p className="esp-aide" style={{ margin: 0 }}>Aucun fournisseur suivi. Sur la page d'un fournisseur, appuyez sur « Suivre » pour le retrouver ici.</p>}
+            {favoris.length === 0 && <p className="esp-aide" style={{ margin: 0 }}>Aucun fournisseur suivi. Sur la page d'un fournisseur, appuyez sur « Suivre » pour le retrouver ici et recevoir ses promotions dans votre cloche.</p>}
             {favoris.map((g) => (
               <Link key={g.id} to={`/grossiste/${g.id}`} className="esp-liste-ligne">
                 <div style={{ minWidth: 0 }}>

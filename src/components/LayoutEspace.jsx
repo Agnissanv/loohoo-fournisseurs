@@ -3,8 +3,10 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   BarChart3, Bell, ChevronDown, ExternalLink, Image as IconeImage, LayoutDashboard, LogOut,
-  Menu, MessageCircle, Package, Settings, X,
+  Megaphone, Menu, MessageCircle, Package, Settings, X,
 } from 'lucide-react';
+import ListeAnnonces from './ListeAnnonces.jsx';
+import { useCloche } from '../utils/useCloche.js';
 import Header from './Header.jsx';
 import { ChoixLangue } from '../i18n/Langue.jsx';
 import Footer from './Footer.jsx';
@@ -18,6 +20,7 @@ const LIENS = [
   { vers: '/produits', texte: 'Mes produits', icone: Package },
   { vers: '/mediatheque', texte: 'Médiathèque', icone: IconeImage },
   { vers: '/conversations', texte: 'Demandes', icone: MessageCircle, pastille: true },
+  { vers: '/promotions', texte: 'Promotions', icone: Megaphone },
   { vers: '/statistiques', texte: 'Statistiques', icone: BarChart3 },
   { vers: '/profil', texte: 'Paramètres', icone: Settings },
 ];
@@ -91,7 +94,7 @@ export default function LayoutEspace() {
         </div>
         <div className="esp-haut-droite">
           <ChoixLangue />
-          <Cloche nonLus={nonLus} />
+          <Cloche nonLus={nonLus} session={session} />
           <MenuUtilisateur identite={identite} onDeconnexion={async () => { await deconnecterFournisseur(); navigate('/'); }} />
         </div>
       </header>
@@ -135,23 +138,30 @@ function useClicExterieur(ouvert, fermer) {
   return ref;
 }
 
-function Cloche({ nonLus }) {
+function Cloche({ nonLus, session }) {
   const [ouvert, setOuvert] = useState(false);
   const [liste, setListe] = useState(null);
+  const [aLire, setALire] = useState(new Set());
+  const actualites = useCloche(session);
   const fermer = useCallback(() => setOuvert(false), []);
   const ref = useClicExterieur(ouvert, fermer);
+  const total = nonLus + actualites.nouveaux;
 
   function basculer() {
     const suivant = !ouvert;
     setOuvert(suivant);
-    if (suivant) recupererNotifications('fournisseur').then(setListe).catch(() => setListe([]));
+    if (suivant) {
+      recupererNotifications('fournisseur').then(setListe).catch(() => setListe([]));
+      setALire(new Set(actualites.elements.filter(actualites.estNouveau).map((e) => e.id)));
+      if (actualites.nouveaux > 0) actualites.marquerLues();
+    }
   }
 
   return (
     <div className="esp-relatif" ref={ref}>
-      <button type="button" className="esp-bouton-icone" onClick={basculer} aria-label={`Notifications${nonLus ? ` (${nonLus} non lues)` : ''}`}>
+      <button type="button" className="esp-bouton-icone" onClick={basculer} aria-label={`Notifications${total ? ` (${total} non lues)` : ''}`}>
         <Bell size={22} />
-        {nonLus > 0 && <span className="esp-pastille">{nonLus > 99 ? '99+' : nonLus}</span>}
+        {total > 0 && <span className="esp-pastille">{total > 99 ? '99+' : total}</span>}
       </button>
       {ouvert && (
         <div className="esp-menu-deroulant" style={{ minWidth: '300px' }}>
@@ -165,6 +175,13 @@ function Cloche({ nonLus }) {
             </Link>
           ))}
           <Link to="/conversations" onClick={fermer} style={{ justifyContent: 'center', color: 'var(--loo-rouge)', fontWeight: 600 }}>Voir toutes les conversations</Link>
+          {actualites.elements.length > 0 && (
+            <>
+              <div className="esp-menu-titre" style={{ borderTop: '1px solid var(--loo-papier-ombre)', marginTop: '0.3rem', paddingTop: '0.6rem' }}>Actualités LOOHOO</div>
+              <ListeAnnonces elements={actualites.elements.slice(0, 3)} nouveaux={aLire} onChoisir={fermer} compact />
+              <Link to="/notifications" onClick={fermer} style={{ justifyContent: 'center', color: 'var(--loo-rouge)', fontWeight: 600 }}>Toutes les actualités</Link>
+            </>
+          )}
         </div>
       )}
     </div>

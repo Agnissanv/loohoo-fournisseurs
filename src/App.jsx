@@ -29,6 +29,8 @@ const Conditions = lazy(() => import('./pages/Conditions.jsx'));
 const MotDePasseOublie = lazy(() => import('./pages/MotDePasseOublie.jsx'));
 const NouveauMotDePasse = lazy(() => import('./pages/NouveauMotDePasse.jsx'));
 const DevenirFournisseur = lazy(() => import('./pages/DevenirFournisseur.jsx'));
+const Notifications = lazy(() => import('./pages/Notifications.jsx'));
+const Promotions = lazy(() => import('./pages/Promotions.jsx'));
 
 function GestionDuScroll() {
   const { pathname } = useLocation();
@@ -91,6 +93,7 @@ export default function App() {
           <Route path="/produit/:id" element={<ProduitDetail />} />
           <Route path="/mon-espace" element={<EspaceAcheteur />} />
           <Route path="/calculateur-marge" element={<CalculateurMarge />} />
+          <Route path="/notifications" element={<Notifications />} />
           <Route path="/connexion" element={<Connexion />} />
           <Route path="/inscription" element={<ChoixInscription />} />
           <Route path="/inscription/fournisseur" element={<Inscription />} />
@@ -116,6 +119,7 @@ export default function App() {
           <Route path="/mediatheque" element={<Mediatheque />} />
           <Route path="/profil" element={<Profil />} />
           <Route path="/statistiques" element={<Statistiques />} />
+          <Route path="/promotions" element={<Promotions />} />
           <Route path="/conversations" element={<Messagerie />} />
           <Route path="/conversations/:id" element={<Messagerie />} />
         </Route>

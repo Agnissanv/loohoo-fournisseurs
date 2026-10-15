@@ -133,3 +133,16 @@ Les produits déjà en ligne ne sont pas modifiés. Pour repérer ceux qui conti
 - `documents_verifies()` (types seulement, jamais le numéro ni le fichier), `origines_fournisseurs()` et le filtre `p_origine`
   de `rechercher_catalogue()`.
 À exécuter après 0028. Testée sur le moteur de test.
+
+## 0030 — Communauté et cloche de notifications (lot 5)
+- Table `annonce` : nouveautés et annonces de l'équipe, ouverture d'un pays (créée toute seule quand un pays passe « actif »),
+  promotions des fournisseurs (reçues par les acheteurs qui les suivent). Les vidéos YouTube sont lues sur la chaîne réglée dans
+  « Rejoignez la communauté » (api/videos-youtube.js, sans clé d'API) : rien à stocker.
+- Publier une annonce depuis l'éditeur SQL (en attendant l'écran d'administration) :
+  `select public.admin_publier_annonce('nouveaute', 'Nouveau : prix par paliers', 'Jusqu''à trois prix selon la quantité.', '/');`
+  Types : `nouveaute`, `annonce`, `pays`. Retirer (aussi une promotion) : `select public.admin_retirer_annonce('<id>');`
+  Tout voir : `select * from public.admin_annonces();`
+- Promotions : depuis l'espace fournisseur (menu « Promotions »), 3 par semaine au plus, 60 jours au plus, même contrôle à l'envoi
+  que les produits.
+- `ma_cloche()` et `marquer_cloche_lue()` : la cloche de l'en-tête et ses non lus.
+À exécuter après 0029. Testée sur le moteur de test.

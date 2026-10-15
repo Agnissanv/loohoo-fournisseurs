@@ -825,3 +825,50 @@ export async function signalerProduit(produitId, motif, details) {
   const { error } = await supabase.rpc('signaler_produit', { p_produit_id: produitId, p_motif: motif, p_details: details || null });
   if (error) throw error;
 }
+
+// ---- Communauté (migration 0030) : cloche de notifications, annonces, promotions ----
+// Cloche : annonces LOOHOO pour tous, et promotions des fournisseurs suivis pour un acheteur. Vide si la migration manque.
+export async function recupererCloche(limite = 30) {
+  const { data, error } = await supabase.rpc('ma_cloche', { p_limite: limite });
+  if (error || !data) return { vuLe: null, elements: [] };
+  return { vuLe: data.vu_le || null, elements: Array.isArray(data.elements) ? data.elements : [] };
+}
+
+export async function marquerClocheLue() {
+  await supabase.rpc('marquer_cloche_lue').then(() => {}, () => {});
+}
+
+// Dernières vidéos de la chaîne YouTube (api/videos-youtube.js, gardées une heure par Vercel). [] en local ou en cas de panne.
+export async function recupererVideosYoutube() {
+  try {
+    const r = await fetch('/api/videos-youtube');
+    if (!r.ok || !(r.headers.get('content-type') || '').includes('json')) return [];
+    const liste = await r.json();
+    return Array.isArray(liste) ? liste : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function publierPromotion({ titre, texte, produitId, dateFin }) {
+  const { error } = await supabase.rpc('publier_promotion', {
+    p_titre: titre, p_texte: texte || null, p_produit_id: produitId || null, p_date_fin: dateFin || null,
+  });
+  if (error) throw error;
+}
+
+export async function retirerMaPromotion(id) {
+  const { error } = await supabase.rpc('retirer_ma_promotion', { p_id: id });
+  if (error) throw error;
+}
+
+// null tant que la migration 0030 n'est pas exécutée
+export async function recupererMesPromotions() {
+  const { data, error } = await supabase.rpc('mes_promotions');
+  return error ? null : data || [];
+}
+
+export async function compterMesAbonnes() {
+  const { data, error } = await supabase.rpc('mes_abonnes');
+  return error ? null : Number(data) || 0;
+}

@@ -5,6 +5,7 @@ import { suivreSession, recupererMonRole, deconnecterFournisseur, compterMessage
 import { useTitreNonLus } from '../utils/useTitreNonLus.js';
 import { ChoixLangue, useLangue } from '../i18n/Langue.jsx';
 import BarreRecherche from './BarreRecherche.jsx';
+import ClocheAnnonces from './ClocheAnnonces.jsx';
 
 // En-tête sur une seule ligne, fond clair : logo, langue, puis « Se connecter » / « Créer un compte » (ou le compte connecté).
 // « Devenir fournisseur » n'est plus ici : l'invitation reste discrète en bas de page (retours du client, 13 oct.).
@@ -69,6 +70,7 @@ export default function Header() {
 
         <div className="entete-actions">
           <ChoixLangue />
+          <ClocheAnnonces session={session} />
           {session === undefined ? null : identite ? (
             <>
               <Link to="/conversations" className="entete-icone" aria-label={nonLus ? t('Mes conversations ({n} non lus)', { n: nonLus }) : t('Mes conversations')}>

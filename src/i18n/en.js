@@ -348,6 +348,29 @@ const en = {
   samedi: 'Saturday',
   dimanche: 'Sunday',
 
+  // Communauté : cloche de notifications (lot 5)
+  Notifications: 'Notifications',
+  'Notifications ({n} nouvelles)': 'Notifications ({n} new)',
+  'Rien de nouveau pour le moment. Les annonces de LOOHOO et les promotions des fournisseurs que vous suivez arriveront ici.': "Nothing new yet. LOOHOO announcements and promotions from suppliers you follow will show up here.",
+  'il y a {n} min': '{n} min ago',
+  'il y a {n} h': '{n} h ago',
+  hier: 'yesterday',
+  'il y a {n} jours': '{n} days ago',
+  'Les annonces de LOOHOO et les promotions des fournisseurs que vous suivez.': 'LOOHOO announcements and promotions from the suppliers you follow.',
+  'Les annonces de LOOHOO, les nouveaux pays et les vidéos de la chaîne.': 'LOOHOO announcements, new countries and videos from our channel.',
+  Filtrer: 'Filter',
+  'Aucune promotion en cours.': 'No promotions right now.',
+  'Rien de nouveau pour le moment.': 'Nothing new yet.',
+  "Créez un compte acheteur et appuyez sur « Suivre » sur la page d'un fournisseur : ses promotions arriveront ici.": "Create a buyer account and tap \"Follow\" on a supplier's page: their promotions will show up here.",
+  Nouveauté: 'New feature',
+  'Annonce LOOHOO': 'LOOHOO announcement',
+  'Nouveau pays': 'New country',
+  Promotion: 'Promotion',
+  'Nouvelle vidéo': 'New video',
+  Annonces: 'Announcements',
+  Promotions: 'Promotions',
+  Vidéos: 'Videos',
+
   // Communs
   'F CFA': 'CFA F',
 };
