@@ -10,6 +10,8 @@ const MOTIFS = [
   ['autre', 'Autre problème'],
 ];
 
+
+
 // « Signaler ce produit » : ouvert à tous, même sans compte. L'équipe LOOHOO reçoit le signalement, pas le fournisseur.
 export default function ModaleSignalement({ produit, onClose }) {
   const { t } = useLangue();
