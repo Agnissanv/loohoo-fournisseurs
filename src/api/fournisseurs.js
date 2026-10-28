@@ -25,7 +25,8 @@ export async function recupererGrossiste(id) {
   // logo, bannière et date d'inscription : lus d'abord, avec repli si les droits de la base ne les exposent pas
   // l'adresse courte (slug, migration 0021) est lue en premier, avec repli tant que la migration n'est pas exécutée
   const vitrine = ', type_entreprise, pays_origine, afficher_origine, langues, annee_creation, specialites, emplacement, zones_expedition, moyens_paiement, video_presentation_url, atelier, nb_employes, capacite_production, sur_mesure, pose_logo, pays_provenance, marques, frequence_arrivages, faq, verifie_le, pays_code';
-  let { data, error } = await requete(`${base}, logo_url, banniere_url, date_ajout, slug${vitrine}`);
+  let { data, error } = await requete(`${base}, logo_url, banniere_url, date_ajout, slug${vitrine}, statut_special, statut_special_expiration`);
+  if (error) ({ data, error } = await requete(`${base}, logo_url, banniere_url, date_ajout, slug${vitrine}`));
   if (error) ({ data, error } = await requete(`${base}, logo_url, banniere_url, date_ajout, slug`));
   if (error) ({ data, error } = await requete(`${base}, logo_url, banniere_url, date_ajout`));
   if (error) ({ data, error } = await requete(base));
@@ -626,8 +627,15 @@ export async function recupererMesAffairesConfirmees() {
   return data;
 }
 
-export async function declarerAffaire(conversationId, montant, description) {
-  const { data, error } = await supabase.rpc('declarer_affaire', { p_conversation_id: conversationId, p_montant: montant, p_description: description || null });
+// quantite : facultative ; à la confirmation, le stock du produit de la conversation baisse d'autant (migration 0031)
+export async function declarerAffaire(conversationId, montant, description, quantite) {
+  const appel = (avecQuantite) => supabase.rpc('declarer_affaire', {
+    p_conversation_id: conversationId, p_montant: montant, p_description: description || null,
+    ...(avecQuantite ? { p_quantite: quantite } : {}),
+  });
+  let { data, error } = await appel(Boolean(quantite));
+  // Base pas encore à jour (migration 0031) : on déclare sans la quantité
+  if (error?.code === 'PGRST202' && quantite) ({ data, error } = await appel(false));
   if (error) throw error;
   return data;
 }
@@ -871,4 +879,17 @@ export async function recupererMesPromotions() {
 export async function compterMesAbonnes() {
   const { data, error } = await supabase.rpc('mes_abonnes');
   return error ? null : Number(data) || 0;
+}
+
+// ---- Compléments du cahier des charges (migration 0031) ----
+// Promotions en cours, pour tous (section de l'accueil, fiche produit, page du fournisseur). [] si indisponible.
+export async function recupererPromotionsEnCours(limite = 24, grossisteId = null) {
+  const { data, error } = await supabase.rpc('promotions_en_cours', { p_limite: limite, p_grossiste_id: grossisteId });
+  return error || !Array.isArray(data) ? [] : data;
+}
+
+// Produits les plus vus et les plus demandés sur 7 jours. [] si indisponible.
+export async function recupererTendances(limite = 12) {
+  const { data, error } = await supabase.rpc('tendances_semaine', { p_limite: limite });
+  return error || !Array.isArray(data) ? [] : data;
 }

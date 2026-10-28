@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Megaphone, Users } from 'lucide-react';
 import {
   suivreSession, recupererMonProfil, publierPromotion, retirerMaPromotion, recupererMesPromotions, compterMesAbonnes,
@@ -16,7 +16,8 @@ export default function Promotions() {
   const [profil, setProfil] = useState(undefined);
   const [liste, setListe] = useState(undefined); // null = migration absente
   const [abonnes, setAbonnes] = useState(null);
-  const [champs, setChamps] = useState({ titre: '', texte: '', produitId: '', dateFin: dansJours(14) });
+  const [params] = useSearchParams();
+  const [champs, setChamps] = useState({ titre: '', texte: '', produitId: params.get('produit') || '', dateFin: dansJours(14) });
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState('');
   const [succes, setSucces] = useState('');
@@ -84,7 +85,7 @@ export default function Promotions() {
         <div>
           <strong>{abonnes == null ? '–' : abonnes} acheteur{abonnes > 1 ? 's' : ''} vous sui{abonnes > 1 ? 'vent' : 't'}</strong>
           <p className="esp-aide" style={{ margin: '0.15rem 0 0' }}>
-            Vos promotions arrivent dans leur cloche de notifications. Pour gagner des abonnés, partagez votre page : le bouton « Suivre » y est en haut.
+            Vos promotions arrivent dans la cloche de vos abonnés et des acheteurs qui vous ont déjà écrit. Elles apparaissent aussi sur votre page, sur vos produits (badge « Promo ») et dans « Promotions en cours » à l'accueil.
           </p>
         </div>
         <Link to={`/grossiste/${profil.id}`} target="_blank" className="btn btn-outline" style={{ fontSize: '0.84rem', padding: '0.45em 1em' }}>Voir ma page</Link>

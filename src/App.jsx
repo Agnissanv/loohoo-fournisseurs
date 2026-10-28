@@ -5,6 +5,7 @@ import Footer from './components/Footer.jsx';
 import LayoutEspace from './components/LayoutEspace.jsx';
 import { suivreSession, finaliserInscriptionEnAttente } from './api/fournisseurs.js';
 import { useApparitionAuDefilement } from './utils/useApparitionAuDefilement.js';
+import { useLangue } from './i18n/Langue.jsx';
 const Produits = lazy(() => import('./pages/Produits.jsx'));
 const FicheParLien = lazy(() => import('./pages/FicheParLien.jsx'));
 const EspaceAcheteur = lazy(() => import('./pages/EspaceAcheteur.jsx'));
@@ -41,13 +42,14 @@ function GestionDuScroll() {
 }
 
 function Introuvable() {
+  const { t } = useLangue();
   return (
     <section className="section">
       <div className="container">
-        <span className="etiquette">Erreur 404</span>
-        <h1 className="section-titre">Cette page n'existe pas.</h1>
+        <span className="etiquette">{t('Erreur 404')}</span>
+        <h1 className="section-titre">{t("Cette page n'existe pas.")}</h1>
         <Link to="/" className="btn btn-primary" style={{ marginTop: '1.5rem' }}>
-          Retour à l'annuaire
+          {t("Retour à l'annuaire")}
         </Link>
       </div>
     </section>

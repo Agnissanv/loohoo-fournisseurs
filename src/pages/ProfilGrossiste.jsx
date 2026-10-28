@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, BadgeCheck, Camera, Check, Copy, Factory, MessageCircle, Search, ShieldCheck, Tag } from 'lucide-react';
+import { ArrowLeft, BadgeCheck, Camera, Check, Copy, Factory, MessageCircle, Search, ShieldCheck, Star, Tag } from 'lucide-react';
 import {
   recupererGrossiste, recupererDescriptionGrossiste, incrementerVueProfil, recupererAvisPublics, recupererIndicateursConfiance,
-  recupererPhotosTerrain, recupererDocumentsVerifies,
+  recupererPhotosTerrain, recupererDocumentsVerifies, recupererPromotionsEnCours,
 } from '../api/fournisseurs.js';
 import CarteProduit from '../components/CarteProduit.jsx';
 import CaptureSortie from '../components/CaptureSortie.jsx';
@@ -13,7 +13,10 @@ import BoutonFavori from '../components/BoutonFavori.jsx';
 import ImageOptimisee from '../components/ImageOptimisee.jsx';
 import { Etoiles } from '../components/Etoiles.jsx';
 import { IconeWhatsApp } from '../components/IconesReseaux.jsx';
-import { anciennete, TYPES_ENTREPRISE, LANGUES, MOYENS_PAIEMENT, DOCUMENTS_PUBLICS, estProducteur } from '../utils/profilFournisseur.js';
+import {
+  anciennete, TYPES_ENTREPRISE, LANGUES, MOYENS_PAIEMENT, DOCUMENTS_PUBLICS, STATUTS_SPECIAUX, estProducteur, statutSpecialActif,
+} from '../utils/profilFournisseur.js';
+import CartePromotion from '../components/CartePromotion.jsx';
 import { infosPays } from '../utils/pays.js';
 import { initiales } from '../utils/messagerie.js';
 import { noterVisite } from '../utils/suiviVisites.js';
@@ -43,6 +46,7 @@ export default function ProfilGrossiste({ idForce }) {
   const [indicateurs, setIndicateurs] = useState(null);
   const [photosTerrain, setPhotosTerrain] = useState([]);
   const [documents, setDocuments] = useState([]);
+  const [promotions, setPromotions] = useState([]);
   const [recherche, setRecherche] = useState('');
   const [categorie, setCategorie] = useState('');
   const [tri, setTri] = useState('nouveautes');
@@ -51,8 +55,8 @@ export default function ProfilGrossiste({ idForce }) {
   const [essai, setEssai] = useState(0);
 
   useTitre(
-    grossiste ? `${grossiste.nom}, fournisseur à ${grossiste.ville}` : null,
-    grossiste ? `${grossiste.nom} (${grossiste.categorie}) à ${grossiste.ville} : catalogue au prix de gros et demande de devis.` : null,
+    grossiste ? t('{nom}, fournisseur à {ville}', { nom: grossiste.nom, ville: grossiste.ville }) : null,
+    grossiste ? t('{nom} ({categorie}) à {ville} : catalogue au prix de gros et demande de devis.', { nom: grossiste.nom, categorie: grossiste.categorie, ville: grossiste.ville }) : null,
   );
 
   useEffect(() => {
@@ -70,6 +74,7 @@ export default function ProfilGrossiste({ idForce }) {
     recupererIndicateursConfiance(id).then((i) => { if (!annule) setIndicateurs(i); }).catch(() => {});
     recupererPhotosTerrain(id).then((p) => { if (!annule) setPhotosTerrain(p); });
     recupererDocumentsVerifies(id).then((d) => { if (!annule) setDocuments(d); });
+    recupererPromotionsEnCours(12, id).then((l) => { if (!annule) setPromotions(l); });
     return () => { annule = true; };
   }, [id, essai]);
 
@@ -187,6 +192,7 @@ export default function ProfilGrossiste({ idForce }) {
               <div className="pf-badges">
                 {g.badge_verifie && <span className="badge badge-verifie"><BadgeCheck size={13} aria-hidden="true" /> {t('Vérifié')}</span>}
                 {type && <span className="badge badge-fabricant">{type === 'fabricant' && <Factory size={13} aria-hidden="true" />} {t(TYPES_ENTREPRISE[type])}</span>}
+                {statutSpecialActif(g) && <span className="badge badge-special"><Star size={12} aria-hidden="true" /> {t(STATUTS_SPECIAUX[statutSpecialActif(g)])}</span>}
               </div>
               <h1>{g.nom}</h1>
             </div>
@@ -225,6 +231,15 @@ export default function ProfilGrossiste({ idForce }) {
                 ? <>{t('Contrôlé par LOOHOO')}{dernierControle && <span className="pf-cadre-sous">{t('dernier contrôle le {date}', { date: dateLongue(dernierControle) })}</span>}</>
                 : t('Vérification en cours')}</dd></div>
           </dl>
+
+          {promotions.length > 0 && (
+            <section className="pf-section" aria-labelledby="titre-promos">
+              <h2 id="titre-promos">{t('Promotions en cours')}</h2>
+              <div className="rangee-piste">
+                {promotions.map((pr) => <div key={pr.id} className="rangee-element"><CartePromotion promo={pr} /></div>)}
+              </div>
+            </section>
+          )}
 
           {/* 3. Catalogue */}
           <section className="pf-section" aria-labelledby="titre-catalogue">

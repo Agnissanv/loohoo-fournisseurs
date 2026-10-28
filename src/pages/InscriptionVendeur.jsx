@@ -7,9 +7,11 @@ import ChampTelephone from '../components/ChampTelephone.jsx';
 import { retourSur } from '../utils/navigation.js';
 import ChampMotDePasse from '../components/ChampMotDePasse.jsx';
 import RedirigerSiConnecte from '../components/RedirigerSiConnecte.jsx';
+import { useLangue } from '../i18n/Langue.jsx';
 
 // Compte acheteur : quatre champs, une minute.
 export default function InscriptionVendeur() {
+  const { t } = useLangue();
   const navigate = useNavigate();
   const { search } = useLocation();
   const retour = retourSur(new URLSearchParams(search).get('retour'));
@@ -23,7 +25,7 @@ export default function InscriptionVendeur() {
   async function soumettre(e) {
     e.preventDefault();
     const telephone = normaliserTelephone(champs.telephone, champs.pays);
-    if (!telephoneComplet(telephone)) { setErreur(`Numéro de téléphone incomplet. Exemple : ${FORMATS[champs.pays]?.exemple || '07 00 00 00 00'}.`); return; }
+    if (!telephoneComplet(telephone)) { setErreur(t('Numéro de téléphone incomplet. Exemple : {exemple}.', { exemple: FORMATS[champs.pays]?.exemple || '07 00 00 00 00' })); return; }
     setEnvoi(true);
     setErreur('');
     try {
@@ -34,7 +36,7 @@ export default function InscriptionVendeur() {
       if (confirmationRequise) setConfirmationEnvoyee(true);
       else navigate(retour || '/');
     } catch (err) {
-      setErreur(err.message || "Impossible de créer le compte pour le moment.");
+      setErreur(t(err.message || 'Impossible de créer le compte pour le moment.'));
     } finally {
       setEnvoi(false);
     }
@@ -44,12 +46,11 @@ export default function InscriptionVendeur() {
     return (
       <section className="acces-page">
         <div className="acces-carte">
-          <h1 className="acces-titre">Confirmez votre e-mail</h1>
+          <h1 className="acces-titre">{t('Confirmez votre e-mail')}</h1>
           <p className="acces-sous">
-            Nous venons d'envoyer un lien à <strong>{champs.email}</strong>. Cliquez dessus : votre compte sera prêt pour contacter des fournisseurs.
-            Pensez à regarder vos courriers indésirables.
+            {t("Nous venons d'envoyer un lien à {email}. Cliquez dessus : votre compte sera prêt pour contacter des fournisseurs. Pensez à regarder vos courriers indésirables.", { email: champs.email })}
           </p>
-          <Link to="/connexion" className="btn btn-primary" style={{ justifyContent: 'center' }}>Aller à la connexion</Link>
+          <Link to="/connexion" className="btn btn-primary" style={{ justifyContent: 'center' }}>{t('Aller à la connexion')}</Link>
         </div>
       </section>
     );
@@ -59,46 +60,46 @@ export default function InscriptionVendeur() {
     <section className="acces-page">
       <RedirigerSiConnecte vers={retour} />
       <div className="acces-carte">
-        <h1 className="acces-titre">Créer mon compte acheteur</h1>
-        <p className="acces-sous">Pour demander des devis aux fournisseurs et retrouver vos conversations.</p>
+        <h1 className="acces-titre">{t('Créer mon compte acheteur')}</h1>
+        <p className="acces-sous">{t('Pour demander des devis aux fournisseurs et retrouver vos conversations.')}</p>
 
         <form onSubmit={soumettre} className="acces-form">
           <div className="acces-champ-bloc">
-            <label htmlFor="nom">Votre nom</label>
+            <label htmlFor="nom">{t('Votre nom')}</label>
             <input id="nom" className="champ" required value={champs.nom} onChange={maj('nom')} autoComplete="name" />
           </div>
           <div className="acces-champ-bloc">
-            <label htmlFor="tel">Téléphone</label>
+            <label htmlFor="tel">{t('Téléphone')}</label>
             <ChampTelephone id="tel" required pays={champs.pays} onPaysChange={(pays) => setChamps((c) => ({ ...c, pays }))} value={champs.telephone} onChange={maj('telephone')} />
-            <p className="acces-aide">Reste privé : les fournisseurs vous répondent par la messagerie LOOHOO.</p>
+            <p className="acces-aide">{t('Reste privé : les fournisseurs vous répondent par la messagerie LOOHOO.')}</p>
           </div>
           <div className="acces-champ-bloc">
-            <label htmlFor="email">E-mail</label>
+            <label htmlFor="email">{t('E-mail')}</label>
             <input id="email" className="champ" required type="email" value={champs.email} onChange={maj('email')} autoComplete="email" />
           </div>
           <div className="acces-champ-bloc">
-            <label htmlFor="mdp">Mot de passe</label>
+            <label htmlFor="mdp">{t('Mot de passe')}</label>
             <ChampMotDePasse id="mdp" nouveau required minLength={8} value={champs.motDePasse} onChange={maj('motDePasse')} />
-            <p className="acces-aide">8 caractères minimum.</p>
+            <p className="acces-aide">{t('8 caractères minimum.')}</p>
           </div>
           <div className="acces-champ-bloc">
-            <label htmlFor="activite">Votre activité <span style={{ fontWeight: 400, opacity: 0.6 }}>(facultatif)</span></label>
-            <input id="activite" className="champ" placeholder="Ex. boutique en ligne de vêtements" value={champs.activite} onChange={maj('activite')} />
+            <label htmlFor="activite">{t('Votre activité')} <span style={{ fontWeight: 400, opacity: 0.6 }}>({t('facultatif')})</span></label>
+            <input id="activite" className="champ" placeholder={t('Ex. boutique en ligne de vêtements')} value={champs.activite} onChange={maj('activite')} />
           </div>
 
           {erreur && <p role="alert" className="acces-erreur">{erreur}</p>}
           <button type="submit" className="btn btn-primary" disabled={envoi} style={{ justifyContent: 'center' }}>
-            {envoi ? 'Création…' : 'Créer mon compte'}
+            {envoi ? t('Création…') : t('Créer mon compte')}
           </button>
           <p className="acces-aide">
-            En créant un compte, vous acceptez les <Link to="/conditions" target="_blank" className="acces-lien" style={{ fontWeight: 500 }}>conditions d'utilisation</Link> et
-            la <Link to="/confidentialite" target="_blank" className="acces-lien" style={{ fontWeight: 500 }}>politique de confidentialité</Link>.
+            {t('En créant un compte, vous acceptez les')} <Link to="/conditions" target="_blank" className="acces-lien" style={{ fontWeight: 500 }}>{t("conditions d'utilisation")}</Link> {t('et la')}{' '}
+            <Link to="/confidentialite" target="_blank" className="acces-lien" style={{ fontWeight: 500 }}>{t('politique de confidentialité')}</Link>.
           </p>
         </form>
 
         <div className="acces-pied">
-          <p style={{ margin: '0 0 0.5rem' }}>Déjà un compte ? <Link to={`/connexion${search}`} className="acces-lien">Se connecter</Link></p>
-          <p style={{ margin: 0 }}>Vous vendez en gros ? <Link to="/inscription/fournisseur" className="acces-lien">Créer un compte fournisseur</Link></p>
+          <p style={{ margin: '0 0 0.5rem' }}>{t('Déjà un compte ?')} <Link to={`/connexion${search}`} className="acces-lien">{t('Se connecter')}</Link></p>
+          <p style={{ margin: 0 }}>{t('Vous vendez en gros ?')} <Link to="/inscription/fournisseur" className="acces-lien">{t('Créer un compte fournisseur')}</Link></p>
         </div>
       </div>
     </section>

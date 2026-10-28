@@ -134,6 +134,7 @@ export default function Produits() {
                   <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                     <Link to={`/produits/${p.id}/modifier`} className="btn btn-outline" style={{ padding: '0.4em 0.8em', fontSize: '0.8rem' }}><Pencil size={14} /> Modifier</Link>
                     <button type="button" className="btn btn-outline" style={{ padding: '0.4em 0.8em', fontSize: '0.8rem' }} onClick={() => setGalerieProduit(p)}>Photos et vidéo</button>
+                    {p.statut === 'publie' && p.actif && <Link to={`/promotions?produit=${p.id}`} className="btn btn-outline" style={{ padding: '0.4em 0.8em', fontSize: '0.8rem' }}>Promouvoir</Link>}
                     <button type="button" className="btn btn-outline" style={{ padding: '0.4em 0.8em', fontSize: '0.8rem' }} onClick={() => basculerActif(p)}>{p.actif ? 'Désactiver' : 'Activer'}</button>
                     <button type="button" className="btn btn-outline" style={{ padding: '0.4em 0.8em' }} onClick={() => supprimer(p)} aria-label="Supprimer"><Trash2 size={15} /></button>
                   </div>

@@ -1,7 +1,11 @@
 import { useEffect } from 'react';
+import { langueActive } from '../i18n/langueActive.js';
 
-const TITRE_PAR_DEFAUT = 'LOOHOO Fournisseurs — Trouvez un fournisseur vérifié';
-const DESCRIPTION_PAR_DEFAUT = "Trouvez un grossiste ou fabricant vérifié en Côte d'Ivoire, consultez son catalogue au prix de gros et demandez un devis.";
+const anglais = () => langueActive() === 'en';
+export const titreParDefaut = () => (anglais() ? 'LOOHOO Suppliers — Find a verified supplier' : 'LOOHOO Fournisseurs — Trouvez un fournisseur vérifié');
+const descriptionParDefaut = () => (anglais()
+  ? "Find a verified wholesaler or manufacturer in Côte d'Ivoire, browse their catalogue at wholesale prices and ask for a quote."
+  : "Trouvez un grossiste ou fabricant vérifié en Côte d'Ivoire, consultez son catalogue au prix de gros et demandez un devis.");
 
 function majDescription(texte) {
   let meta = document.querySelector('meta[name="description"]');
@@ -13,8 +17,8 @@ function majDescription(texte) {
 export function useTitre(titre, description) {
   useEffect(() => {
     if (!titre) return undefined;
-    document.title = `${titre} | LOOHOO Fournisseurs`;
+    document.title = `${titre} | ${anglais() ? 'LOOHOO Suppliers' : 'LOOHOO Fournisseurs'}`;
     if (description) majDescription(description);
-    return () => { document.title = TITRE_PAR_DEFAUT; majDescription(DESCRIPTION_PAR_DEFAUT); };
+    return () => { document.title = titreParDefaut(); majDescription(descriptionParDefaut()); };
   }, [titre, description]);
 }

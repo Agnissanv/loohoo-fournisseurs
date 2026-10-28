@@ -10,9 +10,11 @@ const FILTRES = [
   ['', 'Tout'],
   ['annonces', 'Annonces'],
   ['promotion', 'Promotions'],
+  ['alertes', 'Alertes'],
   ['video', 'Vidéos'],
 ];
-const correspond = (filtre, e) => !filtre || (filtre === 'annonces' ? ['annonce', 'nouveaute', 'pays'].includes(e.type) : e.type === filtre);
+const GROUPES = { annonces: ['annonce', 'nouveaute', 'pays'], alertes: ['fournisseur', 'stock', 'certificat'] };
+const correspond = (filtre, e) => !filtre || (GROUPES[filtre] ? GROUPES[filtre].includes(e.type) : e.type === filtre);
 
 // « Tout voir » de la cloche : toutes les nouvelles, filtrables. Les ouvrir les marque comme lues.
 export default function Notifications() {
@@ -42,7 +44,7 @@ export default function Notifications() {
         <h1 className="notifs-titre">{t('Notifications')}</h1>
         <p className="notifs-intro">
           {role === 'vendeur'
-            ? t('Les annonces de LOOHOO et les promotions des fournisseurs que vous suivez.')
+            ? t('Les annonces de LOOHOO, les promotions des fournisseurs que vous suivez ou avez contactés, et vos alertes.')
             : t('Les annonces de LOOHOO, les nouveaux pays et les vidéos de la chaîne.')}
         </p>
 

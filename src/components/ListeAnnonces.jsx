@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { BadgeCheck, Globe, Megaphone, PlayCircle, Sparkles, Tag } from 'lucide-react';
+import { BadgeCheck, FileWarning, Globe, Megaphone, PackageCheck, PlayCircle, Sparkles, Tag } from 'lucide-react';
 import { useLangue } from '../i18n/Langue.jsx';
 
 const TYPES = {
@@ -9,7 +9,17 @@ const TYPES = {
   pays: { icone: Globe, libelle: 'Nouveau pays' },
   promotion: { icone: Tag, libelle: 'Promotion' },
   video: { icone: PlayCircle, libelle: 'Nouvelle vidéo' },
+  fournisseur: { icone: BadgeCheck, libelle: 'Nouveau fournisseur' },
+  stock: { icone: PackageCheck, libelle: 'Retour en stock' },
+  certificat: { icone: FileWarning, libelle: 'Certificat' },
 };
+
+// Les alertes calculées par la base arrivent en français (« De retour en stock : … ») : on traduit le début
+const PREFIXES = ['Nouveau fournisseur vérifié : ', 'De retour en stock : ', 'Certificat expiré : ', 'Certificat à renouveler : '];
+function titreTraduit(titre, t) {
+  const p = PREFIXES.find((x) => titre?.startsWith(x));
+  return p ? t(p.trim()) + ' ' + titre.slice(p.length) : titre;
+}
 
 function quand(date, t) {
   const minutes = Math.max(1, Math.round((Date.now() - new Date(date).getTime()) / 60000));
@@ -39,7 +49,7 @@ export default function ListeAnnonces({ elements, nouveaux = new Set(), onChoisi
                 )}
                 {' · '}{quand(e.date, t)}
               </span>
-              <strong>{e.titre}</strong>
+              <strong>{titreTraduit(e.titre, t)}</strong>
               {e.texte && <span className="annonce-texte">{e.texte}</span>}
             </span>
             {nouveaux.has(e.id) && <span className="annonce-nouveau" aria-label={t('Nouveau')} />}

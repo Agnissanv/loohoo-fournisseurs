@@ -11,6 +11,8 @@ import {
   trierMessages, formatHeure, formatJour, formatRelatif, initiales, analyserDemande,
   REPONSES_FOURNISSEUR, REPONSES_ACHETEUR, contientCoordonnees,
 } from '../utils/messagerie.js';
+import { nomUnite, prixCFA, quantite } from '../utils/prix.js';
+import { useLangue } from '../i18n/Langue.jsx';
 
 const STATUTS = {
   nouvelle: { texte: 'Nouvelle', classe: 'esp-puce-rouge' },
@@ -19,13 +21,13 @@ const STATUTS = {
 };
 
 // Une conversation prête à afficher, du point de vue du rôle connecté
-function preparer(c, role) {
+function preparer(c, role, t) {
   const messages = trierMessages(c.message);
   const dernier = messages[messages.length - 1];
   const fournisseur = role === 'fournisseur';
   return {
     id: c.id,
-    nom: fournisseur ? (c.vendeur?.nom || 'Acheteur') : (c.grossiste?.nom || 'Fournisseur'),
+    nom: fournisseur ? (c.vendeur?.nom || t('Acheteur')) : (c.grossiste?.nom || t('Fournisseur')),
     sous: fournisseur ? c.vendeur?.activite : c.grossiste?.ville,
     logo: fournisseur ? null : c.grossiste?.logo_url,
     verifie: !fournisseur && !!c.grossiste?.badge_verifie,
@@ -39,6 +41,7 @@ function preparer(c, role) {
 }
 
 export default function Messagerie() {
+  const { t } = useLangue();
   const { id } = useParams();
   const navigate = useNavigate();
   const [session, setSession] = useState(undefined);
@@ -65,8 +68,8 @@ export default function Messagerie() {
 
   const liste = useMemo(() => {
     if (!brutes || !role) return [];
-    return brutes.map((c) => preparer(c, role)).sort((a, b) => new Date(b.horodatage) - new Date(a.horodatage));
-  }, [brutes, role]);
+    return brutes.map((c) => preparer(c, role, t)).sort((a, b) => new Date(b.horodatage) - new Date(a.horodatage));
+  }, [brutes, role, t]);
 
   const q = recherche.trim().toLowerCase();
   const visibles = liste.filter((c) => (!seulementNonLus || c.nonLus > 0)
@@ -83,36 +86,36 @@ export default function Messagerie() {
   const contenu = (
     <>
       {fournisseur
-        ? <h1 className="esp-titre-page" style={{ marginBottom: '0.8rem' }}>Demandes et messages</h1>
+        ? <h1 className="esp-titre-page" style={{ marginBottom: '0.8rem' }}>{t('Demandes et messages')}</h1>
         : (
           <>
-            <Link to="/" style={{ display: 'inline-block', marginBottom: '0.8rem', fontWeight: 600, fontSize: '0.9rem', color: 'var(--loo-rouge)' }}>← Retour à l'annuaire</Link>
-            <h1 style={{ fontSize: '1.6rem', marginBottom: '0.8rem' }}>Mes conversations</h1>
+            <Link to="/" style={{ display: 'inline-block', marginBottom: '0.8rem', fontWeight: 600, fontSize: '0.9rem', color: 'var(--loo-rouge)' }}>{t("← Retour à l'annuaire")}</Link>
+            <h1 style={{ fontSize: '1.6rem', marginBottom: '0.8rem' }}>{t('Mes conversations')}</h1>
           </>
         )}
 
       <div className={`msg${id ? ' msg-ouverte' : ''}${fournisseur ? '' : ' msg-public'}`}>
-        <aside className="msg-liste" aria-label="Conversations">
+        <aside className="msg-liste" aria-label={t('Conversations')}>
           <div className="msg-liste-haut">
             <div style={{ position: 'relative' }}>
               <Search size={15} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }} />
               <input className="champ" style={{ paddingLeft: '2.2rem', padding: '0.6em 0.8em 0.6em 2.2rem', fontSize: '0.9rem' }} type="search"
-                placeholder={fournisseur ? 'Rechercher un acheteur ou un produit' : 'Rechercher un fournisseur ou un produit'} value={recherche} onChange={(e) => setRecherche(e.target.value)} />
+                placeholder={fournisseur ? t('Rechercher un acheteur ou un produit') : t('Rechercher un fournisseur ou un produit')} value={recherche} onChange={(e) => setRecherche(e.target.value)} />
             </div>
             <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.82rem', marginTop: '0.5rem' }}>
               <input type="checkbox" checked={seulementNonLus} onChange={(e) => setSeulementNonLus(e.target.checked)} />
-              Non lus seulement{totalNonLus > 0 ? ` (${totalNonLus})` : ''}
+              {t('Non lus seulement')}{totalNonLus > 0 ? ` (${totalNonLus})` : ''}
             </label>
           </div>
           <div className="msg-liste-corps">
             {liste.length === 0 && (
               <p style={{ padding: '1.2rem', opacity: 0.7, fontSize: '0.9rem', margin: 0 }}>
                 {fournisseur
-                  ? "Aucune demande pour l'instant. Quand un acheteur vous écrira, elle apparaîtra ici."
-                  : 'Aucune conversation. Trouvez un produit et demandez un devis à son fournisseur.'}
+                  ? t("Aucune demande pour l'instant. Quand un acheteur vous écrira, elle apparaîtra ici.")
+                  : t('Aucune conversation. Trouvez un produit et demandez un devis à son fournisseur.')}
               </p>
             )}
-            {liste.length > 0 && visibles.length === 0 && <p style={{ padding: '1.2rem', opacity: 0.7, fontSize: '0.9rem', margin: 0 }}>Aucun résultat.</p>}
+            {liste.length > 0 && visibles.length === 0 && <p style={{ padding: '1.2rem', opacity: 0.7, fontSize: '0.9rem', margin: 0 }}>{t('Aucun résultat.')}</p>}
             {visibles.map((c) => (
               <Link key={c.id} to={`/conversations/${c.id}`} className={`msg-ligne${c.id === id ? ' msg-ligne-active' : ''}${c.nonLus ? ' msg-ligne-nonlue' : ''}`}>
                 <Avatar nom={c.nom} logo={c.logo} />
@@ -123,10 +126,10 @@ export default function Messagerie() {
                   </div>
                   {c.produit?.nom && <div className="msg-produit">{c.produit.nom}</div>}
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem', alignItems: 'center' }}>
-                    <span className="msg-apercu">{c.dernier ? `${c.dernier.expediteur === role ? 'Vous : ' : ''}${apercu(c.dernier.contenu)}` : ''}</span>
+                    <span className="msg-apercu">{c.dernier ? `${c.dernier.expediteur === role ? t('Vous : ') : ''}${apercu(c.dernier.contenu, t)}` : ''}</span>
                     {c.nonLus > 0
                       ? <span className="esp-pastille" style={{ position: 'static' }}>{c.nonLus}</span>
-                      : fournisseur && <span className={`esp-puce ${STATUTS[c.statut].classe}`} style={{ fontSize: '0.66rem', padding: '0.1em 0.55em' }}>{STATUTS[c.statut].texte}</span>}
+                      : fournisseur && <span className={`esp-puce ${STATUTS[c.statut].classe}`} style={{ fontSize: '0.66rem', padding: '0.1em 0.55em' }}>{t(STATUTS[c.statut].texte)}</span>}
                   </div>
                 </div>
               </Link>
@@ -138,8 +141,8 @@ export default function Messagerie() {
           {id && courante
             ? <Fil key={id} conversation={courante} role={role} onChange={charger} />
             : id
-              ? <div className="msg-vide"><AlertCircle size={30} opacity={0.5} /><p>Cette conversation n'existe pas ou n'est plus disponible.</p><Link to="/conversations" className="btn btn-outline">Retour à la liste</Link></div>
-              : <div className="msg-vide"><MessageCircle size={34} color="var(--loo-rouge)" /><p>Sélectionnez une conversation pour la lire et y répondre.</p></div>}
+              ? <div className="msg-vide"><AlertCircle size={30} opacity={0.5} /><p>{t("Cette conversation n'existe pas ou n'est plus disponible.")}</p><Link to="/conversations" className="btn btn-outline">{t('Retour à la liste')}</Link></div>
+              : <div className="msg-vide"><MessageCircle size={34} color="var(--loo-rouge)" /><p>{t('Sélectionnez une conversation pour la lire et y répondre.')}</p></div>}
         </section>
       </div>
     </>
@@ -148,7 +151,7 @@ export default function Messagerie() {
   return fournisseur ? contenu : <section className="section" style={{ paddingTop: '2rem' }}><div className="container">{contenu}</div></section>;
 }
 
-const apercu = (texte = '') => (texte.startsWith('Demande de devis') ? 'Demande de devis' : texte.replace(/\s+/g, ' ').slice(0, 70));
+const apercu = (texte = '', t) => (texte.startsWith('Demande de devis') ? t('Demande de devis') : texte.replace(/\s+/g, ' ').slice(0, 70));
 
 function Avatar({ nom, logo, taille = 42 }) {
   return (
@@ -167,6 +170,7 @@ function fusionner(actuels, entrants, role) {
 }
 
 function Fil({ conversation, role, onChange }) {
+  const { t } = useLangue();
   const [messages, setMessages] = useState(undefined);
   const [texte, setTexte] = useState('');
   const [erreur, setErreur] = useState('');
@@ -226,7 +230,7 @@ function Fil({ conversation, role, onChange }) {
       onChange();
     } catch (err) {
       setMessages((a) => (a || []).map((m) => (m.id === provisoire.id ? { ...m, echec: true } : m)));
-      setErreur("Le message n'a pas été envoyé. Vérifiez votre connexion puis réessayez.");
+      setErreur(t("Le message n'a pas été envoyé. Vérifiez votre connexion puis réessayez."));
     }
   }
 
@@ -240,7 +244,7 @@ function Fil({ conversation, role, onChange }) {
   }
 
   function inserer(modele) {
-    setTexte((t) => (t && !/\s$/.test(t) ? `${t} ${modele}` : `${t}${modele}`));
+    setTexte((actuel) => (actuel && !/\s$/.test(actuel) ? `${actuel} ${modele}` : `${actuel}${modele}`));
     requestAnimationFrame(() => {
       const el = champ.current;
       if (!el) return;
@@ -257,19 +261,19 @@ function Fil({ conversation, role, onChange }) {
   return (
     <>
       <header className="msg-fil-haut">
-        <Link to="/conversations" className="msg-retour" aria-label="Retour à la liste"><ArrowLeft size={20} /></Link>
+        <Link to="/conversations" className="msg-retour" aria-label={t('Retour à la liste')}><ArrowLeft size={20} /></Link>
         <Avatar nom={conversation.nom} logo={conversation.logo} />
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
             <strong style={{ fontSize: '1.02rem' }}>{conversation.nom}</strong>
-            {conversation.verifie && <span className="badge badge-verifie"><BadgeCheck size={12} /> Vérifié</span>}
+            {conversation.verifie && <span className="badge badge-verifie"><BadgeCheck size={12} /> {t('Vérifié')}</span>}
           </div>
           <div style={{ fontSize: '0.8rem', opacity: 0.65 }}>
-            {conversation.sous || (fournisseur ? 'Acheteur' : 'Fournisseur')}
+            {conversation.sous || (fournisseur ? t('Acheteur') : t('Fournisseur'))}
           </div>
         </div>
         {!fournisseur && conversation.grossisteId && (
-          <Link to={`/grossiste/${conversation.grossisteId}`} className="btn btn-outline" style={{ padding: '0.4em 0.9em', fontSize: '0.8rem' }}>Voir la page</Link>
+          <Link to={`/grossiste/${conversation.grossisteId}`} className="btn btn-outline" style={{ padding: '0.4em 0.9em', fontSize: '0.8rem' }}>{t('Voir la page')}</Link>
         )}
       </header>
 
@@ -277,11 +281,11 @@ function Fil({ conversation, role, onChange }) {
         <Link to={`/produit/${p.id}`} target={fournisseur ? '_blank' : undefined} className="msg-produit-carte">
           {p.photo_url ? <img src={p.photo_url} alt="" /> : <span className="msg-produit-vide"><Package size={20} opacity={0.5} /></span>}
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: '0.74rem', opacity: 0.6 }}>À propos du produit</div>
+            <div style={{ fontSize: '0.74rem', opacity: 0.6 }}>{t('À propos du produit')}</div>
             <strong style={{ fontSize: '0.9rem' }}>{p.nom}</strong>
             {p.prix_gros_fcfa != null && (
               <div style={{ fontSize: '0.8rem', opacity: 0.75 }}>
-                {Number(p.prix_gros_fcfa).toLocaleString('fr-FR')} F CFA{p.unite ? ` / ${p.unite}` : ''}{p.moq ? ` · minimum ${p.moq}` : ''}
+                {prixCFA(p.prix_gros_fcfa)}{p.unite ? ` / ${nomUnite(p.unite)}` : ''}{p.moq ? ` · ${t('minimum')} ${quantite(p.moq, p.unite)}` : ''}
               </div>
             )}
           </div>
@@ -292,7 +296,7 @@ function Fil({ conversation, role, onChange }) {
 
       <div className="msg-fil-corps" ref={zone}>
         {messages === undefined && <div className="loo-squelette" style={{ height: 120 }} />}
-        {messages && messages.length === 0 && <p style={{ opacity: 0.65, textAlign: 'center', margin: 'auto' }}>Aucun message pour l'instant.</p>}
+        {messages && messages.length === 0 && <p style={{ opacity: 0.65, textAlign: 'center', margin: 'auto' }}>{t("Aucun message pour l'instant.")}</p>}
         {messages && messages.map((m, i) => {
           const precedent = messages[i - 1];
           const suivant = messages[i + 1];
@@ -308,16 +312,16 @@ function Fil({ conversation, role, onChange }) {
               <div className={`msg-bulle ${moi ? 'msg-moi' : 'msg-lui'}${debutGroupe ? ' msg-debut' : ''}${m.provisoire ? ' msg-provisoire' : ''}`}>
                 {demande ? (
                   <div>
-                    <div className="msg-devis-titre">Demande de devis</div>
-                    {demande.champs.map(([k, v]) => <div key={k} className="msg-devis-ligne"><span>{k}</span><strong>{v}</strong></div>)}
+                    <div className="msg-devis-titre">{t('Demande de devis')}</div>
+                    {demande.champs.map(([k, v]) => <div key={k} className="msg-devis-ligne"><span>{t(k)}</span><strong>{t(v)}</strong></div>)}
                     {demande.libre && <p className="msg-texte" style={{ marginTop: '0.5rem' }}>{demande.libre}</p>}
                   </div>
                 ) : <p className="msg-texte">{m.contenu}</p>}
                 {finGroupe && <span className="msg-meta">{formatHeure(m.date_envoi)}</span>}
               </div>
-              {m.echec && <div className="msg-echec">Non envoyé. <button type="button" onClick={() => reessayer(m)}>Réessayer</button></div>}
+              {m.echec && <div className="msg-echec">{t('Non envoyé.')} <button type="button" onClick={() => reessayer(m)}>{t('Réessayer')}</button></div>}
               {moi && dernierPropre?.id === m.id && !m.echec && !m.provisoire && (
-                <div className="msg-etat">{m.lu ? 'Vu' : 'Envoyé'}</div>
+                <div className="msg-etat">{m.lu ? t('Vu') : t('Envoyé')}</div>
               )}
             </React.Fragment>
           );
@@ -327,19 +331,19 @@ function Fil({ conversation, role, onChange }) {
 
       <div className="msg-saisie">
         {erreur && <p role="alert" style={{ color: 'var(--loo-rouge)', fontWeight: 600, fontSize: '0.84rem', margin: '0 0 0.4rem' }}>{erreur}</p>}
-        <div className="msg-rapides" aria-label="Réponses rapides">
-          {reponses.map((r) => <button key={r} type="button" onClick={() => inserer(r)}>{r}</button>)}
+        <div className="msg-rapides" aria-label={t('Réponses rapides')}>
+          {reponses.map((r) => <button key={r} type="button" onClick={() => inserer(t(r))}>{t(r)}</button>)}
         </div>
         {contientCoordonnees(texte) && (
           <p className="esp-aide" style={{ margin: '0 0 0.4rem', color: '#B8650A', opacity: 1 }}>
-            Les numéros, e-mails et liens sont masqués automatiquement : tous les échanges se font sur LOOHOO, ce qui protège votre demande.
+            {t('Les numéros, e-mails et liens sont masqués automatiquement : tous les échanges se font sur LOOHOO, ce qui protège votre demande.')}
           </p>
         )}
         <form onSubmit={(e) => { e.preventDefault(); envoyer(); }} style={{ display: 'flex', gap: '0.6rem', alignItems: 'flex-end' }}>
-          <textarea ref={champ} className="champ" rows={1} placeholder="Écrivez votre message…" value={texte} onChange={(e) => setTexte(e.target.value)} onKeyDown={toucheEnfoncee} maxLength={2000} style={{ resize: 'none', maxHeight: 140, overflowY: 'hidden' }} />
-          <button type="submit" className="btn btn-primary" disabled={!texte.trim()} aria-label="Envoyer" style={{ padding: '0.85em 1.1em' }}><Send size={17} /></button>
+          <textarea ref={champ} className="champ" rows={1} placeholder={t('Écrivez votre message…')} value={texte} onChange={(e) => setTexte(e.target.value)} onKeyDown={toucheEnfoncee} maxLength={2000} style={{ resize: 'none', maxHeight: 140, overflowY: 'hidden' }} />
+          <button type="submit" className="btn btn-primary" disabled={!texte.trim()} aria-label={t('Envoyer')} style={{ padding: '0.85em 1.1em' }}><Send size={17} /></button>
         </form>
-        <div className="esp-aide" style={{ marginTop: '0.3rem' }}>Entrée pour envoyer, Maj+Entrée pour un retour à la ligne.</div>
+        <div className="esp-aide" style={{ marginTop: '0.3rem' }}>{t('Entrée pour envoyer, Maj+Entrée pour un retour à la ligne.')}</div>
       </div>
     </>
   );

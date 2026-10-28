@@ -146,3 +146,18 @@ Les produits déjà en ligne ne sont pas modifiés. Pour repérer ceux qui conti
   que les produits.
 - `ma_cloche()` et `marquer_cloche_lue()` : la cloche de l'en-tête et ses non lus.
 À exécuter après 0029. Testée sur le moteur de test.
+
+## 0031 — Compléments du cahier v3 (promotions, statut spécial, stock, alertes, tendances)
+- Promotions (§15bis) : `promotions_en_cours()` alimente la rangée « Promotions en cours » de l'accueil, la page du fournisseur
+  et le bandeau de la fiche produit ; `rechercher_catalogue()` renvoie `en_promotion` (badge « Promo » sur les cartes).
+  La cloche prévient aussi les acheteurs qui ont déjà écrit au fournisseur, plus seulement ses abonnés.
+- Statut spécial (§4) : « Membre fondateur » ou « Fournisseur prioritaire », mis en avant dans les résultats et « À la une ».
+  Seul LOOHOO l'accorde, depuis l'éditeur SQL en attendant l'écran d'administration :
+  `select public.admin_definir_statut_special('<id du fournisseur>', 'fondateur', null);` (null = sans fin ;
+  ou une date : `now() + interval '6 months'`). Retirer : `select public.admin_definir_statut_special('<id>', null, null);`
+- Stock (§8) : la déclaration d'affaire accepte une quantité ; à la confirmation par l'acheteur, le stock du produit de la
+  conversation baisse d'autant (jamais sous zéro).
+- Cloche : nouveau fournisseur vérifié dans les catégories de l'acheteur, produit de retour en stock (enregistré ou fournisseur
+  suivi), et pour le fournisseur, certificat qui expire dans 30 jours.
+- `tendances_semaine()` (§16) : produits les plus vus et contactés sur 7 jours (rangée affichée à partir de 4 produits).
+À exécuter après 0030. Testée sur le moteur de test. Le site fonctionne avant son exécution (les nouveautés restent masquées).

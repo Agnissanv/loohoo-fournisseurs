@@ -4,7 +4,7 @@ import { BadgeCheck, Factory, FileCheck2, MessageSquare, Package, Repeat, Shield
 import { recupererChiffresPublics, recupererFournisseursALaUne } from '../api/fournisseurs.js';
 import { Etoiles } from './Etoiles.jsx';
 import ImageOptimisee from './ImageOptimisee.jsx';
-import { anciennete } from '../utils/profilFournisseur.js';
+import { anciennete, STATUTS_SPECIAUX } from '../utils/profilFournisseur.js';
 import { prixCFA, quantite } from '../utils/prix.js';
 import { useLangue } from '../i18n/Langue.jsx';
 
@@ -40,6 +40,7 @@ export function FournisseursALaUne() {
                 <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', minHeight: '1.6rem' }}>
                   {f.badge_verifie && <span className="badge badge-verifie"><BadgeCheck size={13} /> {t('Vérifié')}</span>}
                   {f.est_fabricant && <span className="badge badge-fabricant"><Factory size={13} /> {t('Fabricant local')}</span>}
+                  {STATUTS_SPECIAUX[f.statut_special] && <span className="badge badge-special">{t(STATUTS_SPECIAUX[f.statut_special])}</span>}
                 </div>
                 {f.nb_avis > 0
                   ? <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}><Etoiles note={Number(f.note)} taille={14} /><strong>{Number(f.note).toLocaleString('fr-FR')}</strong><span style={{ opacity: 0.6 }}>({t('{n} avis', { n: f.nb_avis })})</span></div>

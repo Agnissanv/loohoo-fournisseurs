@@ -1,3 +1,5 @@
+import { langueActive } from '../i18n/langueActive.js';
+
 // Petits calculs d'affichage pour l'espace fournisseur : rien n'est stocké, tout est recalculé à l'affichage.
 
 // « 3 jours » sous un mois, « 5 mois » sous un an, « 2 ans » au-delà
@@ -6,10 +8,12 @@ export function anciennete(dateIso) {
   const debut = new Date(dateIso);
   if (Number.isNaN(debut.getTime())) return null;
   const jours = Math.max(0, Math.floor((Date.now() - debut.getTime()) / 86400000));
-  if (jours < 30) return jours <= 1 ? `${jours} jour` : `${jours} jours`;
+  const en = langueActive() === 'en';
+  if (jours < 30) return en ? `${jours} day${jours > 1 ? 's' : ''}` : jours <= 1 ? `${jours} jour` : `${jours} jours`;
   const mois = Math.floor(jours / 30.4375);
-  if (mois < 12) return `${mois} mois`;
+  if (mois < 12) return en ? `${mois} month${mois > 1 ? 's' : ''}` : `${mois} mois`;
   const ans = Math.floor(mois / 12);
+  if (en) return ans === 1 ? '1 year' : `${ans} years`;
   return ans === 1 ? '1 an' : `${ans} ans`;
 }
 
@@ -96,3 +100,11 @@ export const QUESTIONS_SUGGEREES = [
 
 // Le fournisseur fabrique (ou produit) lui-même : on montre l'atelier ; sinon, d'où vient la marchandise
 export const estProducteur = (type) => type === 'fabricant' || type === 'producteur';
+
+// Statut spécial réglé par l'équipe (migration 0031) : badge et priorité d'affichage, tant qu'il n'a pas expiré
+export const STATUTS_SPECIAUX = { fondateur: 'Membre fondateur', prioritaire: 'Fournisseur prioritaire' };
+export function statutSpecialActif(g) {
+  if (!g?.statut_special || !STATUTS_SPECIAUX[g.statut_special]) return null;
+  if (g.statut_special_expiration && new Date(g.statut_special_expiration) <= new Date()) return null;
+  return g.statut_special;
+}

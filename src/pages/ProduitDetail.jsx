@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { BadgeCheck, Check, ChevronRight, Copy, Factory, FileCheck2, Flag, MapPin, MessageCircle, Package, ShieldCheck, Star, Tag } from 'lucide-react';
 import {
   recupererProduitPublic, recupererAutresProduitsFournisseur, rechercherCatalogue, recupererCertificats, recupererResumeAvis,
+  recupererPromotionsEnCours,
 } from '../api/fournisseurs.js';
 import ModaleContact from '../components/ModaleContact.jsx';
 import ModaleSignalement from '../components/ModaleSignalement.jsx';
@@ -12,7 +13,7 @@ import BoutonFavoriProduit from '../components/BoutonFavoriProduit.jsx';
 import RangeeProduits from '../components/RangeeProduits.jsx';
 import { PaliersProduit } from '../components/PaliersPrix.jsx';
 import { IconeWhatsApp } from '../components/IconesReseaux.jsx';
-import { estNouveau, fourchettePrix, prixCFA, quantite } from '../utils/prix.js';
+import { estNouveau, fourchettePrix, nomUnite, prixCFA, quantite } from '../utils/prix.js';
 import { infosPays } from '../utils/pays.js';
 import { anciennete } from '../utils/profilFournisseur.js';
 import { initiales } from '../utils/messagerie.js';
@@ -42,11 +43,14 @@ export default function ProduitDetail() {
   const [similaires, setSimilaires] = useState([]);
   const [certificats, setCertificats] = useState([]);
   const [avis, setAvis] = useState(null);
+  const [promotion, setPromotion] = useState(null);
   const [lienCopie, setLienCopie] = useState(false);
 
   useTitre(
-    produit ? `${produit.nom} en gros` : null,
-    produit ? `${produit.nom} : ${fourchettePrix(produit)}, minimum ${quantite(produit.moq || 1, produit.unite)}. Vendu par ${produit.grossiste?.nom}. Demandez un devis sur LOOHOO.` : null,
+    produit ? t('{nom} en gros', { nom: produit.nom }) : null,
+    produit ? t('{nom} : {prix}, minimum {q}. Vendu par {fournisseur}. Demandez un devis sur LOOHOO.', {
+      nom: produit.nom, prix: fourchettePrix(produit), q: quantite(produit.moq || 1, produit.unite), fournisseur: produit.grossiste?.nom,
+    }) : null,
   );
 
   useEffect(() => {
@@ -66,6 +70,10 @@ export default function ProduitDetail() {
       noterVisite({ grossisteId: p.grossiste.id, produitId: p.id });
       // Tout le reste se charge à côté : rien de tout ça ne bloque l'affichage de la fiche
       recupererCertificats(p.id).then((l) => { if (!annule) setCertificats(l); });
+      // Promotion sur ce produit, ou sur tout le catalogue du fournisseur
+      recupererPromotionsEnCours(10, p.grossiste.id).then((l) => {
+        if (!annule) setPromotion(l.find((x) => x.produit_id === p.id) || l.find((x) => !x.produit_id) || null);
+      });
       recupererResumeAvis(p.grossiste.id).then((a) => { if (!annule) setAvis(a); });
       recupererAutresProduitsFournisseur(p.grossiste.id, p.id).then((l) => {
         if (!annule) setMemeFournisseur(l.map((x) => ({ ...x, grossiste_nom: p.grossiste.nom, badge_verifie: p.grossiste.badge_verifie })));
@@ -162,7 +170,7 @@ export default function ProduitDetail() {
   const messageWhatsApp = [
     t('Regarde ce produit sur LOOHOO :'),
     `*${p.nom}*`,
-    t('{prix} par {unite}, minimum {q}', { prix: fourchettePrix(p), unite, q: quantite(p.moq || 1, p.unite) }),
+    t('{prix} par {unite}, minimum {q}', { prix: fourchettePrix(p), unite: nomUnite(unite), q: quantite(p.moq || 1, p.unite) }),
     t('Vendu par {nom}{verifie}', { nom: g.nom, verifie: g.badge_verifie ? ` (${t('fournisseur vérifié')})` : '' }),
     lien,
   ].join('\n');
@@ -220,8 +228,18 @@ export default function ProduitDetail() {
               <span className="fp-vendu-lieu"><MapPin size={13} aria-hidden="true" /> {g.commune ? `${g.commune}, ${g.ville}` : g.ville}</span>
             </p>
 
+            {promotion && (
+              <div className="fp-promo">
+                <Tag size={16} aria-hidden="true" />
+                <div>
+                  <strong>{promotion.titre}</strong>
+                  {promotion.texte && <span>{promotion.texte}</span>}
+                  {promotion.date_fin && <em>{t("Jusqu'au {date}", { date: dateFr(promotion.date_fin) })}</em>}
+                </div>
+              </div>
+            )}
             <div className="fp-prix">
-              <strong>{fourchettePrix(p)}</strong> <span>/ {t(unite)}</span>
+              <strong>{fourchettePrix(p)}</strong> <span>/ {nomUnite(unite)}</span>
             </div>
             <p className="fp-minimum">{t('Minimum de commande : {q}', { q: quantite(p.moq || 1, p.unite) })}</p>
 
@@ -345,7 +363,7 @@ export default function ProduitDetail() {
       <div className="fiche-cta-mobile">
         <div style={{ flex: 1, minWidth: 0 }}>
           <div className="fp-cta-prix">{fourchettePrix(p)}</div>
-          <div style={{ fontSize: '0.74rem', opacity: 0.65 }}>{t('Minimum')} : {quantite(p.moq || 1, p.unite)}</div>
+          <div style={{ fontSize: '0.74rem', opacity: 0.65 }}>{t('Minimum : {q}', { q: quantite(p.moq || 1, p.unite) })}</div>
         </div>
         <button type="button" className="btn btn-primary" onClick={() => setContactOuvert(true)}><MessageCircle size={16} aria-hidden="true" /> {t('Demander un devis')}</button>
       </div>

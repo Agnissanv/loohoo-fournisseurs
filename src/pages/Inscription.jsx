@@ -19,7 +19,7 @@ export default function Inscription() {
   const { villes, communes } = useLieux();
   const [etape, setEtape] = useState(1);
   const [champs, setChamps] = useState({
-    nom: '', categorie: '', pays: 'CI', ville: '', commune: '', typeEntreprise: '',
+    nom: '', categorie: '', pays: 'CI', ville: '', commune: '', typeEntreprise: '', stock: '',
     telephone: '', email: '', motDePasse: '', conditions: false,
   });
   const [erreur, setErreur] = useState('');
@@ -47,7 +47,7 @@ export default function Inscription() {
         email: champs.email.trim(), password: champs.motDePasse,
         nom: champs.nom.trim(), categorie: champs.categorie, ville: champs.ville.trim(), commune: champs.commune.trim(),
         telephone, estFabricant: champs.typeEntreprise === 'fabricant', origine: 'local', typeEntreprise: champs.typeEntreprise,
-        stockConfirme: false, paysCode: champs.pays,
+        stockConfirme: champs.stock === 'disponible', paysCode: champs.pays,
       });
       if (confirmationRequise) setConfirmationEnvoyee(true);
       else navigate('/tableau-de-bord');
@@ -124,6 +124,14 @@ export default function Inscription() {
                 <option value="grossiste">Grossiste : j'achète et revends en gros</option>
                 <option value="importateur">Importateur : je fais venir la marchandise de l'étranger</option>
                 <option value="producteur">Producteur : agriculture, élevage, pêche…</option>
+              </select>
+            </div>
+            <div className="acces-champ-bloc">
+              <label htmlFor="stock">Votre stock</label>
+              <select id="stock" className="champ" required value={champs.stock} onChange={maj('stock')}>
+                <option value="">Choisir</option>
+                <option value="disponible">Disponible maintenant</option>
+                <option value="constitution">En cours de constitution</option>
               </select>
             </div>
             <button type="submit" className="btn btn-primary" style={{ justifyContent: 'center' }}>Continuer</button>

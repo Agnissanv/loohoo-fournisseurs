@@ -1,21 +1,27 @@
 // Aides de la messagerie : mise en forme, demande de devis, réponses rapides.
+// Les messages envoyés aux fournisseurs (demande de devis, messages prêts) restent en français : les fournisseurs sont
+// francophones et la demande de devis est relue par analyserDemande(). Seuls les libellés affichés sont traduits.
+import { langueActive } from '../i18n/langueActive.js';
+
+const locale = () => (langueActive() === 'en' ? 'en-GB' : 'fr-FR');
 
 export const trierMessages = (messages = []) =>
   [...messages].sort((a, b) => new Date(a.date_envoi) - new Date(b.date_envoi));
 
-export const formatHeure = (iso) => new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-export const formatJour = (iso) => new Date(iso).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+export const formatHeure = (iso) => new Date(iso).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' });
+export const formatJour = (iso) => new Date(iso).toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' });
 
 // « Il y a 5 min », « Hier », « 12 sept. » pour la liste
 export function formatRelatif(iso) {
   const date = new Date(iso);
   const minutes = Math.round((Date.now() - date) / 60000);
-  if (minutes < 1) return "À l'instant";
+  const en = langueActive() === 'en';
+  if (minutes < 1) return en ? 'Just now' : "À l'instant";
   if (minutes < 60) return `${minutes} min`;
   if (date.toDateString() === new Date().toDateString()) return formatHeure(iso);
   const hier = new Date(Date.now() - 86400000);
-  if (date.toDateString() === hier.toDateString()) return 'Hier';
-  return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+  if (date.toDateString() === hier.toDateString()) return en ? 'Yesterday' : 'Hier';
+  return date.toLocaleDateString(locale(), { day: 'numeric', month: 'short' });
 }
 
 export const initiales = (nom = '') =>

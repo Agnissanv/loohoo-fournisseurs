@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Heart } from 'lucide-react';
 import { recupererMonRole, estFavori, basculerFavori } from '../api/fournisseurs.js';
+import { useLangue } from '../i18n/Langue.jsx';
 
 // « Suivre ce fournisseur » : réservé aux acheteurs connectés. Un visiteur est invité à créer son compte acheteur ; un fournisseur ne voit rien.
 export default function BoutonFavori({ grossisteId }) {
+  const { t } = useLangue();
   const navigate = useNavigate();
   const [role, setRole] = useState(undefined); // undefined = chargement, null = visiteur
   const [favori, setFavori] = useState(false);
@@ -29,8 +31,8 @@ export default function BoutonFavori({ grossisteId }) {
   }
 
   return (
-    <button type="button" className="btn btn-outline" onClick={cliquer} disabled={envoi} aria-pressed={favori} title={role === 'vendeur' ? undefined : 'Créez un compte acheteur pour suivre ce fournisseur'}>
-      <Heart size={16} fill={favori ? 'var(--loo-rouge)' : 'none'} color={favori ? 'var(--loo-rouge)' : 'currentColor'} /> {favori ? 'Suivi' : 'Suivre'}
+    <button type="button" className="btn btn-outline" onClick={cliquer} disabled={envoi} aria-pressed={favori} title={role === 'vendeur' ? undefined : t('Créez un compte acheteur pour suivre ce fournisseur')}>
+      <Heart size={16} fill={favori ? 'var(--loo-rouge)' : 'none'} color={favori ? 'var(--loo-rouge)' : 'currentColor'} /> {favori ? t('Suivi') : t('Suivre')}
     </button>
   );
 }

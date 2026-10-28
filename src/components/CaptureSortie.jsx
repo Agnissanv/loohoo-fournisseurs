@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { X, Mail } from 'lucide-react';
 import { capturerLead, suivreSession } from '../api/fournisseurs.js';
+import { useLangue } from '../i18n/Langue.jsx';
 
 const CLE_SESSION = 'loohoo_sortie_proposee';
 
 export default function CaptureSortie({ recherche }) {
+  const { t } = useLangue();
   const [visible, setVisible] = useState(false);
   const [dejaConnecte, setDejaConnecte] = useState(true); // tant qu'on n'a pas vérifié, on n'affiche rien par prudence
   const [email, setEmail] = useState('');
@@ -44,23 +46,23 @@ export default function CaptureSortie({ recherche }) {
   return (
     <div className="modale-fond" onClick={() => setVisible(false)}>
       <div className="modale" onClick={(e) => e.stopPropagation()}>
-        <button type="button" className="modale-fermer" onClick={() => setVisible(false)} aria-label="Fermer"><X size={20} /></button>
+        <button type="button" className="modale-fermer" onClick={() => setVisible(false)} aria-label={t('Fermer')}><X size={20} /></button>
         {envoye ? (
           <div style={{ textAlign: 'center', padding: '0.5rem 0' }}>
             <Mail size={32} color="var(--loo-rouge)" />
-            <h2 style={{ fontSize: '1.15rem', margin: '0.8rem 0 0.4rem' }}>C'est noté !</h2>
-            <p style={{ opacity: 0.75 }}>Nous vous préviendrons des nouveaux fournisseurs correspondants.</p>
+            <h2 style={{ fontSize: '1.15rem', margin: '0.8rem 0 0.4rem' }}>{t("C'est noté !")}</h2>
+            <p style={{ opacity: 0.75 }}>{t('Nous vous préviendrons des nouveaux fournisseurs correspondants.')}</p>
           </div>
         ) : (
           <form onSubmit={soumettre}>
-            <span className="etiquette">Avant de partir</span>
-            <h2 style={{ fontSize: '1.15rem', margin: '0.3rem 0 0.6rem' }}>Pas trouvé votre bonheur ?</h2>
+            <span className="etiquette">{t('Avant de partir')}</span>
+            <h2 style={{ fontSize: '1.15rem', margin: '0.3rem 0 0.6rem' }}>{t('Pas trouvé votre bonheur ?')}</h2>
             <p style={{ opacity: 0.75, fontSize: '0.9rem', marginBottom: '1rem' }}>
-              Laissez votre e-mail pour être averti des nouveaux fournisseurs correspondant à votre recherche.
+              {t('Laissez votre e-mail pour être averti des nouveaux fournisseurs correspondant à votre recherche.')}
             </p>
-            <input className="champ" type="email" required placeholder="Votre e-mail" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <input className="champ" type="email" required placeholder={t('Votre e-mail')} value={email} onChange={(e) => setEmail(e.target.value)} />
             <button type="submit" className="btn btn-primary" disabled={envoi} style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }}>
-              {envoi ? 'Envoi…' : 'Me prévenir'}
+              {envoi ? t('Envoi…') : t('Me prévenir')}
             </button>
           </form>
         )}

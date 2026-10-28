@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Check, Handshake, X } from 'lucide-react';
 import { recupererAffaires, declarerAffaire, repondreAffaire, annulerAffaire, recupererMesAvis, deposerAvis } from '../api/fournisseurs.js';
 import { ChoixNote, Etoiles } from './Etoiles.jsx';
+import { prixCFA } from '../utils/prix.js';
+import { useLangue } from '../i18n/Langue.jsx';
 
 const STATUTS = {
   proposee: { texte: 'En attente de confirmation', classe: 'esp-puce-orange' },
@@ -9,14 +11,15 @@ const STATUTS = {
   contestee: { texte: 'Contestée', classe: 'esp-puce-rouge' },
   annulee: { texte: 'Annulée', classe: 'esp-puce-neutre' },
 };
-const formatPrix = (n) => `${Number(n).toLocaleString('fr-FR')} F CFA`;
 
 // Déclaration des affaires conclues grâce à LOOHOO : une partie déclare, l'autre confirme.
 // Rien n'est affiché tant que la fonction n'est pas activée sur la base.
 export default function PanneauAffaires({ conversationId, role }) {
+  const { t, langue } = useLangue();
   const [affaires, setAffaires] = useState(undefined); // undefined = chargement, null = fonction indisponible
   const [formulaireOuvert, setFormulaireOuvert] = useState(false);
   const [montant, setMontant] = useState('');
+  const [quantite, setQuantite] = useState('');
   const [description, setDescription] = useState('');
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState('');
@@ -38,11 +41,11 @@ export default function PanneauAffaires({ conversationId, role }) {
   }, [charger]);
 
   if (!affaires && affaires !== undefined) return null; // fonction non activée
-  const autre = role === 'fournisseur' ? "l'acheteur" : 'le fournisseur';
+  const autre = role === 'fournisseur' ? t("l'acheteur") : t('le fournisseur');
 
   async function agir(action) {
     setErreur('');
-    try { await action(); await charger(); } catch (err) { setErreur(err.message || 'Action impossible.'); }
+    try { await action(); await charger(); } catch (err) { setErreur(t(err.message || 'Action impossible.')); }
   }
 
   async function declarer(e) {
@@ -50,13 +53,14 @@ export default function PanneauAffaires({ conversationId, role }) {
     setEnvoi(true);
     setErreur('');
     try {
-      await declarerAffaire(conversationId, Math.round(Number(montant)), description.trim());
+      await declarerAffaire(conversationId, Math.round(Number(montant)), description.trim(), quantite ? Math.round(Number(quantite)) : null);
       setMontant('');
+      setQuantite('');
       setDescription('');
       setFormulaireOuvert(false);
       await charger();
     } catch (err) {
-      setErreur(err.message || "Impossible d'enregistrer la déclaration.");
+      setErreur(t(err.message || "Impossible d'enregistrer la déclaration."));
     } finally {
       setEnvoi(false);
     }
@@ -71,7 +75,7 @@ export default function PanneauAffaires({ conversationId, role }) {
       setAvisOuvert(null); setNote(0); setCommentaire('');
       await charger();
     } catch (err) {
-      setErreur(err.message || "Impossible d'enregistrer votre avis.");
+      setErreur(t(err.message || "Impossible d'enregistrer votre avis."));
     } finally {
       setEnvoi(false);
     }
@@ -81,22 +85,24 @@ export default function PanneauAffaires({ conversationId, role }) {
   return (
     <div className="msg-affaires">
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.6rem', flexWrap: 'wrap' }}>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700, fontSize: '0.86rem' }}><Handshake size={16} /> Affaires conclues</span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700, fontSize: '0.86rem' }}><Handshake size={16} /> {t('Affaires conclues')}</span>
         {!formulaireOuvert && (
           <button type="button" className="btn btn-outline" style={{ padding: '0.3em 0.8em', fontSize: '0.78rem' }} onClick={() => setFormulaireOuvert(true)}>
-            Déclarer une affaire conclue
+            {t('Déclarer une affaire conclue')}
           </button>
         )}
       </div>
 
       {formulaireOuvert && (
         <form onSubmit={declarer} style={{ display: 'grid', gap: '0.5rem', marginTop: '0.6rem' }}>
-          <p className="esp-aide" style={{ margin: 0 }}>Vous avez conclu une affaire grâce à LOOHOO ? Déclarez-la : {autre} devra la confirmer.</p>
-          <input className="champ" type="number" min="1" required placeholder="Montant total convenu (F CFA)" value={montant} onChange={(e) => setMontant(e.target.value)} autoFocus />
-          <input className="champ" maxLength={200} placeholder="Description (ex. 500 pagnes wax, livraison à Bouaké)" value={description} onChange={(e) => setDescription(e.target.value)} />
+          <p className="esp-aide" style={{ margin: 0 }}>{t('Vous avez conclu une affaire grâce à LOOHOO ? Déclarez-la : {autre} devra la confirmer.', { autre })}</p>
+          <input className="champ" type="number" min="1" required placeholder={t('Montant total convenu (F CFA)')} value={montant} onChange={(e) => setMontant(e.target.value)} autoFocus />
+          <input className="champ" type="number" min="1" placeholder={t('Quantité vendue (facultatif)')} aria-label={t('Quantité vendue')} value={quantite} onChange={(e) => setQuantite(e.target.value)} />
+          <input className="champ" maxLength={200} placeholder={t('Description (ex. 500 pagnes wax, livraison à Bouaké)')} value={description} onChange={(e) => setDescription(e.target.value)} />
+          <p className="esp-aide" style={{ margin: 0 }}>{t("Avec la quantité, le stock du produit de cette conversation baisse tout seul quand l'affaire est confirmée.")}</p>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button type="submit" className="btn btn-primary" style={{ padding: '0.5em 1.1em', fontSize: '0.82rem' }} disabled={envoi || !montant}>{envoi ? 'Envoi…' : 'Déclarer'}</button>
-            <button type="button" className="btn btn-outline" style={{ padding: '0.5em 1.1em', fontSize: '0.82rem' }} onClick={() => setFormulaireOuvert(false)}>Annuler</button>
+            <button type="submit" className="btn btn-primary" style={{ padding: '0.5em 1.1em', fontSize: '0.82rem' }} disabled={envoi || !montant}>{envoi ? t('Envoi…') : t('Déclarer')}</button>
+            <button type="button" className="btn btn-outline" style={{ padding: '0.5em 1.1em', fontSize: '0.82rem' }} onClick={() => setFormulaireOuvert(false)}>{t('Annuler')}</button>
           </div>
         </form>
       )}
@@ -109,41 +115,43 @@ export default function PanneauAffaires({ conversationId, role }) {
         return (
           <div key={a.id} className="msg-affaire-ligne">
             <div style={{ minWidth: 0 }}>
-              <strong style={{ fontSize: '0.9rem' }}>{formatPrix(a.montant_fcfa)}</strong>
+              <strong style={{ fontSize: '0.9rem' }}>{prixCFA(a.montant_fcfa)}</strong>
               {a.description && <span style={{ fontSize: '0.82rem', opacity: 0.75 }}> · {a.description}</span>}
               <div className="esp-aide">
-                Déclarée par {moi ? 'vous' : autre} le {new Date(a.date_declaration).toLocaleDateString('fr-FR')}
+                {t('Déclarée par {qui} le {date}', { qui: moi ? t('vous') : autre, date: new Date(a.date_declaration).toLocaleDateString(langue === 'en' ? 'en-GB' : 'fr-FR') })}
               </div>
             </div>
             <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap' }}>
-              <span className={`esp-puce ${st.classe}`}>{st.texte}</span>
+              <span className={`esp-puce ${st.classe}`}>{t(st.texte)}</span>
               {a.statut === 'proposee' && !moi && (
                 <>
-                  <button type="button" className="btn adm-confirmer" style={{ padding: '0.3em 0.8em', fontSize: '0.78rem' }} onClick={() => agir(() => repondreAffaire(a.id, true))}><Check size={13} /> Confirmer</button>
-                  <button type="button" className="btn btn-outline" style={{ padding: '0.3em 0.8em', fontSize: '0.78rem' }} onClick={() => agir(() => repondreAffaire(a.id, false))}><X size={13} /> Contester</button>
+                  <button type="button" className="btn adm-confirmer" style={{ padding: '0.3em 0.8em', fontSize: '0.78rem' }} onClick={() => agir(() => repondreAffaire(a.id, true))}><Check size={13} /> {t('Confirmer')}</button>
+                  <button type="button" className="btn btn-outline" style={{ padding: '0.3em 0.8em', fontSize: '0.78rem' }} onClick={() => agir(() => repondreAffaire(a.id, false))}><X size={13} /> {t('Contester')}</button>
                 </>
               )}
               {a.statut === 'proposee' && moi && (
-                <button type="button" className="btn btn-outline" style={{ padding: '0.3em 0.8em', fontSize: '0.78rem' }} onClick={() => agir(() => annulerAffaire(a.id))}>Retirer</button>
+                <button type="button" className="btn btn-outline" style={{ padding: '0.3em 0.8em', fontSize: '0.78rem' }} onClick={() => agir(() => annulerAffaire(a.id))}>{t('Retirer')}</button>
               )}
             </div>
             {role === 'vendeur' && a.statut === 'confirmee' && (() => {
               const donne = avis.find((v) => v.affaire_id === a.id);
               if (donne) {
-                const suite = donne.statut === 'publie' ? 'est publié.' : donne.statut === 'rejete' ? `n'a pas été retenu${donne.motif_rejet ? ` : ${donne.motif_rejet}` : '.'}` : 'est en cours de lecture par notre équipe.';
-                return <div className="esp-aide" style={{ flexBasis: '100%' }}><Etoiles note={donne.note} taille={14} /> Votre avis {suite}</div>;
+                const suite = donne.statut === 'publie' ? t('Votre avis est publié.')
+                  : donne.statut === 'rejete' ? `${t("Votre avis n'a pas été retenu")}${donne.motif_rejet ? ` : ${donne.motif_rejet}` : '.'}`
+                    : t('Votre avis est en cours de lecture par notre équipe.');
+                return <div className="esp-aide" style={{ flexBasis: '100%' }}><Etoiles note={donne.note} taille={14} /> {suite}</div>;
               }
               if (avisOuvert !== a.id) {
-                return <button type="button" className="btn btn-outline" style={{ padding: '0.3em 0.8em', fontSize: '0.78rem' }} onClick={() => setAvisOuvert(a.id)}>Donner mon avis</button>;
+                return <button type="button" className="btn btn-outline" style={{ padding: '0.3em 0.8em', fontSize: '0.78rem' }} onClick={() => setAvisOuvert(a.id)}>{t('Donner mon avis')}</button>;
               }
               return (
                 <form onSubmit={(e) => envoyerAvis(e, a.id)} style={{ display: 'grid', gap: '0.5rem', flexBasis: '100%' }}>
-                  <p className="esp-aide" style={{ margin: 0 }}>Comment s'est passée cette affaire ? Pas de numéro ni de lien dans le commentaire.</p>
+                  <p className="esp-aide" style={{ margin: 0 }}>{t("Comment s'est passée cette affaire ? Pas de numéro ni de lien dans le commentaire.")}</p>
                   <ChoixNote valeur={note} onChange={setNote} />
-                  <textarea className="champ" rows={3} maxLength={500} placeholder="Votre commentaire (facultatif)" value={commentaire} onChange={(e) => setCommentaire(e.target.value)} />
+                  <textarea className="champ" rows={3} maxLength={500} placeholder={t('Votre commentaire (facultatif)')} value={commentaire} onChange={(e) => setCommentaire(e.target.value)} />
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button type="submit" className="btn btn-primary" style={{ padding: '0.5em 1.1em', fontSize: '0.82rem' }} disabled={envoi || !note}>{envoi ? 'Envoi…' : 'Envoyer mon avis'}</button>
-                    <button type="button" className="btn btn-outline" style={{ padding: '0.5em 1.1em', fontSize: '0.82rem' }} onClick={() => setAvisOuvert(null)}>Annuler</button>
+                    <button type="submit" className="btn btn-primary" style={{ padding: '0.5em 1.1em', fontSize: '0.82rem' }} disabled={envoi || !note}>{envoi ? t('Envoi…') : t('Envoyer mon avis')}</button>
+                    <button type="button" className="btn btn-outline" style={{ padding: '0.5em 1.1em', fontSize: '0.82rem' }} onClick={() => setAvisOuvert(null)}>{t('Annuler')}</button>
                   </div>
                 </form>
               );

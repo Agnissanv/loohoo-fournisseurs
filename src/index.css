@@ -723,6 +723,25 @@ a.carte:active { transform: translateY(-1px); }
 .carte-produit-unite { color: var(--loo-encre); opacity: 0.6; font-family: var(--police-texte); font-weight: 400; font-size: 0.8rem; }
 .carte-produit-moq { font-size: 0.78rem; opacity: 0.65; }
 
+/* Promotions (cahier v3 §15bis) : badge sur les cartes, cartes de la rangée « Promotions en cours », bandeau de la fiche */
+.badge-promo { position: absolute; top: 0.45rem; right: 0.45rem; display: inline-flex; align-items: center; gap: 0.25rem; background: var(--loo-rouge); color: #fff; font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; padding: 0.2em 0.55em; border-radius: 6px; }
+.carte-promo { display: flex; flex-direction: column; gap: 0.3rem; padding: 0.8rem; color: inherit; text-decoration: none; min-width: 0; }
+.carte-promo-image { position: relative; height: 130px; background: var(--loo-orange-clair); border-radius: 4px 14px 4px 14px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.carte-promo-image img { width: 100%; height: 100%; object-fit: cover; }
+.carte-promo-initiales { font-family: var(--police-affiche); font-weight: 800; font-size: 2rem; color: var(--loo-rouge); }
+.carte-promo-titre { font-size: 0.95rem; line-height: 1.25; margin-top: 0.15rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.carte-promo-texte { font-size: 0.8rem; opacity: 0.75; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.carte-promo .carte-produit-prix { margin-top: 0; }
+.carte-promo-pied { display: flex; align-items: center; gap: 0.3rem; font-size: 0.78rem; opacity: 0.75; margin-top: auto; min-width: 0; }
+.carte-promo-pied span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.carte-promo-fin { font-family: var(--police-etiquette); font-size: 0.74rem; font-weight: 600; color: var(--loo-rouge); }
+.fp-promo { display: flex; gap: 0.6rem; align-items: flex-start; background: var(--loo-orange-clair); border-left: 4px solid var(--loo-rouge); border-radius: 4px 12px 12px 4px; padding: 0.7rem 0.9rem; margin: 0 0 0.9rem; color: var(--loo-encre); }
+.fp-promo > svg { color: var(--loo-rouge); flex-shrink: 0; margin-top: 0.15rem; }
+.fp-promo div { display: grid; gap: 0.15rem; font-size: 0.88rem; line-height: 1.4; }
+.fp-promo em { font-style: normal; font-family: var(--police-etiquette); font-size: 0.76rem; font-weight: 600; color: var(--loo-rouge); }
+/* Statut spécial accordé par LOOHOO (membre fondateur, fournisseur prioritaire) */
+.badge-special { background: var(--loo-encre); color: var(--loo-orange); display: inline-flex; align-items: center; gap: 0.25rem; }
+
 /* Grille : 4 à 5 produits par ligne sur ordinateur */
 .loo-fournisseurs-grille { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
 @media (max-width: 640px) { .loo-fournisseurs-grille { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.7rem; } .carte-produit-image { height: 130px; } }
@@ -994,6 +1013,8 @@ a.carte:active { transform: translateY(-1px); }
 .annonce-promotion { background: #FFE6CC; color: #8A3A00; }
 .annonce-pays { background: var(--loo-vert-clair); color: var(--loo-vert); }
 .annonce-video { background: #FDE3E1; color: #B42318; }
+.annonce-fournisseur, .annonce-stock { background: var(--loo-vert-clair); color: var(--loo-vert); }
+.annonce-certificat { background: #FEF3C7; color: #92400E; }
 .annonce-corps { display: grid; gap: 0.15rem; min-width: 0; flex: 1; }
 .annonce-meta { font-size: 0.74rem; font-weight: 600; opacity: 0.6; display: flex; align-items: center; gap: 0.2rem; flex-wrap: wrap; }
 .annonce-verifie { color: var(--loo-vert); }

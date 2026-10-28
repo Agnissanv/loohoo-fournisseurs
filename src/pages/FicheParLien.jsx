@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { grossisteIdParSlug } from '../api/fournisseurs.js';
 import ProfilGrossiste from './ProfilGrossiste.jsx';
+import { useLangue } from '../i18n/Langue.jsx';
 
 // Adresse courte d'un fournisseur (/f/kone-textiles) : on retrouve son identifiant puis on affiche sa fiche à la même adresse
 export default function FicheParLien() {
+  const { t } = useLangue();
   const { slug } = useParams();
   const [id, setId] = useState(undefined);
 
@@ -20,9 +22,9 @@ export default function FicheParLien() {
     return (
       <section className="section">
         <div className="container">
-          <h1 className="section-titre">Fournisseur introuvable.</h1>
-          <p className="section-intro">Ce lien n'est plus valable ou le fournisseur n'est pas encore publié.</p>
-          <Link to="/" className="btn btn-primary" style={{ marginTop: '1.2rem' }}>Voir les produits</Link>
+          <h1 className="section-titre">{t('Fournisseur introuvable.')}</h1>
+          <p className="section-intro">{t("Ce lien n'est plus valable ou le fournisseur n'est pas encore publié.")}</p>
+          <Link to="/" className="btn btn-primary" style={{ marginTop: '1.2rem' }}>{t('Voir les produits')}</Link>
         </div>
       </section>
     );

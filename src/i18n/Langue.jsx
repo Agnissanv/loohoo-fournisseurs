@@ -1,5 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import en from './en.js';
+import { definirLangueActive } from './langueActive.js';
+import { titreParDefaut } from '../utils/useTitre.js';
 
 // Le site est écrit en français ; chaque texte affiché passe par t('Texte en français').
 // En anglais, t() cherche la traduction dans en.js et garde le français si elle manque encore.
@@ -31,10 +33,28 @@ const Contexte = createContext({ langue: 'fr', setLangue: () => {}, t: (s, v) =>
 
 export function FournisseurLangue({ children }) {
   const [langue, setLangueEtat] = useState(langueDeDepart);
+  definirLangueActive(langue); // avant le rendu des enfants : prix et quantités suivent la langue
 
   useEffect(() => {
     document.documentElement.lang = langue;
+    if (/^LOOHOO (Fournisseurs|Suppliers) — /.test(document.title)) document.title = titreParDefaut(); // titre d'accueil
     try { localStorage.setItem(CLE, langue); } catch { /* indisponible */ }
+  }, [langue]);
+
+  // Les liens vers le site officiel (autre site, autre mémoire du navigateur) emportent la langue : ?lang=en
+  useEffect(() => {
+    const surClic = (e) => {
+      const a = e.target.closest?.('a[href]');
+      if (!a) return;
+      let url;
+      try { url = new URL(a.href); } catch { return; }
+      if (url.origin === window.location.origin || !/(^|\.)looh-oo\.com$/.test(url.hostname)) return;
+      url.searchParams.set('lang', langue);
+      a.href = url.toString();
+    };
+    document.addEventListener('click', surClic, true);
+    document.addEventListener('auxclick', surClic, true);
+    return () => { document.removeEventListener('click', surClic, true); document.removeEventListener('auxclick', surClic, true); };
   }, [langue]);
 
   const setLangue = useCallback((l) => { if (CODES.includes(l)) setLangueEtat(l); }, []);

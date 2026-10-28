@@ -1,7 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { X } from 'lucide-react';
-import { rechercherCatalogue, recupererCategoriesCatalogue, recupererOrigines, capturerLead, suivreSession, signalerRechercheVide } from '../api/fournisseurs.js';
+import {
+  rechercherCatalogue, recupererCategoriesCatalogue, recupererOrigines, recupererPromotionsEnCours, recupererTendances,
+  capturerLead, suivreSession, signalerRechercheVide,
+} from '../api/fournisseurs.js';
+import CartePromotion from '../components/CartePromotion.jsx';
 import CarteProduit from '../components/CarteProduit.jsx';
 import RangeeProduits from '../components/RangeeProduits.jsx';
 import PanneauFiltres from '../components/PanneauFiltres.jsx';
@@ -45,12 +49,17 @@ export default function Annuaire() {
   const [categories, setCategories] = useState([]);
   const [origines, setOrigines] = useState([]);
   const [rangees, setRangees] = useState(null);
+  const [promotions, setPromotions] = useState([]);
+  const [tendances, setTendances] = useState([]);
   const [resultats, setResultats] = useState(null); // { produits, total }
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(false);
   const [filtresOuverts, setFiltresOuverts] = useState(false);
 
-  useTitre(categorie ? `${categorie} en gros` : q ? `« ${q} » en gros` : null, categorie || q ? `Fournisseurs vérifiés et prix de gros : ${categorie || q}.` : null);
+  useTitre(
+    categorie ? t('{nom} en gros', { nom: t(categorie) }) : q ? t('{nom} en gros', { nom: `« ${q} »` }) : null,
+    categorie || q ? t('Fournisseurs vérifiés et prix de gros : {q}.', { q: categorie ? t(categorie) : q }) : null,
+  );
 
   const changer = (cles) => setParams((p) => {
     const suivant = new URLSearchParams(p);
@@ -58,7 +67,13 @@ export default function Annuaire() {
     return suivant;
   }, { replace: true });
 
-  useEffect(() => { recupererCategoriesCatalogue().then(setCategories); recupererOrigines().then(setOrigines); noterPageInterne(); }, []);
+  useEffect(() => {
+    recupererCategoriesCatalogue().then(setCategories);
+    recupererOrigines().then(setOrigines);
+    recupererPromotionsEnCours(16).then(setPromotions);
+    recupererTendances(12).then(setTendances);
+    noterPageInterne();
+  }, []);
 
   // Le bouton « Filtres » de l'en-tête arrive ici avec ?filtres=1 : on ouvre le panneau
   useEffect(() => {
@@ -148,9 +163,18 @@ export default function Annuaire() {
         </nav>
       )}
 
-      {!rechercheActive && rangees?.length > 0 && (
+      {!rechercheActive && (rangees?.length > 0 || promotions.length > 0) && (
         <div className="container" style={{ paddingTop: '1.2rem' }}>
-          {rangees.map((r) => (
+          {promotions.length > 0 && (
+            <section className="rangee" aria-label={t('Promotions en cours')}>
+              <div className="rangee-tete"><h2>{t('Promotions en cours')}</h2></div>
+              <div className="rangee-piste">
+                {promotions.map((pr) => <div key={pr.id} className="rangee-element"><CartePromotion promo={pr} /></div>)}
+              </div>
+            </section>
+          )}
+          {tendances.length >= 4 && <RangeeProduits titre={t('Tendances de la semaine')} produits={tendances} />}
+          {(rangees || []).map((r) => (
             <RangeeProduits key={r.titre} titre={r.titre} produits={r.produits}
               action={r.categorie ? <button type="button" className="rangee-tout" onClick={() => changer({ categorie: r.categorie })}>{t('Tout voir')}</button> : null} />
           ))}

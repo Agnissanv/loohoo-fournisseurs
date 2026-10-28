@@ -49,7 +49,7 @@ export default function ClocheAnnonces({ session }) {
           {!charge ? (
             <div className="cloche-vide"><div className="loo-squelette" style={{ height: '120px' }} /></div>
           ) : elements.length === 0 ? (
-            <p className="cloche-vide">{t('Rien de nouveau pour le moment. Les annonces de LOOHOO et les promotions des fournisseurs que vous suivez arriveront ici.')}</p>
+            <p className="cloche-vide">{t('Rien de nouveau pour le moment. Les annonces de LOOHOO et les promotions des fournisseurs que vous suivez ou avez contactés arriveront ici.')}</p>
           ) : (
             <ListeAnnonces elements={elements.slice(0, 6)} nouveaux={aLire} onChoisir={() => setOuvert(false)} compact />
           )}

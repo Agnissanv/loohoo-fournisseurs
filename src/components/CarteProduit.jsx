@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { BadgeCheck, Package } from 'lucide-react';
+import { BadgeCheck, Package, Tag } from 'lucide-react';
 import ImageOptimisee from './ImageOptimisee.jsx';
-import { estNouveau, fourchettePrix, quantite } from '../utils/prix.js';
+import { estNouveau, fourchettePrix, nomUnite, quantite } from '../utils/prix.js';
 import { useLangue } from '../i18n/Langue.jsx';
 
 // Carte d'un produit : photo, nom, fournisseur, fourchette de prix des paliers et minimum de commande.
@@ -14,6 +14,7 @@ export default function CarteProduit({ p, sansFournisseur = false }) {
       <div className="carte-produit-image">
         {p.photo_url ? <ImageOptimisee src={p.photo_url} largeur={480} alt={p.nom} /> : <Package size={28} color="var(--loo-orange)" />}
         {estNouveau(p.date_ajout) && <span className="badge-nouveau">{t('Nouveau')}</span>}
+        {p.en_promotion && <span className="badge-promo"><Tag size={12} aria-hidden="true" /> {t('Promo')}</span>}
       </div>
       <h3 className="carte-produit-nom">{p.nom}</h3>
       {!sansFournisseur && p.grossiste_nom && (
@@ -24,9 +25,9 @@ export default function CarteProduit({ p, sansFournisseur = false }) {
       )}
       <div className="carte-produit-prix">
         {fourchettePrix(p)}
-        {p.unite && <span className="carte-produit-unite"> / {p.unite}</span>}
+        {p.unite && <span className="carte-produit-unite"> / {nomUnite(p.unite)}</span>}
       </div>
-      <span className="carte-produit-moq">{t('Minimum')} : {quantite(p.moq || 1, p.unite)}</span>
+      <span className="carte-produit-moq">{t('Minimum : {q}', { q: quantite(p.moq || 1, p.unite) })}</span>
     </Link>
   );
 }
