@@ -12,6 +12,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "../loohoo", "run", "dev", "--", "--port", "5201", "--strictPort"],
       "port": 5201
+    },
+    {
+      "name": "medithe",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "../medithe/frontend", "run", "dev", "--", "--port", "5202", "--strictPort"],
+      "port": 5202
     }
   ]
 }
