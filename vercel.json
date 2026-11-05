@@ -5,5 +5,8 @@
     { "source": "/produit/:id", "destination": "/api/fiche-produit?id=:id" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
-  "crons": [{ "path": "/api/nettoyer-conversations", "schedule": "0 4 * * *" }]
+  "crons": [
+    { "path": "/api/nettoyer-conversations", "schedule": "0 4 * * *" },
+    { "path": "/api/keep-alive", "schedule": "0 3 */2 * *" }
+  ]
 }

@@ -1,0 +1,18 @@
+# Deuxième garde contre la mise en veille de Supabase, indépendante de la tâche planifiée de Vercel.
+# Tous les 3 jours, GitHub appelle /api/keep-alive. Si l'appel échoue, GitHub envoie un e-mail : c'est aussi l'alarme.
+# Bon à savoir : sur un dépôt public, GitHub suspend ce rappel après 60 jours sans aucun commit (il prévient par e-mail).
+name: Garder Supabase actif
+
+on:
+  schedule:
+    - cron: '30 6 */3 * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  appel:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Appeler le keep-alive
+        run: curl --fail --silent --show-error --retry 3 --retry-delay 30 --max-time 30 https://fournisseurs.looh-oo.com/api/keep-alive
