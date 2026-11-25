@@ -6,7 +6,7 @@ import SelecteurPhoto from '../components/SelecteurPhoto.jsx';
 import SelectCategorie from '../components/SelectCategorie.jsx';
 import { useCategories } from '../utils/useCategories.js';
 import {
-  suivreSession, recupererMonProfil, ajouterProduit, modifierProduit,
+  suivreSession, recupererMonProfil, ajouterProduit, modifierProduit, supprimerProduit,
   recupererGaleriePhotosProduit, ajouterPhotoProduit, supprimerPhotoProduit, ajouterMedia,
 } from '../api/fournisseurs.js';
 import { televerserMedia, televerserVideo, supprimerVideoStockage } from '../utils/stockagePhotos.js';
@@ -47,6 +47,9 @@ export default function ProduitFormulaire() {
   const [enregistrement, setEnregistrement] = useState(false);
   const [erreur, setErreur] = useState('');
   const champFichier = useRef(null);
+  // Garde anti double-soumission SYNCHRONE : un useState ne bloque pas deux clics
+  // dans le meme tick (bug mesure le 22/11 : doublon « Mini fer a repasser »).
+  const soumission = useRef(false);
 
   useEffect(() => suivreSession(setSession), []);
 
@@ -155,7 +158,10 @@ export default function ProduitFormulaire() {
     if (Number(champs.prix_gros) < 0 || champs.prix_gros === '') { setErreur('Indiquez un prix de gros.'); return; }
     const verif = normaliserPaliers(paliers, champs.moq, champs.prix_gros);
     if (verif.erreur) { setErreur(verif.erreur); return; }
+    if (soumission.current) return; // 2e clic : rien ne part
+    soumission.current = true;
     setEnregistrement(true);
+    let produitCree = null;
     try {
       const donnees = {
         nom: champs.nom.trim(),
@@ -184,12 +190,24 @@ export default function ProduitFormulaire() {
       if (produit) {
         await modifierProduit(produit.id, donnees);
       } else {
-        const nouveauId = await ajouterProduit(profil.id, donnees);
-        for (let i = 0; i < photos.length; i += 1) await ajouterPhotoProduit(nouveauId, photos[i].url, i);
+        produitCree = await ajouterProduit(profil.id, donnees);
+        for (let i = 0; i < photos.length; i += 1) await ajouterPhotoProduit(produitCree, photos[i].url, i);
       }
+      soumission.current = false;
       navigate('/produits');
     } catch (err) {
-      setErreur(`Impossible d'enregistrer le produit : ${err.message}`);
+      // On ne laisse JAMAIS un produit sans ses photos : c'est ce demi-enregistrement
+      // qui affichait une erreur, poussait le fournisseur a recliquer et creait un
+      // doublon (rapport du 22/11, F1).
+      console.error('produit/enregistrer', err);
+      let nettoye = true;
+      if (produitCree) {
+        try { await supprimerProduit(produitCree); } catch { nettoye = false; }
+      }
+      setErreur(nettoye
+        ? "La publication n'a pas abouti, rien n'a été enregistré. Vérifiez votre connexion et réessayez."
+        : "La fiche a été créée sans ses photos. Ouvrez-la depuis « Mes produits » pour les ajouter.");
+      soumission.current = false;
       setEnregistrement(false);
     }
   }
@@ -392,7 +410,7 @@ export default function ProduitFormulaire() {
       <div className="esp-barre-actions">
         <Link to="/produits" className="btn btn-outline">Annuler</Link>
         <button type="submit" className="btn btn-primary" disabled={enregistrement || envoiPhoto}>
-          {enregistrement ? 'Enregistrement…' : 'Enregistrer le produit'}
+          {enregistrement ? (produit ? 'Enregistrement…' : 'Publication en cours…') : (produit ? 'Enregistrer les modifications' : 'Publier le produit')}
         </button>
       </div>
 
