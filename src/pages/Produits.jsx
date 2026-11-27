@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FileUp, Image as IconeImage, Pencil, Plus, Search, Trash2 } from 'lucide-react';
-import GaleriePhotosProduit from '../components/GaleriePhotosProduit.jsx';
+import { Eye, FileUp, Image as IconeImage, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import {
   suivreSession, recupererMonProfil, modifierProduit, supprimerProduit,
 } from '../api/fournisseurs.js';
@@ -19,7 +18,6 @@ export default function Produits() {
   const [erreur, setErreur] = useState('');
   const [recherche, setRecherche] = useState('');
   const [filtre, setFiltre] = useState('tous');
-  const [galerieProduit, setGalerieProduit] = useState(null);
 
   useEffect(() => suivreSession(setSession), []);
 
@@ -132,26 +130,17 @@ export default function Produits() {
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    <Link to={`/produits/${p.id}/modifier`} className="btn btn-outline" style={{ padding: '0.4em 0.8em', fontSize: '0.8rem' }}><Pencil size={14} /> Modifier</Link>
-                    <button type="button" className="btn btn-outline" style={{ padding: '0.4em 0.8em', fontSize: '0.8rem' }} onClick={() => setGalerieProduit(p)}>Photos et vidéo</button>
+                    <Link to={`/produit/${p.id}?apercu=1`} target="_blank" rel="noreferrer" className="btn btn-outline" style={{ padding: '0.4em 0.8em' }} aria-label={`Voir « ${p.nom} » comme un acheteur`} title="Voir comme un acheteur"><Eye size={15} /></Link>
+                    <Link to={`/produits/${p.id}/modifier`} className="btn btn-outline" style={{ padding: '0.4em 0.8em', fontSize: '0.8rem' }} title="Modifier le produit, ses photos et sa vidéo"><Pencil size={14} /> Modifier</Link>
                     {p.statut === 'publie' && p.actif && <Link to={`/promotions?produit=${p.id}`} className="btn btn-outline" style={{ padding: '0.4em 0.8em', fontSize: '0.8rem' }}>Promouvoir</Link>}
                     <button type="button" className="btn btn-outline" style={{ padding: '0.4em 0.8em', fontSize: '0.8rem' }} onClick={() => basculerActif(p)}>{p.actif ? 'Désactiver' : 'Activer'}</button>
-                    <button type="button" className="btn btn-outline" style={{ padding: '0.4em 0.8em' }} onClick={() => supprimer(p)} aria-label="Supprimer"><Trash2 size={15} /></button>
+                    <button type="button" className="btn btn-outline" style={{ padding: '0.4em 0.8em' }} onClick={() => supprimer(p)} aria-label="Supprimer" title="Supprimer le produit"><Trash2 size={15} /></button>
                   </div>
                 </div>
               );
             })}
           </div>
         </>
-      )}
-
-      {galerieProduit && (
-        <GaleriePhotosProduit
-          produit={galerieProduit}
-          grossisteId={profil.id}
-          onClose={() => setGalerieProduit(null)}
-          onChange={() => recupererMonProfil(session.user.id).then(setProfil)}
-        />
       )}
     </>
   );

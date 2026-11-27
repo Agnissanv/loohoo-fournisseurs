@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Image as IconeImage, Pencil, Plus } from 'lucide-react';
+import { Eye, Image as IconeImage, Pencil, Plus } from 'lucide-react';
 import { modifierProduit } from '../api/fournisseurs.js';
 import { ilYa } from '../utils/profilFournisseur.js';
 
@@ -76,7 +76,8 @@ export default function GestionStock({ produits, onChange }) {
             ) : (
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                 <strong style={{ fontFamily: 'var(--police-affiche)', fontSize: '1.15rem', color: rupture ? 'var(--loo-rouge)' : undefined }}>{inconnu ? '–' : p.stock_disponible}</strong>
-                <button type="button" className="esp-bouton-icone" aria-label={`Modifier le stock de ${p.nom}`} onClick={() => ouvrir(p)}><Pencil size={15} /></button>
+                <Link to={`/produit/${p.id}?apercu=1`} target="_blank" rel="noreferrer" className="esp-bouton-icone" aria-label={`Voir « ${p.nom} » comme un acheteur`} title="Voir comme un acheteur"><Eye size={15} /></Link>
+                <button type="button" className="esp-bouton-icone" aria-label={`Modifier le stock de ${p.nom}`} title="Modifier le stock" onClick={() => ouvrir(p)}><Pencil size={15} /></button>
               </div>
             )}
           </div>

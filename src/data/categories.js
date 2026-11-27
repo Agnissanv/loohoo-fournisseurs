@@ -17,6 +17,7 @@ export const CATEGORIES = [
   'Emballage et papeterie',
   'Jouets et enfants',
   'Auto et moto',
+  'Sport et fitness',
   'Autre',
 ];
 
@@ -37,5 +38,6 @@ export const SOUS_CATEGORIES = {
   'Emballage et papeterie': ['Sachets et sacs', 'Cartons', 'Étiquettes', 'Papeterie'],
   'Jouets et enfants': ['Jouets', 'Puériculture', 'Fournitures scolaires'],
   'Auto et moto': ['Pièces détachées', 'Pneus', 'Accessoires', 'Huiles et entretien'],
+  'Sport et fitness': ['Matériel de musculation', 'Accessoires de fitness', 'Vêtements de sport', 'Autres articles de sport'],
   Autre: [],
 };

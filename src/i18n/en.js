@@ -141,6 +141,7 @@ const en = {
   'Emballage et papeterie': 'Packaging and stationery',
   'Jouets et enfants': 'Toys and children',
   'Auto et moto': 'Cars and motorbikes',
+  'Sport et fitness': 'Sports and fitness',
   Autre: 'Other',
 
   // Fiche produit (lot 3)
@@ -166,6 +167,8 @@ const en = {
   "Prix à l'unité": 'Single-unit price',
   'Stock disponible': 'Stock available',
   'Disponibilité': 'Availability',
+  'Aperçu : ce produit est masqué aux acheteurs.': 'Preview: this product is hidden from buyers.',
+  'Aperçu : voici ce que voient les acheteurs.': 'Preview: this is what buyers see.',
   'Sur commande': 'Made to order',
   Conditionnement: 'Packaging',
   "Poids d'une unité": 'Weight per unit',

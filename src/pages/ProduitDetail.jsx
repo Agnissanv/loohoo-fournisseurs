@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { BadgeCheck, Check, ChevronRight, Copy, Factory, FileCheck2, Flag, MapPin, MessageCircle, Package, ShieldCheck, Star, Tag } from 'lucide-react';
 import {
   recupererProduitPublic, recupererAutresProduitsFournisseur, rechercherCatalogue, recupererCertificats, recupererResumeAvis,
@@ -32,6 +32,7 @@ function dateVerification(p) {
 
 export default function ProduitDetail() {
   const { id } = useParams();
+  const apercu = useSearchParams()[0].get('apercu') === '1'; // « Voir comme un acheteur » depuis l'espace fournisseur
   const { t, langue } = useLangue();
   const [produit, setProduit] = useState(undefined);
   const [panne, setPanne] = useState(false);
@@ -63,11 +64,11 @@ export default function ProduitDetail() {
     setCertificats([]);
     setAvis(null);
     window.scrollTo({ top: 0 });
-    recupererProduitPublic(id).then((p) => {
+    recupererProduitPublic(id, { apercu }).then((p) => {
       if (annule) return;
       setProduit(p);
       if (!p) return;
-      noterVisite({ grossisteId: p.grossiste.id, produitId: p.id });
+      if (!apercu) noterVisite({ grossisteId: p.grossiste.id, produitId: p.id }); // l'aperçu du fournisseur ne compte pas comme une visite
       // Tout le reste se charge à côté : rien de tout ça ne bloque l'affichage de la fiche
       recupererCertificats(p.id).then((l) => { if (!annule) setCertificats(l); });
       // Promotion sur ce produit, ou sur tout le catalogue du fournisseur
@@ -85,7 +86,7 @@ export default function ProduitDetail() {
       }
     }).catch(() => { if (!annule) { setProduit(null); setPanne(true); } });
     return () => { annule = true; };
-  }, [id, essai]);
+  }, [id, essai, apercu]);
 
   if (produit === undefined) {
     return (
@@ -186,6 +187,13 @@ export default function ProduitDetail() {
   return (
     <section className="section fp-page fiche-avec-cta">
       <div className="container">
+        {apercu && (
+          <p className={`fp-apercu${p.masque ? ' fp-apercu-masque' : ''}`} role="status">
+            {p.masque
+              ? t('Aperçu : ce produit est masqué aux acheteurs.')
+              : t('Aperçu : voici ce que voient les acheteurs.')}
+          </p>
+        )}
         <nav aria-label={t("Fil d'Ariane")} className="fp-fil">
           <Link to="/">{t('Accueil')}</Link>
           {p.categorie && <><ChevronRight size={14} aria-hidden="true" /><Link to={`/?categorie=${encodeURIComponent(p.categorie)}`}>{t(p.categorie)}</Link></>}

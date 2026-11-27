@@ -174,3 +174,6 @@ Avant, modifier la quantité retirait la mention « stock vérifié » : le four
 
 ## 0035 — Disponibilité « sur commande » (27 nov 2026, appliquée)
 Ajoute `produit.sur_commande` (faux par défaut) pour le formulaire simplifié : « En stock : quantité » ou « Sur commande : délai en jours ». Les produits existants ne changent pas.
+
+## 0036 — Catégorie « Sport et fitness » (27 nov 2026, appliquée)
+Ajoutée juste avant « Autre » (qui reste la dernière), avec quatre sous-catégories : matériel de musculation, accessoires de fitness, vêtements de sport, autres articles de sport. L'équipe peut les modifier depuis l'écran Catégories de l'admin.

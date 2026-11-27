@@ -75,6 +75,19 @@ function allerA(id) {
 
 const Obligatoire = () => <span className="esp-obligatoire" aria-hidden="true"> *</span>;
 
+// Brouillon dans le stockage de l'appareil (jamais bloquant : si le stockage est refusé, le formulaire marche sans)
+const PREFIXE_BROUILLON = 'loohoo:brouillon-produit:';
+function lireBrouillon(cle) {
+  try { const b = JSON.parse(localStorage.getItem(cle) || 'null'); return b && b.donnees ? b : null; } catch { return null; }
+}
+function ecrireBrouillon(cle, valeur) {
+  try { localStorage.setItem(cle, JSON.stringify(valeur)); return true; } catch { return false; }
+}
+function effacerBrouillon(cle) {
+  try { localStorage.removeItem(cle); } catch { /* stockage indisponible : rien à effacer */ }
+}
+const heureFr = (ts) => { const d = new Date(ts); return `${d.getHours()} h ${String(d.getMinutes()).padStart(2, '0')}`; };
+
 export default function ProduitFormulaire() {
   const { id } = useParams(); // absent = création
   const navigate = useNavigate();
@@ -105,6 +118,10 @@ export default function ProduitFormulaire() {
   const [completerOuvert, setCompleterOuvert] = useState(false); // « Compléter ma fiche » : fermé à la création, ouvert en modification
   const [tentative, setTentative] = useState(false); // « Publier » a déjà été cliqué : on montre les champs manquants
   const [paliersConfirmes, setPaliersConfirmes] = useState(''); // avertissements de prix déjà confirmés par le fournisseur
+  const [brouillonTrouve, setBrouillonTrouve] = useState(null); // { enregistre, donnees } : un brouillon attend la décision du fournisseur
+  const [heureBrouillon, setHeureBrouillon] = useState(null);
+  const etatInitial = useRef(null); // le formulaire tel qu'il était à l'ouverture : un brouillon n'est écrit que s'il en diffère
+  const termine = useRef(false); // publication réussie : plus de brouillon
   const champFichier = useRef(null);
   const champCamera = useRef(null);
   // Garde anti double-soumission SYNCHRONE : un useState ne bloque pas deux clics
@@ -157,6 +174,25 @@ export default function ProduitFormulaire() {
       setPhotos(await recupererGaleriePhotosProduit(id));
     }).catch((err) => setErreur(err.message));
   }, [session, id, navigate]);
+
+  // Brouillon enregistré sur l'appareil (rapport du 22 nov 2026, F6) : une page actualisée, un téléphone en veille ou une connexion
+  // coupée ne font plus perdre la saisie. Un brouillon par produit (ou « nouveau »), effacé après une publication réussie.
+  const cleBrouillon = profil ? (id ? (produit ? `${PREFIXE_BROUILLON}${profil.id}:${id}` : null) : `${PREFIXE_BROUILLON}${profil.id}:nouveau`) : null;
+  const instantane = JSON.stringify({ champs, tags, paliers, photos: id ? [] : photos.map((p) => p.url) });
+  useEffect(() => { // à l'ouverture : photographie du formulaire de départ, et recherche d'un brouillon à proposer
+    if (!cleBrouillon || etatInitial.current !== null) return;
+    etatInitial.current = instantane;
+    const trouve = lireBrouillon(cleBrouillon);
+    if (trouve) setBrouillonTrouve(trouve);
+  }, [cleBrouillon]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { // une seconde après la dernière frappe, sans bouton à toucher
+    if (!cleBrouillon || etatInitial.current === null || brouillonTrouve || termine.current || instantane === etatInitial.current) return undefined;
+    const minuterie = setTimeout(() => {
+      const maintenant = Date.now();
+      if (ecrireBrouillon(cleBrouillon, { enregistre: maintenant, donnees: JSON.parse(instantane) })) setHeureBrouillon(maintenant);
+    }, 1000);
+    return () => clearTimeout(minuterie);
+  }, [instantane, cleBrouillon, brouillonTrouve]);
 
   if (session === undefined || profil === undefined) return <div className="loo-squelette" style={{ height: '260px' }} />;
   if (!profil) return <p>Aucun profil fournisseur associé à ce compte.</p>;
@@ -319,6 +355,8 @@ export default function ProduitFormulaire() {
         produitCree = await ajouterProduit(profil.id, donnees);
         for (let i = 0; i < photos.length; i += 1) await ajouterPhotoProduit(produitCree, photos[i].url, i);
       }
+      termine.current = true;
+      effacerBrouillon(cleBrouillon);
       soumission.current = false;
       navigate('/produits');
     } catch (err) {
@@ -338,6 +376,22 @@ export default function ProduitFormulaire() {
     }
   }
 
+  function reprendreBrouillon() {
+    const d = brouillonTrouve.donnees;
+    setChamps((c) => ({ ...c, ...d.champs }));
+    setTags(d.tags || []);
+    setPaliers(d.paliers || []);
+    if (!id && Array.isArray(d.photos)) setPhotos(d.photos.map((url) => ({ url }))); // photos déjà envoyées : gardées avec le brouillon
+    const c = d.champs || {};
+    if (id || (d.paliers || []).length || c.description || c.usage || c.poids_kg || c.pieces_par_carton || c.longueur) setCompleterOuvert(true);
+    setBrouillonTrouve(null);
+  }
+  function effacerLeBrouillon() {
+    effacerBrouillon(cleBrouillon);
+    setBrouillonTrouve(null);
+    setHeureBrouillon(null);
+  }
+
   const statut = produit ? (STATUTS[produit.statut] || STATUTS.en_attente) : null;
   const texteNom = `${champs.nom}`;
   const alerteNom = contientCoordonnees(texteNom) || promessesInterdites(texteNom).length > 0;
@@ -348,6 +402,22 @@ export default function ProduitFormulaire() {
         <Link to="/produits">Mes produits</Link><span>›</span><span>{produit ? 'Modifier' : 'Ajouter un produit'}</span>
       </div>
       <h1 className="esp-titre-page">{produit ? 'Modifier le produit' : 'Ajouter un nouveau produit'}</h1>
+
+      {brouillonTrouve && (
+        <div className="esp-bandeau-brouillon" role="status">
+          <span>
+            {produit
+              ? 'Vous avez des modifications non enregistrées sur ce produit'
+              : `Vous avez un produit en cours${brouillonTrouve.donnees.champs?.nom?.trim() ? ` : ${brouillonTrouve.donnees.champs.nom.trim()}` : ''}`}
+            {brouillonTrouve.enregistre ? ` (brouillon de ${heureFr(brouillonTrouve.enregistre)})` : ''}.
+          </span>
+          <span style={{ display: 'flex', gap: '0.5rem' }}>
+            <button type="button" className="btn btn-primary" style={{ padding: '0.45em 1em', fontSize: '0.85rem' }} onClick={reprendreBrouillon}>Reprendre</button>
+            <button type="button" className="btn btn-outline" style={{ padding: '0.45em 1em', fontSize: '0.85rem' }} onClick={effacerLeBrouillon}>Effacer</button>
+          </span>
+        </div>
+      )}
+      {heureBrouillon && !brouillonTrouve && <p className="esp-aide" aria-live="polite" style={{ margin: '-0.4rem 0 0.8rem' }}>Brouillon enregistré à {heureFr(heureBrouillon)}</p>}
 
       {listeManquants.length > 0 && (
         <div className="esp-bandeau-manquants" role="alert">

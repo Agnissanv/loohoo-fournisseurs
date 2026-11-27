@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  Baby, Car, Footprints, Gem, Hammer, HeartPulse, House, Laptop, Package, Refrigerator, Shirt,
+  Baby, Car, Dumbbell, Footprints, Gem, Hammer, HeartPulse, House, Laptop, Package, Refrigerator, Shirt,
   Smartphone, Sparkles, Sprout, Tag, Utensils, Wheat,
 } from 'lucide-react';
 
@@ -20,6 +20,7 @@ const ICONES = {
   'Emballage et papeterie': Package,
   'Jouets et enfants': Baby,
   'Auto et moto': Car,
+  'Sport et fitness': Dumbbell,
 };
 
 // Icône d'une catégorie (étiquette générique si la catégorie n'est pas dans la liste)

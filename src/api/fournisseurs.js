@@ -452,14 +452,18 @@ export async function rechercherProduits({ q = '', categorie = '', ville = '', c
 }
 
 // Fiche produit publique complète (galerie, vidéo, infos du fournisseur)
-export async function recupererProduitPublic(id) {
+// apercu : le fournisseur regarde son produit comme un acheteur, même désactivé ou en vérification (la base ne rend que les produits
+// qu'il a le droit de lire : le sien, ou un produit publié). Le résultat porte alors `masque: true` si les acheteurs ne le voient pas.
+export async function recupererProduitPublic(id, { apercu = false } = {}) {
   const base = `id, nom, description, tags, categorie, sous_categorie, video_url,
       prix_gros_fcfa, prix_unitaire_fcfa, moq, unite, poids_grammes,
-      produit_photo(url, ordre)`;
+      produit_photo(url, ordre)${apercu ? ', statut, actif' : ''}`;
   // Le pays du fournisseur (migration 0024) est lu avec les colonnes récentes ; sans lui, on retombe sur l'ancienne liste
   const fournisseur = (recent) => `, grossiste(id, nom, badge_verifie, est_fabricant, ville, commune, statut, logo_url, date_ajout${recent ? ', slug, pays_code' : ''})`;
-  const requete = (colonnes) => supabase.from('produit').select(colonnes)
-    .eq('id', id).eq('statut', 'publie').eq('actif', true).maybeSingle();
+  const requete = (colonnes) => {
+    const q = supabase.from('produit').select(colonnes).eq('id', id);
+    return (apercu ? q : q.eq('statut', 'publie').eq('actif', true)).maybeSingle();
+  };
   // Stock, dimensions et référence : lus d'abord, avec repli si les droits de la base ne les exposent pas
   let data = null;
   let error = null;
@@ -470,8 +474,10 @@ export async function recupererProduitPublic(id) {
     if (!error) break;
   }
   if (error) throw error;
-  if (!data || data.grossiste?.statut !== 'publie') return null;
-  return { ...data, photos: [...(data.produit_photo || [])].sort((a, b) => a.ordre - b.ordre).map((p) => p.url) };
+  if (!data) return null;
+  if (!apercu && data.grossiste?.statut !== 'publie') return null;
+  const masque = apercu && (data.statut !== 'publie' || data.actif === false || data.grossiste?.statut !== 'publie');
+  return { ...data, masque, photos: [...(data.produit_photo || [])].sort((a, b) => a.ordre - b.ordre).map((p) => p.url) };
 }
 
 // Autres produits publiés d'un fournisseur (pour « Du même fournisseur »)
