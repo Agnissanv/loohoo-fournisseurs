@@ -62,7 +62,7 @@ export default function GestionStock({ produits, onChange }) {
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontWeight: 600, fontSize: '0.92rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.nom}</div>
                 <div style={{ fontSize: '0.78rem', color: rupture ? 'var(--loo-rouge)' : undefined, opacity: rupture ? 1 : 0.65 }}>
-                  {inconnu ? 'Stock non renseigné' : rupture ? `Rupture, ${ilYa(p.stock_maj_le) || 'à mettre à jour'}` : `Mis à jour ${ilYa(p.stock_maj_le) || 'récemment'}`}
+                  {inconnu ? (p.sur_commande ? 'Sur commande' : 'Stock non renseigné') : rupture ? `Rupture, ${ilYa(p.stock_maj_le) || 'à mettre à jour'}` : `Mis à jour ${ilYa(p.stock_maj_le) || 'récemment'}`}
                 </div>
               </div>
             </div>
@@ -84,7 +84,7 @@ export default function GestionStock({ produits, onChange }) {
       })}
       {erreur && <p role="alert" style={{ color: 'var(--loo-rouge)', fontWeight: 600, fontSize: '0.85rem', margin: '0.5rem 0 0' }}>{erreur}</p>}
       {actifs.length > LIMITE && <p style={{ margin: '0.6rem 0 0' }}><Link to="/produits" style={{ color: 'var(--loo-rouge)', fontWeight: 600, fontSize: '0.88rem' }}>Voir tous les produits →</Link></p>}
-      <p className="esp-aide" style={{ margin: '0.6rem 0 0' }}>Changer la quantité retire la mention « stock vérifié » : notre équipe la confirmera à nouveau.</p>
+      <p className="esp-aide" style={{ margin: '0.6rem 0 0' }}>Mettez votre stock à jour quand vous le souhaitez : la mention « stock vérifié » reste. Notre équipe contrôle ensuite les écarts inhabituels.</p>
     </div>
   );
 }

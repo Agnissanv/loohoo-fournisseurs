@@ -121,7 +121,7 @@ export default function Produits() {
                       <strong>{p.nom}</strong>
                       <div style={{ fontSize: '0.84rem', opacity: 0.7 }}>
                         {p.prix_gros_fcfa.toLocaleString('fr-FR')} F CFA{p.unite ? ` / ${p.unite}` : ''} · minimum {p.moq}
-                        {p.stock_disponible != null && ` · stock : ${p.stock_disponible}`}
+                        {p.sur_commande ? ` · sur commande` : p.stock_disponible != null && ` · stock : ${p.stock_disponible}`}
                       </div>
                       <div style={{ marginTop: '0.3rem', display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
                         <span className={`esp-puce ${st.classe}`}>{st.texte}</span>

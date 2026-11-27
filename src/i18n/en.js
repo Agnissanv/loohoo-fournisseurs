@@ -165,6 +165,8 @@ const en = {
   'Minimum de commande': 'Minimum order',
   "Prix à l'unité": 'Single-unit price',
   'Stock disponible': 'Stock available',
+  'Disponibilité': 'Availability',
+  'Sur commande': 'Made to order',
   Conditionnement: 'Packaging',
   "Poids d'une unité": 'Weight per unit',
   "Dimensions d'une unité": 'Dimensions per unit',

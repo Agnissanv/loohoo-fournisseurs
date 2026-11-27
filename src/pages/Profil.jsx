@@ -30,6 +30,8 @@ const TYPES_DOCUMENT = {
   certificat_conformite: { libelle: 'Certificat de conformité', sous: 'Normes et qualité' },
   autre: { libelle: 'Autre document', sous: 'Tout justificatif utile' },
 };
+// Documents exigés pour obtenir le badge « Vérifié » (rapport du 22 nov 2026, S5). Les autres restent facultatifs.
+const REQUIS_BADGE = ['rccm', 'piece_identite', 'attestation_residence'];
 const STATUTS_DOCUMENT = {
   en_attente: { texte: 'En attente', classe: 'esp-puce-orange' },
   verifie: { texte: 'Vérifié', classe: 'esp-puce-vert' },
@@ -69,6 +71,8 @@ export default function Profil() {
   const horaires = profil.horaires_ouverture || {};
   const reseaux = contact.reseaux_sociaux || {};
   const photosProfil = [...(profil.grossiste_photo || [])].sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0));
+  // Un document rejeté ne compte pas : le fournisseur doit le renvoyer
+  const documentsRequisEnvoyes = REQUIS_BADGE.filter((t) => (documents || []).some((d) => d.type === t && d.statut !== 'rejete')).length;
   const initiales = (profil.nom || '').split(/\s+/).filter(Boolean).slice(0, 2).map((m) => m[0]).join('').toUpperCase();
 
   const annonce = (msg) => { setSucces(msg); setTimeout(() => setSucces(''), 2500); };
@@ -283,13 +287,34 @@ export default function Profil() {
 
           <div className="esp-carte">
             <h2 className="esp-carte-titre"><span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}><FileText size={18} /> Documents et vérification</span></h2>
-            <p className="esp-aide" style={{ marginBottom: '0.6rem' }}>Facultatifs, mais ils accélèrent la vérification et l'obtention du badge « Vérifié ». Jamais visibles publiquement.</p>
+            {documents !== undefined && (
+              <div style={{ marginBottom: '0.9rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.4rem' }}>
+                  <span>Requis pour le badge « Vérifié »</span>
+                  <span>{documentsRequisEnvoyes}/{REQUIS_BADGE.length} documents envoyés</span>
+                </div>
+                <div className="esp-progression" role="progressbar" aria-valuenow={documentsRequisEnvoyes} aria-valuemin={0} aria-valuemax={REQUIS_BADGE.length} aria-label="Documents requis pour le badge Vérifié">
+                  <div style={{ width: `${Math.round((documentsRequisEnvoyes / REQUIS_BADGE.length) * 100)}%` }} />
+                </div>
+                <p className="esp-aide" style={{ marginTop: '0.5rem' }}>
+                  {documentsRequisEnvoyes === REQUIS_BADGE.length
+                    ? "Tous les documents requis sont envoyés. Notre équipe les contrôle avant d'accorder le badge."
+                    : "Le badge « Vérifié » n'est accordé qu'après envoi et contrôle de ces documents. Un document rejeté doit être renvoyé."}
+                  {' '}Il faut aussi au moins une photo de votre stock ou de votre local ({photosProfil.length}/3 ajoutées). Rien n'est visible publiquement.
+                </p>
+              </div>
+            )}
             {Object.entries(TYPES_DOCUMENT).map(([type, { libelle, sous }]) => {
               const existants = (documents || []).filter((d) => d.type === type);
               return (
                 <div key={type} className="esp-liste-ligne" style={{ flexWrap: 'wrap' }}>
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{libelle}</div>
+                    <div style={{ fontWeight: 600, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      {libelle}
+                      {REQUIS_BADGE.includes(type)
+                        ? <span className="esp-puce esp-puce-orange">Requis pour le badge</span>
+                        : <span className="esp-aide" style={{ fontWeight: 400 }}>Facultatif</span>}
+                    </div>
                     <div className="esp-aide">{sous}</div>
                     {existants.map((d) => (
                       <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.4rem', fontSize: '0.82rem' }}>

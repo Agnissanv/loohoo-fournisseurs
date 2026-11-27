@@ -464,7 +464,7 @@ export async function recupererProduitPublic(id) {
   let data = null;
   let error = null;
   // Caractéristiques détaillées (migration 0027) lues d'abord, avec repli tant que la migration n'est pas exécutée
-  const caracteristiques = ', usage, pieces_par_carton, poids_carton_kg, origine_produit, delai_preparation_jours, matiere, marque, modele, variantes, capacite_mensuelle, personnalisable, echantillon_disponible, prix_echantillon';
+  const caracteristiques = ', usage, pieces_par_carton, poids_carton_kg, origine_produit, delai_preparation_jours, sur_commande, matiere, marque, modele, variantes, capacite_mensuelle, personnalisable, echantillon_disponible, prix_echantillon';
   for (const extra of [`, paliers, date_ajout, stock_maj_le, stock_disponible, longueur_cm, largeur_cm, hauteur_cm, sku, stock_verifie_le${caracteristiques}${fournisseur(true)}`, `, paliers, stock_disponible, longueur_cm, largeur_cm, hauteur_cm, sku, stock_verifie_le${fournisseur(false)}`, `, stock_disponible, longueur_cm, largeur_cm, hauteur_cm, sku, stock_verifie_le${fournisseur(false)}`, `, stock_disponible, longueur_cm, largeur_cm, hauteur_cm, sku${fournisseur(false)}`, fournisseur(false)]) {
     ({ data, error } = await requete(`${base}${extra}`));
     if (!error) break;

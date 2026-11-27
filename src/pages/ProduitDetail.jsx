@@ -153,7 +153,7 @@ export default function ProduitDetail() {
     delai && [t('Délai de préparation'), delai],
     [t('Minimum de commande'), quantite(p.moq || 1, p.unite)],
     p.prix_unitaire_fcfa != null && [t("Prix à l'unité"), prixCFA(p.prix_unitaire_fcfa)],
-    p.stock_disponible != null && [t('Stock disponible'), quantite(p.stock_disponible, p.unite)],
+    p.sur_commande ? [t('Disponibilité'), t('Sur commande')] : p.stock_disponible != null && [t('Stock disponible'), quantite(p.stock_disponible, p.unite)],
     conditionnement && [t('Conditionnement'), conditionnement],
     p.poids_grammes != null && [t("Poids d'une unité"), poids(p.poids_grammes / 1000)],
     dimensions && [t("Dimensions d'une unité"), dimensions],

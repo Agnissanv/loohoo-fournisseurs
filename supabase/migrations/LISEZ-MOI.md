@@ -168,3 +168,9 @@ Retire deux déclencheurs hérités de l'ancien fonctionnement, qui n'étaient d
 ## 0033 — Modèle d'abonnement unique (27 nov 2026, appliquée)
 Quatre formules plafonnées par nouvelles demandes reçues par mois (décision du client du 22 nov) : Départ (gratuit, 20), Plus (2 900 F/mois, 60), Pro (4 900 F/mois, 200), Élite (10 900 F/mois, illimité). Ajoute `grossiste.formule` (protégée contre toute modification par le fournisseur), les quatre formules dans `parametre`, et enrichit `mon_abonnement()` (formule, demandes utilisées ce mois-ci, plafond). Le plafond est mesuré et affiché, pas encore appliqué (pas de mise en attente, pas de paiement).
 Pour l'administration : `definir_formule_fournisseur(id, formule)` (réservée aux admins) change la formule d'un fournisseur. La commission de 2 % n'est plus le modèle et reste à retirer de l'écran « Affaires » côté admin.
+
+## 0034 — Le « stock vérifié » est conservé quand le fournisseur met son stock à jour (27 nov 2026, appliquée)
+Avant, modifier la quantité retirait la mention « stock vérifié » : le fournisseur était puni pour avoir mis son stock à jour. Maintenant la mention reste, et la quantité contrôlée est mémorisée (`produit.stock_verifie_quantite`) pour que l'équipe repère un écart après coup (requête dans le fichier). `verifier_stock_produit` enregistre la quantité contrôlée. Un fournisseur ne peut toujours pas modifier ces champs.
+
+## 0035 — Disponibilité « sur commande » (27 nov 2026, appliquée)
+Ajoute `produit.sur_commande` (faux par défaut) pour le formulaire simplifié : « En stock : quantité » ou « Sur commande : délai en jours ». Les produits existants ne changent pas.

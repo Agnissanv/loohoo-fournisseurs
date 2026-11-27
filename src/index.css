@@ -1067,3 +1067,22 @@ a.carte:active { transform: translateY(-1px); }
   .palier-saisie-titre { grid-column: 1 / -1; padding-top: 0; }
   .palier-saisie .esp-bouton-icone { margin-top: 1.55rem; }
 }
+
+/* ---- Formulaire produit simplifié : l'essentiel en 5 champs (rapport du 22 nov 2026) ---- */
+.prix-par-unite { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.prix-par-unite > .champ { flex: 1 1 8rem; min-width: 0; max-width: 14rem; }
+.prix-par-unite > select.champ { flex: 0 1 9rem; }
+.prix-par-unite > span { font-size: 0.9rem; font-weight: 600; }
+.dispo-choix { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+.dispo-bouton { flex: 1 1 9rem; padding: 0.8em 1em; border: 1.5px solid var(--loo-papier-ombre); border-radius: var(--rayon-sm); background: var(--loo-blanc); font: inherit; font-weight: 600; color: var(--loo-encre); cursor: pointer; }
+.dispo-bouton:hover { border-color: var(--loo-orange); }
+.dispo-bouton.dispo-actif { border-color: var(--loo-orange); background: #FFF3E3; box-shadow: inset 0 0 0 1px var(--loo-orange); }
+.esp-actions-photo { display: flex; gap: 0.6rem; flex-wrap: wrap; margin: 0.5rem 0 0.7rem; }
+.esp-actions-photo .btn { justify-content: center; }
+.esp-zone-erreur { border-color: var(--loo-rouge); background: #FFF5F4; }
+.esp-completer { padding-bottom: 1rem; }
+.esp-completer-entete { display: flex; justify-content: space-between; align-items: center; gap: 1rem; width: 100%; margin: 0 0 0.7rem; padding: 0; border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.esp-completude { font-family: var(--police-etiquette); font-weight: 600; font-size: 1.05rem; color: var(--loo-rouge); white-space: nowrap; }
+@media (max-width: 560px) {
+  .esp-actions-photo .btn { flex: 1 1 100%; }
+}
