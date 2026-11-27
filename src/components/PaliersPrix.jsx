@@ -63,24 +63,81 @@ export function PaliersProduit({ moq, prix, paliers, unite }) {
   );
 }
 
+// Contrôle des paliers saisis (en texte) pendant la frappe.
+// erreurs : un objet { min, prix } par palier, ce qui bloque la publication.
+// avertissements : valeurs possibles mais suspectes (baisse de plus de 50 %, quantité au-delà du stock) : le fournisseur doit les confirmer.
+export function controlerPaliers(saisis, moq, prixBase, stock) {
+  const erreurs = saisis.map(() => ({}));
+  const avertissements = [];
+  let qtePrecedente = Number(moq) || 1;
+  let prixPrecedent = Number(prixBase);
+  const stockDeclare = stock === '' || stock == null ? null : Number(stock);
+
+  saisis.forEach((p, i) => {
+    const min = Number(p.min);
+    const prix = Number(p.prix);
+    if (p.min === '' || !Number.isInteger(min)) erreurs[i].min = 'Indiquez une quantité (nombre entier).';
+    else if (min <= qtePrecedente) erreurs[i].min = `La quantité doit être supérieure à ${prixFr(qtePrecedente)}.`;
+    if (p.prix === '' || !Number.isInteger(prix)) erreurs[i].prix = 'Indiquez un prix (nombre entier).';
+    else if (prixPrecedent > 0 && prix >= prixPrecedent) erreurs[i].prix = `Le prix doit être inférieur à ${prixFr(prixPrecedent)} F CFA.`;
+
+    if (!erreurs[i].min && !erreurs[i].prix) {
+      if (prixPrecedent > 0 && prix < prixPrecedent / 2) {
+        avertissements.push(`Palier ${i + 1} : le prix baisse de plus de moitié (de ${prixFr(prixPrecedent)} à ${prixFr(prix)} F CFA).`);
+      }
+      if (stockDeclare != null && min > stockDeclare) {
+        avertissements.push(`Palier ${i + 1} : la quantité (${prixFr(min)}) est supérieure à votre stock déclaré (${prixFr(stockDeclare)}).`);
+      }
+    }
+    if (!erreurs[i].min && Number.isInteger(min)) qtePrecedente = min;
+    if (!erreurs[i].prix && Number.isInteger(prix)) prixPrecedent = prix;
+  });
+  return { erreurs, avertissements };
+}
+
+// Le tableau tel que l'acheteur le verra : « 5 à 9 pièces : 20 000 F — 10 à 19 pièces : 17 000 F — 20 pièces et plus : 16 000 F »
+function apercuPaliers(paliers, moq, prixBase, unite) {
+  const niveaux = niveauxPrix(moq, prixBase, paliers);
+  const pluriel = uniteAccordee(2, unite || 'pièce');
+  return niveaux.map((niv, i) => {
+    const suivant = niveaux[i + 1];
+    const quantites = suivant ? `${prixFr(niv.min)} à ${prixFr(suivant.min - 1)} ${pluriel}` : `${prixFr(niv.min)} ${pluriel} et plus`;
+    return `${quantites} : ${prixFr(niv.prix)} F`;
+  });
+}
+
 // Saisie des paliers dans le formulaire du fournisseur (deux paliers dégressifs au plus, après le prix de base)
-export function EditeurPaliers({ paliers, onChange, moq, prixBase }) {
+// confirmation : texte des avertissements déjà confirmés par le fournisseur ; onConfirmer l'enregistre.
+export function EditeurPaliers({ paliers, onChange, moq, prixBase, unite, stock, confirmation, onConfirmer }) {
   const maj = (i, cle, valeur) => onChange(paliers.map((p, j) => (j === i ? { ...p, [cle]: valeur } : p)));
   const dernierMin = paliers.length ? Number(paliers[paliers.length - 1].min) || Number(moq) || 1 : Number(moq) || 1;
+  const pluriel = uniteAccordee(2, unite || 'pièce');
+  const { erreurs, avertissements } = controlerPaliers(paliers, moq, prixBase, stock);
+  const signature = avertissements.join('|');
+  const valide = paliers.length > 0 && erreurs.every((e) => !e.min && !e.prix) && Number(prixBase) > 0;
+
   return (
-    <div className="esp-champ-bloc">
+    <div className="esp-champ-bloc" id="bloc-paliers">
       <label>Prix dégressifs (facultatif)</label>
       <p className="esp-aide" style={{ margin: '0 0 0.5rem' }}>
-        Plus l'acheteur commande, moins le prix est élevé. Votre prix de gros s'applique à partir de {Number(moq) || 1} ; ajoutez jusqu'à deux paliers,
+        Plus l'acheteur commande, moins le prix est élevé. Votre prix de gros s'applique à partir de {Number(moq) || 1} {uniteAccordee(Number(moq) || 1, unite || 'pièce')} ; ajoutez jusqu'à deux paliers,
         chacun à partir d'une quantité plus grande et avec un prix plus bas. Ces prix sont fermes : l'acheteur les voit et calcule son total.
       </p>
       {paliers.map((p, i) => (
-        <div key={i} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
-          <span>À partir de</span>
-          <input className="champ" style={{ width: '7rem' }} type="number" min="1" inputMode="numeric" required aria-label={`Quantité du palier ${i + 1}`} value={p.min} onChange={(e) => maj(i, 'min', e.target.value)} />
-          <span>pièces :</span>
-          <input className="champ" style={{ width: '8rem' }} type="number" min="0" inputMode="numeric" required aria-label={`Prix du palier ${i + 1}`} value={p.prix} onChange={(e) => maj(i, 'prix', e.target.value)} />
-          <span>F CFA</span>
+        <div key={i} className="palier-saisie">
+          <strong className="palier-saisie-titre">Palier {i + 1}</strong>
+          <div className="palier-saisie-champ">
+            <label htmlFor={`palier-min-${i}`}>Quantité ({pluriel})</label>
+            <input id={`palier-min-${i}`} className={`champ${erreurs[i].min ? ' champ-erreur' : ''}`} type="number" min="1" inputMode="numeric" required
+              aria-invalid={erreurs[i].min ? 'true' : undefined} placeholder="Ex. : 10" value={p.min} onChange={(e) => maj(i, 'min', e.target.value)} />
+            {erreurs[i].min && <p className="esp-erreur-champ" role="alert">{erreurs[i].min}</p>}
+          </div>
+          <div className="palier-saisie-champ">
+            <label htmlFor={`palier-prix-${i}`}>Prix unitaire (F CFA)</label>
+            <input id={`palier-prix-${i}`} className={`champ${erreurs[i].prix ? ' champ-erreur' : ''}`} type="number" min="0" inputMode="numeric" required
+              aria-invalid={erreurs[i].prix ? 'true' : undefined} placeholder="Ex. : 17000" value={p.prix} onChange={(e) => maj(i, 'prix', e.target.value)} />
+            {erreurs[i].prix && <p className="esp-erreur-champ" role="alert">{erreurs[i].prix}</p>}
+          </div>
           <button type="button" className="esp-bouton-icone" aria-label={`Retirer le palier ${i + 1}`} onClick={() => onChange(paliers.filter((_, j) => j !== i))}><Trash2 size={16} /></button>
         </div>
       ))}
@@ -89,6 +146,24 @@ export function EditeurPaliers({ paliers, onChange, moq, prixBase }) {
           onClick={() => onChange([...paliers, { min: String(dernierMin * 5), prix: String(Math.max(0, Math.round((paliers.length ? Number(paliers[paliers.length - 1].prix) : Number(prixBase) || 0) * 0.9))) }])}>
           <Plus size={14} /> Ajouter un palier
         </button>
+      )}
+
+      {avertissements.length > 0 && (
+        <div className="palier-avertissement" role="alert">
+          <strong>Vérifiez ces prix avant de publier</strong>
+          <ul>{avertissements.map((a) => <li key={a}>{a}</li>)}</ul>
+          <label className="palier-confirmation">
+            <input type="checkbox" checked={confirmation === signature} onChange={(e) => onConfirmer(e.target.checked ? signature : '')} />
+            Ces prix et ces quantités sont corrects
+          </label>
+        </div>
+      )}
+
+      {valide && (
+        <div className="palier-apercu" aria-live="polite">
+          <span className="palier-apercu-titre">Ce que l'acheteur verra</span>
+          <p>{apercuPaliers(paliers, moq, prixBase, unite).join(' — ')}</p>
+        </div>
       )}
     </div>
   );

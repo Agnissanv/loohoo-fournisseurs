@@ -46,13 +46,15 @@ const QUESTIONS = [
   },
 ];
 
-// Réponse à « Combien ça coûte ? », avec le seuil et le prix le plus bas lus dans la base (repli sur les valeurs validées)
+// Réponse à « Combien ça coûte ? », avec le plafond gratuit et le prix le plus bas lus dans la base (repli sur les valeurs validées)
 function reponseTarif(formules) {
-  const seuil = formules?.seuil ?? 20;
-  const niveaux = formules?.niveaux?.length ? formules.niveaux : [{ mensuel: 2900, annuel: 29000 }];
-  const moinsCher = niveaux.reduce((a, b) => (b.mensuel < a.mensuel ? b : a));
+  const niveaux = formules?.niveaux?.length ? formules.niveaux : [];
+  const gratuite = niveaux.find((n) => n.code === 'depart');
+  const payantes = niveaux.filter((n) => n.mensuel > 0);
+  const moinsCher = payantes.length ? payantes.reduce((a, b) => (b.mensuel < a.mensuel ? b : a)) : { mensuel: 2900, annuel: 29000 };
+  const demandes = gratuite?.demandes_mois ?? 20;
   const f = (n) => Number(n).toLocaleString('fr-FR');
-  return `L'inscription est gratuite, et LOOHOO le reste jusqu'à vos ${seuil} premières ventes confirmées sur la plateforme. Ensuite, un abonnement à partir de ${f(moinsCher.mensuel)} F CFA par mois (ou ${f(moinsCher.annuel)} F CFA par an). Rien n'est prélevé sur vos ventes.`;
+  return `L'inscription est gratuite, et la formule Départ l'est aussi : elle comprend jusqu'à ${demandes} nouvelles demandes d'acheteurs par mois. Pour en recevoir davantage, des formules payantes existent à partir de ${f(moinsCher.mensuel)} F CFA par mois (ou ${f(moinsCher.annuel)} F CFA par an). Rien n'est prélevé sur vos ventes.`;
 }
 
 export default function DevenirFournisseur() {

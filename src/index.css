@@ -1045,3 +1045,25 @@ a.carte:active { transform: translateY(-1px); }
   .entete-marque { gap: 0.4rem; }
   .entete-cta { padding: 0.5em 0.7em; }
 }
+
+/* ---- Formulaire produit : champs obligatoires et paliers de prix (rapport du 22 nov 2026, F2 et F3) ---- */
+.champ-erreur { border-color: var(--loo-rouge); background: #FFF5F4; }
+.esp-erreur-champ { margin: 0.25rem 0 0; font-size: 0.8rem; font-weight: 600; color: var(--loo-rouge); line-height: 1.35; }
+.esp-obligatoire { color: var(--loo-rouge); font-weight: 700; }
+.esp-bandeau-manquants { margin: 0 0 1rem; padding: 0.8rem 1rem; border: 1.5px solid var(--loo-rouge); border-radius: var(--rayon-sm); background: #FFF5F4; color: var(--loo-rouge); font-weight: 600; font-size: 0.92rem; line-height: 1.5; }
+.palier-saisie { display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr) auto; gap: 0.6rem; align-items: start; margin-bottom: 0.7rem; }
+.palier-saisie-titre { padding-top: 1.7rem; font-size: 0.84rem; white-space: nowrap; }
+.palier-saisie-champ { display: grid; gap: 0.25rem; }
+.palier-saisie-champ > label { font-weight: 600; font-size: 0.8rem; }
+.palier-saisie .esp-bouton-icone { margin-top: 1.55rem; }
+.palier-avertissement { margin-top: 0.7rem; padding: 0.7rem 0.9rem; border: 1.5px solid var(--loo-orange); border-radius: var(--rayon-sm); background: #FFF3E3; font-size: 0.86rem; line-height: 1.45; }
+.palier-avertissement ul { margin: 0.35rem 0 0.5rem 1.1rem; padding: 0; }
+.palier-confirmation { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; cursor: pointer; }
+.palier-apercu { margin-top: 0.7rem; padding: 0.65rem 0.9rem; border-radius: var(--rayon-sm); background: var(--loo-papier); border: 1px dashed var(--loo-papier-ombre); }
+.palier-apercu p { margin: 0.2rem 0 0; font-size: 0.9rem; font-weight: 600; line-height: 1.5; }
+.palier-apercu-titre { font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.6; font-weight: 600; }
+@media (max-width: 560px) {
+  .palier-saisie { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; }
+  .palier-saisie-titre { grid-column: 1 / -1; padding-top: 0; }
+  .palier-saisie .esp-bouton-icone { margin-top: 1.55rem; }
+}

@@ -161,3 +161,10 @@ Les produits déjà en ligne ne sont pas modifiés. Pour repérer ceux qui conti
   suivi), et pour le fournisseur, certificat qui expire dans 30 jours.
 - `tendances_semaine()` (§16) : produits les plus vus et contactés sur 7 jours (rangée affichée à partir de 4 produits).
 À exécuter après 0030. Testée sur le moteur de test. Le site fonctionne avant son exécution (les nouveautés restent masquées).
+
+## 0032 — Correctif B1 : ajout de photos à un produit (27 nov 2026, appliquée)
+Retire deux déclencheurs hérités de l'ancien fonctionnement, qui n'étaient dans aucun fichier de migration : `produit_proteger_champs_admin` (refusait tout changement de statut par un non-admin, d'où « Seul un administrateur peut publier ou rejeter un produit » à l'ajout d'une photo) et `produit_photo_reverifier` (remettait le produit « en attente » à chaque photo). La modération `produit_proteger_moderation` (0027) reste seule en place : un fournisseur ne peut toujours pas se publier lui-même.
+
+## 0033 — Modèle d'abonnement unique (27 nov 2026, appliquée)
+Quatre formules plafonnées par nouvelles demandes reçues par mois (décision du client du 22 nov) : Départ (gratuit, 20), Plus (2 900 F/mois, 60), Pro (4 900 F/mois, 200), Élite (10 900 F/mois, illimité). Ajoute `grossiste.formule` (protégée contre toute modification par le fournisseur), les quatre formules dans `parametre`, et enrichit `mon_abonnement()` (formule, demandes utilisées ce mois-ci, plafond). Le plafond est mesuré et affiché, pas encore appliqué (pas de mise en attente, pas de paiement).
+Pour l'administration : `definir_formule_fournisseur(id, formule)` (réservée aux admins) change la formule d'un fournisseur. La commission de 2 % n'est plus le modèle et reste à retirer de l'écran « Affaires » côté admin.

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { EditeurPaliers, normaliserPaliers } from '../components/PaliersPrix.jsx';
+import { EditeurPaliers, normaliserPaliers, controlerPaliers } from '../components/PaliersPrix.jsx';
 import ConsigneImages from '../components/ConsigneImages.jsx';
 import CertificatsProduit from '../components/CertificatsProduit.jsx';
 import { Link, useNavigate, useParams } from 'react-router-dom';
@@ -30,6 +30,36 @@ const STATUTS = {
 const versNombre = (v) => (v === '' || v == null ? null : Number(String(v).replace(',', '.')));
 const texteOuNull = (v) => (String(v ?? '').trim() || null);
 
+// Champs obligatoires encore vides (id = identifiant de l'élément à atteindre dans la page). Même liste que les attributs `required` du formulaire.
+function champsManquants(c) {
+  const vide = (v) => v === '' || v == null;
+  const liste = [];
+  if (!c.nom.trim()) liste.push({ id: 'nom', libelle: 'Nom du produit', message: 'Indiquez le nom du produit.' });
+  if (vide(c.prix_gros)) liste.push({ id: 'prix_gros', libelle: 'Prix de gros', message: 'Indiquez votre prix de gros.' });
+  if (!(Number(c.moq) >= 1)) liste.push({ id: 'moq', libelle: 'Quantité minimale', message: 'Indiquez la quantité minimale (au moins 1).' });
+  if (!c.usage.trim()) liste.push({ id: 'usage', libelle: 'À quoi sert le produit', message: 'Dites à quoi sert ce produit.' });
+  if (vide(c.poids_kg)) liste.push({ id: 'poids', libelle: "Poids d'une unité", message: "Indiquez le poids d'une unité." });
+  if (vide(c.longueur) || vide(c.largeur) || vide(c.hauteur)) {
+    liste.push({ id: vide(c.longueur) ? 'longueur' : vide(c.largeur) ? 'largeur' : 'hauteur', libelle: 'Dimensions', message: 'Indiquez la longueur, la largeur et la hauteur.' });
+  }
+  if (!(Number(c.pieces_par_carton) >= 1)) liste.push({ id: 'pieces_par_carton', libelle: 'Pièces par carton', message: 'Indiquez le nombre de pièces par carton (au moins 1).' });
+  if (!(Number(c.poids_carton_kg) > 0)) liste.push({ id: 'poids_carton', libelle: 'Poids du carton', message: 'Indiquez le poids du carton plein.' });
+  if (vide(c.delai_preparation)) liste.push({ id: 'delai', libelle: 'Délai de préparation', message: 'Indiquez le délai de préparation (0 si prêt tout de suite).' });
+  if (!c.origine_type) liste.push({ id: 'origine-local', libelle: 'Origine du produit', message: 'Choisissez : fabriqué ici ou importé.' });
+  if (c.origine_type === 'importe' && !c.origine_pays.trim()) liste.push({ id: 'origine_pays', libelle: 'Pays de fabrication', message: 'Indiquez le pays où le produit est fabriqué.' });
+  return liste;
+}
+
+// Défile jusqu'à un élément de la page et lui donne le focus
+function allerA(id) {
+  const el = document.getElementById(id);
+  if (!el) { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  el.focus?.({ preventScroll: true });
+}
+
+const Obligatoire = () => <span className="esp-obligatoire" aria-hidden="true"> *</span>;
+
 export default function ProduitFormulaire() {
   const { id } = useParams(); // absent = création
   const navigate = useNavigate();
@@ -56,6 +86,8 @@ export default function ProduitFormulaire() {
   const [enregistrement, setEnregistrement] = useState(false);
   const [erreur, setErreur] = useState('');
   const [detailsOuverts, setDetailsOuverts] = useState(false);
+  const [tentative, setTentative] = useState(false); // « Publier » a déjà été cliqué : on montre les champs manquants
+  const [paliersConfirmes, setPaliersConfirmes] = useState(''); // avertissements de prix déjà confirmés par le fournisseur
   const champFichier = useRef(null);
   // Garde anti double-soumission SYNCHRONE : un useState ne bloque pas deux clics
   // dans le meme tick (bug mesure le 22/11 : doublon « Mini fer a repasser »).
@@ -115,6 +147,16 @@ export default function ProduitFormulaire() {
   const texteControle = `${champs.nom} ${champs.description} ${tags.join(' ')} ${champs.usage}`;
   const coordonnees = contientCoordonnees(`${texteControle} ${champs.sku}`);
   const promesses = promessesInterdites(texteControle);
+  // Champs manquants : mis à jour pendant la saisie une fois « Publier » cliqué, ils disparaissent dès que le champ est rempli
+  const listeManquants = tentative ? champsManquants(champs) : [];
+  const manquants = Object.fromEntries(listeManquants.map((m) => [m.id, m.message]));
+  const classe = (...ids) => `champ${ids.some((i) => manquants[i]) ? ' champ-erreur' : ''}`;
+  const signaturePaliers = controlerPaliers(paliers, champs.moq, champs.prix_gros, champs.stock).avertissements.join('|');
+  // Erreur affichée en haut de page : on y remonte pour qu'elle soit vue
+  function echouer(message, cible) {
+    setErreur(message);
+    if (cible) allerA(cible); else window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 
   function ajouterTag(brut) {
     const t = brut.trim().replace(/,$/, '').trim();
@@ -179,11 +221,18 @@ export default function ProduitFormulaire() {
   async function enregistrer(e) {
     e.preventDefault();
     setErreur('');
-    if (Number(champs.prix_gros) < 0 || champs.prix_gros === '') { setErreur('Indiquez un prix de gros.'); return; }
-    if (coordonnees || promesses.length) { setErreur('Retirez du texte les coordonnées et les promesses signalées en orange pour publier le produit.'); return; }
-    if (champs.origine_type === 'importe' && !champs.origine_pays.trim()) { setErreur('Indiquez le pays où le produit est fabriqué.'); return; }
+    setTentative(true);
+    // Champs obligatoires : bandeau en haut, défilement jusqu'au premier champ manquant (le navigateur ne le montrait pas)
+    const manquantsMaintenant = champsManquants(champs);
+    if (manquantsMaintenant.length) { allerA(manquantsMaintenant[0].id); return; }
+    if (Number(champs.prix_gros) < 0) { echouer('Le prix de gros ne peut pas être négatif.', 'prix_gros'); return; }
+    if (coordonnees || promesses.length) { echouer('Retirez du texte les coordonnées et les promesses signalées en orange pour publier le produit.', 'description'); return; }
     const verif = normaliserPaliers(paliers, champs.moq, champs.prix_gros);
-    if (verif.erreur) { setErreur(verif.erreur); return; }
+    if (verif.erreur) { echouer(verif.erreur, 'bloc-paliers'); return; }
+    if (signaturePaliers && paliersConfirmes !== signaturePaliers) {
+      echouer('Vérifiez les prix signalés en orange, puis confirmez-les pour publier.', 'bloc-paliers');
+      return;
+    }
     if (soumission.current) return; // 2e clic : rien ne part
     soumission.current = true;
     setEnregistrement(true);
@@ -255,12 +304,17 @@ export default function ProduitFormulaire() {
   const statut = produit ? (STATUTS[produit.statut] || STATUTS.en_attente) : null;
 
   return (
-    <form onSubmit={enregistrer}>
+    <form onSubmit={enregistrer} noValidate>
       <div className="esp-fil">
         <Link to="/produits">Mes produits</Link><span>›</span><span>{produit ? 'Modifier' : 'Ajouter un produit'}</span>
       </div>
       <h1 className="esp-titre-page">{produit ? 'Modifier le produit' : 'Ajouter un nouveau produit'}</h1>
 
+      {listeManquants.length > 0 && (
+        <div className="esp-bandeau-manquants" role="alert">
+          {listeManquants.length} information{listeManquants.length > 1 ? 's' : ''} à compléter : {listeManquants.map((m) => m.libelle).join(', ')}.
+        </div>
+      )}
       {erreur && <p role="alert" style={{ color: 'var(--loo-rouge)', fontWeight: 600, margin: '0 0 1rem' }}>{erreur}</p>}
 
       <div className="esp-formulaire">
@@ -269,8 +323,9 @@ export default function ProduitFormulaire() {
             <h2 className="esp-carte-titre">Informations générales</h2>
 
             <div className="esp-champ-bloc">
-              <label htmlFor="nom">Nom du produit</label>
-              <input id="nom" className="champ" required maxLength={150} placeholder="Ex. : Pagne wax 6 yards" value={champs.nom} onChange={maj('nom')} />
+              <label htmlFor="nom">Nom du produit<Obligatoire /></label>
+              <input id="nom" className={classe('nom')} required maxLength={150} placeholder="Ex. : Pagne wax 6 yards" value={champs.nom} onChange={maj('nom')} />
+              {manquants.nom && <p className="esp-erreur-champ" role="alert">{manquants.nom}</p>}
             </div>
 
             <div className="esp-ligne-champs">
@@ -303,9 +358,9 @@ export default function ProduitFormulaire() {
 
             <div className="esp-ligne-champs">
               <div className="esp-champ-bloc">
-                <label htmlFor="prix_gros">Prix de gros (F CFA)</label>
-                <input id="prix_gros" className="champ" type="number" min="0" required placeholder="0" value={champs.prix_gros} onChange={maj('prix_gros')} />
-                <p className="esp-aide">Le prix par unité pour une commande en gros.</p>
+                <label htmlFor="prix_gros">Prix de gros (F CFA)<Obligatoire /></label>
+                <input id="prix_gros" className={classe('prix_gros')} type="number" min="0" required placeholder="0" value={champs.prix_gros} onChange={maj('prix_gros')} />
+                {manquants.prix_gros ? <p className="esp-erreur-champ" role="alert">{manquants.prix_gros}</p> : <p className="esp-aide">Le prix par unité pour une commande en gros.</p>}
               </div>
               <div className="esp-champ-bloc">
                 <label htmlFor="prix_unitaire">Prix à l'unité (facultatif)</label>
@@ -313,13 +368,14 @@ export default function ProduitFormulaire() {
                 <p className="esp-aide">Pour une petite quantité, si vous en vendez.</p>
               </div>
               <div className="esp-champ-bloc">
-                <label htmlFor="moq">Quantité minimale (MOQ)</label>
-                <input id="moq" className="champ" type="number" min="1" required value={champs.moq} onChange={maj('moq')} />
-                <p className="esp-aide">Le minimum que l'acheteur doit commander.</p>
+                <label htmlFor="moq">Quantité minimale (MOQ)<Obligatoire /></label>
+                <input id="moq" className={classe('moq')} type="number" min="1" required value={champs.moq} onChange={maj('moq')} />
+                {manquants.moq ? <p className="esp-erreur-champ" role="alert">{manquants.moq}</p> : <p className="esp-aide">Le minimum que l'acheteur doit commander.</p>}
               </div>
             </div>
 
-            <EditeurPaliers paliers={paliers} onChange={setPaliers} moq={champs.moq} prixBase={champs.prix_gros} />
+            <EditeurPaliers paliers={paliers} onChange={setPaliers} moq={champs.moq} prixBase={champs.prix_gros}
+              unite={champs.unite} stock={champs.stock} confirmation={paliersConfirmes} onConfirmer={setPaliersConfirmes} />
 
             <div className="esp-ligne-champs">
               <div className="esp-champ-bloc">
@@ -342,51 +398,62 @@ export default function ProduitFormulaire() {
             <p className="esp-aide" style={{ margin: '-0.3rem 0 0.9rem' }}>Les acheteurs comparent ces informations avant de demander un devis. Les champs non marqués « facultatif » sont obligatoires.</p>
 
             <div className="esp-champ-bloc">
-              <label htmlFor="usage">À quoi sert ce produit ?</label>
-              <input id="usage" className="champ" required maxLength={200} placeholder="Ex. : tenue de cérémonie, revente en boutique, emballage alimentaire…" value={champs.usage} onChange={maj('usage')} />
+              <label htmlFor="usage">À quoi sert ce produit ?<Obligatoire /></label>
+              <input id="usage" className={classe('usage')} required maxLength={200} placeholder="Ex. : tenue de cérémonie, revente en boutique, emballage alimentaire…" value={champs.usage} onChange={maj('usage')} />
+              {manquants.usage && <p className="esp-erreur-champ" role="alert">{manquants.usage}</p>}
             </div>
 
             <div className="esp-ligne-champs">
               <div className="esp-champ-bloc">
-                <label htmlFor="poids">Poids d'une unité (kg)</label>
-                <input id="poids" className="champ" type="number" min="0" step="0.001" required placeholder="0,5" value={champs.poids_kg} onChange={maj('poids_kg')} />
+                <label htmlFor="poids">Poids d'une unité (kg)<Obligatoire /></label>
+                <input id="poids" className={classe('poids')} type="number" min="0" step="0.001" required placeholder="0,5" value={champs.poids_kg} onChange={maj('poids_kg')} />
+                {manquants.poids && <p className="esp-erreur-champ" role="alert">{manquants.poids}</p>}
               </div>
               <div className="esp-champ-bloc">
-                <label id="dimensions">Dimensions d'une unité (cm)</label>
+                <label id="dimensions">Dimensions d'une unité (cm)<Obligatoire /></label>
                 <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }} role="group" aria-labelledby="dimensions">
-                  <input className="champ" type="number" min="0" step="0.1" required placeholder="L" aria-label="Longueur (cm)" value={champs.longueur} onChange={maj('longueur')} />×
-                  <input className="champ" type="number" min="0" step="0.1" required placeholder="l" aria-label="Largeur (cm)" value={champs.largeur} onChange={maj('largeur')} />×
-                  <input className="champ" type="number" min="0" step="0.1" required placeholder="H" aria-label="Hauteur (cm)" value={champs.hauteur} onChange={maj('hauteur')} />
+                  <input id="longueur" className={classe('longueur', 'largeur', 'hauteur')} type="number" min="0" step="0.1" required placeholder="L" aria-label="Longueur (cm)" value={champs.longueur} onChange={maj('longueur')} />×
+                  <input id="largeur" className={classe('longueur', 'largeur', 'hauteur')} type="number" min="0" step="0.1" required placeholder="l" aria-label="Largeur (cm)" value={champs.largeur} onChange={maj('largeur')} />×
+                  <input id="hauteur" className={classe('longueur', 'largeur', 'hauteur')} type="number" min="0" step="0.1" required placeholder="H" aria-label="Hauteur (cm)" value={champs.hauteur} onChange={maj('hauteur')} />
                 </div>
+                {(manquants.longueur || manquants.largeur || manquants.hauteur) && <p className="esp-erreur-champ" role="alert">{manquants.longueur || manquants.largeur || manquants.hauteur}</p>}
               </div>
             </div>
 
             <div className="esp-ligne-champs">
               <div className="esp-champ-bloc">
-                <label htmlFor="pieces_par_carton">Pièces par carton (ou par colis)</label>
-                <input id="pieces_par_carton" className="champ" type="number" min="1" required placeholder="Ex. : 24" value={champs.pieces_par_carton} onChange={maj('pieces_par_carton')} />
+                <label htmlFor="pieces_par_carton">Pièces par carton (ou par colis)<Obligatoire /></label>
+                <input id="pieces_par_carton" className={classe('pieces_par_carton')} type="number" min="1" required placeholder="Ex. : 24" value={champs.pieces_par_carton} onChange={maj('pieces_par_carton')} />
+                {manquants.pieces_par_carton && <p className="esp-erreur-champ" role="alert">{manquants.pieces_par_carton}</p>}
               </div>
               <div className="esp-champ-bloc">
-                <label htmlFor="poids_carton">Poids du carton plein (kg)</label>
-                <input id="poids_carton" className="champ" type="number" min="0.001" step="0.001" required placeholder="Ex. : 12" value={champs.poids_carton_kg} onChange={maj('poids_carton_kg')} />
+                <label htmlFor="poids_carton">Poids du carton plein (kg)<Obligatoire /></label>
+                <input id="poids_carton" className={classe('poids_carton')} type="number" min="0.001" step="0.001" required placeholder="Ex. : 12" value={champs.poids_carton_kg} onChange={maj('poids_carton_kg')} />
+                {manquants.poids_carton && <p className="esp-erreur-champ" role="alert">{manquants.poids_carton}</p>}
               </div>
               <div className="esp-champ-bloc">
-                <label htmlFor="delai">Délai de préparation (jours)</label>
-                <input id="delai" className="champ" type="number" min="0" required placeholder="Ex. : 2" value={champs.delai_preparation} onChange={maj('delai_preparation')} />
-                <p className="esp-aide">0 si la commande est prête tout de suite.</p>
+                <label htmlFor="delai">Délai de préparation (jours)<Obligatoire /></label>
+                <input id="delai" className={classe('delai')} type="number" min="0" required placeholder="Ex. : 2" value={champs.delai_preparation} onChange={maj('delai_preparation')} />
+                {manquants.delai ? <p className="esp-erreur-champ" role="alert">{manquants.delai}</p> : <p className="esp-aide">0 si la commande est prête tout de suite.</p>}
               </div>
             </div>
 
             <fieldset className="esp-champ-bloc" style={{ border: 0, padding: 0, margin: '0 0 0.9rem' }}>
-              <legend style={{ fontWeight: 600, fontSize: '0.88rem', marginBottom: '0.4rem' }}>Origine du produit</legend>
+              <legend style={{ fontWeight: 600, fontSize: '0.88rem', marginBottom: '0.4rem' }}>Origine du produit<Obligatoire /></legend>
               <div style={{ display: 'flex', gap: '1.2rem', flexWrap: 'wrap' }}>
-                <label style={styles.choix}><input type="radio" name="origine" value="local" required checked={champs.origine_type === 'local'} onChange={maj('origine_type')} /> Fabriqué en {paysLocal}</label>
-                <label style={styles.choix}><input type="radio" name="origine" value="importe" checked={champs.origine_type === 'importe'} onChange={maj('origine_type')} /> Importé</label>
+                <label style={styles.choix}><input id="origine-local" type="radio" name="origine" value="local" required checked={champs.origine_type === 'local'} onChange={maj('origine_type')} /> Fabriqué en {paysLocal}</label>
+                <label style={styles.choix}>
+                  <input type="radio" name="origine" value="importe" checked={champs.origine_type === 'importe'}
+                    onChange={() => setChamps((c) => ({ ...c, origine_type: 'importe', origine_pays: c.origine_pays || 'Chine' }))} /> Importé
+                </label>
               </div>
+              {manquants['origine-local'] && <p className="esp-erreur-champ" role="alert">{manquants['origine-local']}</p>}
               {champs.origine_type === 'importe' && (
                 <div style={{ marginTop: '0.5rem' }}>
-                  <label htmlFor="origine_pays" style={{ fontSize: '0.84rem' }}>Pays de fabrication</label>
-                  <input id="origine_pays" className="champ" list="pays-import" required maxLength={60} placeholder="Ex. : Chine" value={champs.origine_pays} onChange={maj('origine_pays')} />
+                  <label htmlFor="origine_pays" style={{ fontSize: '0.84rem' }}>Pays de fabrication<Obligatoire /></label>
+                  <input id="origine_pays" className={classe('origine_pays')} list="pays-import" required maxLength={60} placeholder="Ex. : Chine" value={champs.origine_pays} onChange={maj('origine_pays')} />
+                  <p className="esp-aide">« Chine » est proposé par défaut : changez-le si le produit vient d'ailleurs.</p>
+                  {manquants.origine_pays && <p className="esp-erreur-champ" role="alert">{manquants.origine_pays}</p>}
                   <datalist id="pays-import">{PAYS_IMPORT.map((p) => <option key={p} value={p} />)}</datalist>
                 </div>
               )}
